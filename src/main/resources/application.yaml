@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: JAI-Doc
+  config:
+    import:
+      - configurations/actuator-configuration.yml
+      - configurations/logging-configuration.yml
+  threads:
+    virtual:
+      enabled: true
