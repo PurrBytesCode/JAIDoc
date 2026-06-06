@@ -9,6 +9,40 @@ Guidelines for AI agents working in this repository.
 - **Documentation is always written in English.** All documentation, including Javadoc/KDoc, README files, design docs,
   and any other written documentation, must be in English.
 
+## Code Style Rules
+
+- **Do not use Fully Qualified Class Names in code.** Always use `import` statements and refer to classes by their
+  simple name. For example, use `ObjectMapper` instead of `com.fasterxml.jackson.databind.ObjectMapper` in the code
+  body. **Exception:** when two classes share the same simple name (e.g., `java.util.Date` and `java.sql.Date`), import
+  the one that is used more frequently and use the Fully Qualified Class Name only for the less frequently used one.
+- **Follow Java naming conventions.** Use `PascalCase` for classes, `camelCase` for methods and variables, and
+  `UPPER_SNAKE_CASE` for constants.
+- **Prefer constructor injection.** Use constructor-based dependency injection instead of `@Autowired` on fields. This
+  facilitates testing and makes dependencies explicit.
+- **Do not leave commented-out code.** If code is not used, remove it. Git history preserves it.
+- **Do not use `@SuppressWarnings` without justification.** If a warning needs to be suppressed, add a comment
+  explaining why.
+- **Prefer `Optional` over `null`.** Use `Optional` as a return type when a value may be absent, instead of returning
+  `null`.
+
+## Configuration / Spring Boot Rules
+
+- **Do not hardcode configuration values.** Use `application.yaml` or environment variables. Do not put URLs, ports,
+  credentials, or configuration values directly in Java code.
+
+## Security Rules
+
+- **Never commit secrets or credentials.** Do not include API keys, passwords, tokens, or certificates in the
+  repository. Use environment variables or a secrets manager.
+- **Do not log sensitive data.** Avoid printing personal information, tokens, or credentials in logs.
+
+## Documentation Rules
+
+- **Document public classes and methods with Javadoc.** All public APIs must have Javadoc explaining their purpose,
+  parameters, and return values.
+- **Keep the `README.md` up to date.** If a change affects how the project is configured, installed, or used, update the
+  README.
+
 ## File Reading Rules
 
 These rules prevent infinite loops and redundant work when reading files.
