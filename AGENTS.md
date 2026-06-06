@@ -47,9 +47,9 @@ Guidelines for AI agents working in this repository.
 
 These rules prevent infinite loops and redundant work when reading files.
 
-- **Read each file once.** Do not re-open, re-query, or re-search a file whose content you already obtained, unless it
-  was modified after you read it. Cache and reuse what you already have in context.
-- **Track files you have already read.** Keep a mental (or explicit) list of inspected files and their key findings, and
+- **Read each file once.** Do not re-open, re-query, or re-search a file whose content you already got, unless it was
+  modified after you read it. Cache and reuse what you already have in context.
+- **Track files you have already read.** Keep a mental (or explicit) list of inspected files and their key findings and
   consult that list before issuing another read.
 - **Stop after the goal is met.** As soon as you have the information needed to answer or to make a change, stop
   reading. Do not keep exploring "just in case".
@@ -65,6 +65,28 @@ These rules prevent infinite loops and redundant work when reading files.
   generated or binary artifacts (e.g., `target`, build output, large binaries).
 - **Respect symbolic links.** Do not follow symlinks that point back into an already-visited directory; this is a common
   source of infinite loops.
-- **Ask when stuck.** If the needed information cannot be found within the read budget, ask for clarification rather
+- **Ask when stuck.** If the necessary information cannot be found within the read budget, ask for clarification rather
   than looping over the same files indefinitely.
 
+## Parallel Agent Workflow
+
+For tasks that can be split into independent subtasks, use the parallel agents workflow defined in [
+`parallel-agents.md`](parallel-agents.md).
+
+**Quick start:** Add this at the top of your task prompt:
+
+```yaml
+parallel_agents_count: 3
+agents:
+  - id: agent-1
+    role: CodeAgent
+    task: "<your code task>"
+  - id: agent-2
+    role: TestAgent
+    task: "<your test task>"
+  - id: agent-3
+    role: DocsAgent
+    task: "<your docs task>"
+```
+
+See `parallel-agents.md` for full configuration, roles, and splitting rules.
