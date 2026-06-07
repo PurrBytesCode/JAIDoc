@@ -67,26 +67,3 @@ These rules prevent infinite loops and redundant work when reading files.
   source of infinite loops.
 - **Ask when stuck.** If the necessary information cannot be found within the read budget, ask for clarification rather
   than looping over the same files indefinitely.
-
-## Parallel Agent Workflow
-
-For tasks that can be split into independent subtasks, use the parallel agents workflow defined in [
-`parallel-agents.md`](parallel-agents.md).
-
-**Quick start:** Add this at the top of your task prompt:
-
-```yaml
-parallel_agents_count: 3
-agents:
-  - id: agent-1
-    role: CodeAgent
-    task: "<your code task>"
-  - id: agent-2
-    role: TestAgent
-    task: "<your test task>"
-  - id: agent-3
-    role: DocsAgent
-    task: "<your docs task>"
-```
-
-See `parallel-agents.md` for full configuration, roles, and splitting rules.
