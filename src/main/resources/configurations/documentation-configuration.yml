@@ -1,0 +1,4 @@
+jdk:
+  source:
+    download:
+      directory: ${JDK_SOUCE_DOWNLOAD_ZIP:./jdk-sources}

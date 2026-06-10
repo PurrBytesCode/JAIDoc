@@ -4,6 +4,7 @@ spring:
   config:
     import:
       - configurations/actuator-configuration.yml
+      - configurations/documentation-configuration.yml
       - configurations/logging-configuration.yml
       - configurations/mcp-configuration.yml
       - configurations/springdoc-configuration.yml

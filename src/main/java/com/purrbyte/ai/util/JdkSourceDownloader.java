@@ -1,6 +1,7 @@
 package com.purrbyte.ai.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -29,15 +30,19 @@ public class JdkSourceDownloader {
     private static final Pattern VERSION_PATTERN = Pattern.compile("^jdk-\\d+(\\.\\d+)*$");
 
     private final Executor downloadExecutor = Executors.newVirtualThreadPerTaskExecutor();
+    private final String defaultJDKSourceDirectory;
     private final RestClient restClient;
 
-    public JdkSourceDownloader(RestClient.Builder builder) {
+    public JdkSourceDownloader(@Value("${jdk.source.download.directory}") String defaultJDKSourceDirectory, RestClient.Builder builder) {
+        this.defaultJDKSourceDirectory = defaultJDKSourceDirectory;
         this.restClient = builder.build();
     }
 
-    public CompletableFuture<Path> downloadSource(String version,
-                                                  Path targetDirectory,
-                                                  Consumer<Double> progressCallback) {
+    public CompletableFuture<Path> downloadSource(String version, Consumer<Double> progressCallback) {
+        return downloadSource(version, Path.of(defaultJDKSourceDirectory), progressCallback);
+    }
+
+    public CompletableFuture<Path> downloadSource(String version, Path targetDirectory, Consumer<Double> progressCallback) {
         String normalizedVersion = normalizeVersion(version);
         String tagName = "jdk-" + normalizedVersion;
         String zipUrl = "https://github.com/openjdk/jdk/archive/refs/tags/" + tagName + ".zip";
