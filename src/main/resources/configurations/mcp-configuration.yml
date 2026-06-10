@@ -3,6 +3,6 @@ spring:
     mcp:
       server:
         enabled: true
-        name: Jai-Doc
+        name: JaiDoc
         protocol: streamable
         stdio: true
