@@ -1,4 +1,4 @@
-package com.purrbyte.ai.docklet;
+package com.purrbyte.ai.doclet;
 
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.LineMap;
@@ -100,7 +100,7 @@ final class TypeJsonBuilder {
         ObjectNode doc = docs.comment(trees, t);
         if (doc != null) n.set("doc", doc);
 
-        // Componentes de record: la descripción viene de los @param del comentario de la clase
+        // Record components: the description comes from @param of the class comment
         if (t.getKind() == ElementKind.RECORD && !t.getRecordComponents().isEmpty()) {
             Map<String, String> paramDocs = docs.paramDescriptions(trees, t, false);
             ArrayNode arr = n.putArray("recordComponents");
@@ -188,7 +188,7 @@ final class TypeJsonBuilder {
         Map<String, String> typeParamDocs = docs.paramDescriptions(trees, m, true);
         Map<String, String> throwsDocs = docs.throwsDescriptions(trees, m);
 
-        // descripción de parámetros de tipo (@param <T> ...)
+        // type parameter descriptions (@param <T> ...)
         if (!typeParamDocs.isEmpty() && n.has("typeParameters")) {
             ArrayNode tps = (ArrayNode) n.get("typeParameters");
             for (int i = 0; i < tps.size(); i++) {

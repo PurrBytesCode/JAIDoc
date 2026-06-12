@@ -1,4 +1,4 @@
-package com.purrbyte.ai.docklet;
+package com.purrbyte.ai.doclet;
 
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
