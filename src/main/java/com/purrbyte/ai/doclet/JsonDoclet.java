@@ -1,4 +1,4 @@
-package com.purrbyte.ai.docklet;
+package com.purrbyte.ai.doclet;
 
 import jdk.javadoc.doclet.Doclet;
 import jdk.javadoc.doclet.DocletEnvironment;
@@ -27,12 +27,9 @@ import java.util.*;
  *   <li>Uses the modern {@code jdk.javadoc.doclet} API (JDK 9+). The old
  *       {@code com.sun.javadoc} API was removed in JDK 13.</li>
  *   <li>Jackson 3 ({@code tools.jackson.*}) requires Java 17, so the
- *       {@code javadoc} tool must be run with JDK 17 or higher (17, 21, 25, 27...).</li>
- *   <li>To document source code from Java 8 to 27 it is sufficient to pass
- *       {@code --release N} (or {@code -source N}) to the javadoc tool.</li>
- *   <li>For environments where the javadoc tool MUST be from JDK 8..12 there is the
- *       {@code json-doclet-legacy} module (old API + Jackson 2) with the same
- *       output format.</li>
+ *       application must run with JDK 17 or higher (17, 21, 25, 27...).</li>
+ *   <li>To document source code from Java 8 to 27 it is sufficient that the
+ *       source code is compiled with {@code --release N} (or {@code -source N}).</li>
  * </ul>
  *
  * <p>Output (in the directory specified with {@code -d}):
@@ -181,7 +178,7 @@ public class JsonDoclet implements Doclet {
 
                 Set<? extends Element> included = env.getIncludedElements();
 
-                // ---- Módulos ----
+                // ---- Modules ----
                 for (ModuleElement mod : ElementFilter.modulesIn(included)) {
                     if (mod.isUnnamed()) continue;
                     ObjectNode m = builder.buildModule(mod);

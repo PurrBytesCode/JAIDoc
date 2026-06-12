@@ -1,4 +1,4 @@
-package com.purrbyte.ai.docklet;
+package com.purrbyte.ai.doclet;
 
 import com.sun.source.doctree.*;
 import com.sun.source.util.DocTrees;
@@ -229,8 +229,8 @@ final class DocTreeJson {
                 n.put("diagnostic", et.getDiagnostic().getMessage(null));
             }
         } else {
-            // Nodos de JDKs posteriores a 17 (SNIPPET, SPEC, MARKDOWN/RAW_TEXT, ...):
-            // serialización genérica para mantener compatibilidad hasta JDK 27+.
+            // Nodes from JDKs after 17 (SNIPPET, SPEC, MARKDOWN/RAW_TEXT, ...):
+            // generic serialization to maintain compatibility through JDK 27+.
             n.put("text", t.toString());
         }
         return n;
