@@ -317,16 +317,16 @@ and the `doc` block with:
 
 ```json
 "recordComponents": [
-  {
-    "name": "code",
-    "type": "java.lang.String",
-    "description": "ISO 4217 code, e.g. \"USD\""
-  },
-  {
-    "name": "decimals",
-    "type": "int",
-    "description": "number of decimal places"
-  }
+{
+"name": "code",
+"type": "java.lang.String",
+"description": "ISO 4217 code, e.g. \"USD\""
+},
+{
+"name": "decimals",
+"type": "int",
+"description": "number of decimal places"
+}
 ]
 ```
 

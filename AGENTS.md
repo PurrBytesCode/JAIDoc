@@ -68,6 +68,17 @@ These rules prevent infinite loops and redundant work when reading files.
 - **Ask when stuck.** If the necessary information cannot be found within the read budget, ask for clarification rather
   than looping over the same files indefinitely.
 
+## Project References
+
+Deep-dive documentation lives in the `documentation/` directory. Consult these files before working in the areas they cover — they prevent context loss and keep AGENTS.md from growing out of control.
+
+- **[Project Structure](documentation/STRUCTURE.md)** — High-level layout, config hierarchy, build output
+- **[Doclet](documentation/DOCLET.md)** — JSON doclet architecture, CLI options, output format, ChromaDB chunking
+- **[MCP Server](documentation/MCP.md)** — MCP server setup and JetBrains adapter
+- **[Jackson Config](documentation/JACKSON.md)** — Customizer pattern, YAML mapper convention
+- **[Security Config](documentation/SECURITY.md)** — Actuator restrictions, logging paths
+- **[JDK Sources](documentation/JDK-SOURCES.md)** — JDK source downloader, async execution, version parsing
+
 ## Plan Files Rules
 
 - **Save plans in the `./plans` directory.** Any implementation plan, task breakdown, or design document must be stored
