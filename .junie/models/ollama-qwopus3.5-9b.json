@@ -1,0 +1,8 @@
+{
+  "baseUrl": "http://localhost:11434/v1/responses",
+  "id": "hf-Jackrong-Qwopus3.5-9B-v3-GGUF:Q4_K_M",
+  "apiType": "OpenAIResponses",
+  "primaryModel": {
+    "id": "hf-Jackrong-Qwopus3.5-9B-v3-GGUF:Q4_K_M"
+  }
+}

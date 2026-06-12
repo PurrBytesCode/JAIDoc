@@ -1,0 +1,8 @@
+{
+  "baseUrl": "http://localhost:11434/v1/responses",
+  "id": "JetBrains-Mellum2-12B-A2.5B",
+  "apiType": "OpenAICompletion",
+  "primaryModel": {
+    "id": "JetBrains-Mellum2-12B-A2.5B"
+  }
+}
