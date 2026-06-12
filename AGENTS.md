@@ -53,6 +53,44 @@ Guidelines for AI agents working in this repository.
 - **Do not update documentation "later."** If a change affects the docs, update them in the same session — before moving on.
   Stale documentation is worse than no documentation.
 
+## JetBrains MCP Endpoint Priority
+
+**Always use JetBrains MCP-provided endpoints instead of shell commands.** The
+JetBrains IDE provides a rich set of tools and resources through the MCP protocol
+that are faster, safer, and more integrated than spawning a shell process. See
+[documentation/MCP.md](documentation/MCP.md) for the full list of available endpoints.
+
+### Priority order
+
+The priority order is **MCP-server-specific** — each MCP server defines its own tools
+and resources. The order below reflects the JetBrains MCP server:
+
+1. **MCP tools** — Search (`search_in_files`, `search_regex`, `search_symbol`), file
+   operations (`read_file`, `write_file`, `edit_file`, `reformat_file`), symbol
+   introspection (`get_symbol_info`, `get_file_problems`), refactoring
+   (`rename_refactoring`), build (`build_project`), and git operations
+   (`git_status`, `git_diff`, `git_log`, etc.)
+2. **MCP resources** — Read structured data from the IDE (project modules, dependencies,
+   database schemas, open editors, run configurations)
+3. **Shell commands** — Only when no MCP equivalent exists. Use `execute_command` instead
+   of raw shell invocations, and only as a last resort
+
+**Important:** When multiple MCP servers are configured, use the tools/resources from
+the most relevant MCP server for the task at hand. Do not fall back to shell commands
+just because one MCP server lacks a particular tool — check if another MCP server
+provides it.
+
+### Why MCP over shell?
+
+- **Performance**: MCP tools use the IDE's internal indexing and caches — no process
+  spawning overhead, no parsing shell output
+- **Safety**: MCP tools validate inputs and paths before executing; shell commands can
+  accidentally modify or delete files
+- **Integrations**: MCP tools understand the project structure (packages, modules,
+  dependencies) and can operate on symbols with context-aware semantics
+- **Reliability**: MCP tools handle edge cases like file encoding, large files, and
+  special characters automatically
+
 ## File Reading Rules
 
 These rules prevent infinite loops and redundant work when reading files.
