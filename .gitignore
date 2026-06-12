@@ -13,6 +13,7 @@ data.xml
 .cline/
 .junie/
 .claude/
+plans/
 
 ### DB ###
 *.mv.db

@@ -67,3 +67,12 @@ These rules prevent infinite loops and redundant work when reading files.
   source of infinite loops.
 - **Ask when stuck.** If the necessary information cannot be found within the read budget, ask for clarification rather
   than looping over the same files indefinitely.
+
+## Plan Files Rules
+
+- **Save plans in the `./plans` directory.** Any implementation plan, task breakdown, or design document must be stored
+  under `./plans/`, not embedded in the conversation or written as inline comments.
+- **Name plan files descriptively.** Use a clear, concise name that reflects the feature or fix being planned (e.g.,
+  `auth-token-refresh.md`).
+- **Keep plans up to date.** If implementation deviates from the plan, update it to reflect reality. Do not leave
+  outdated plans as guides.
