@@ -1,0 +1,8 @@
+{
+  "baseUrl": "http://localhost:11434/v1/chat/completions",
+  "id": "unsloth-Qwen3.6-27B",
+  "apiType": "OpenAICompletion",
+  "primaryModel": {
+    "id": "unsloth-Qwen3.6-27B"
+  }
+}
