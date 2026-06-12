@@ -51,4 +51,3 @@ Maven produces a Spring Boot fat JAR in `target/`.
 ## Maintenance
 
 Keep this file compact — group related items under one line, only expand when something is truly independent.
-When the source layout changes, update this file to match. The goal is a high-level map, not a tree view.

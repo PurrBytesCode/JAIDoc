@@ -41,7 +41,17 @@ Guidelines for AI agents working in this repository.
 - **Document public classes and methods with Javadoc.** All public APIs must have Javadoc explaining their purpose,
   parameters, and return values.
 - **Keep the `README.md` up to date.** If a change affects how the project is configured, installed, or used, update the
-  README.
+  README. Do not leave it as a historical record.
+
+## Documentation Maintenance Rules
+
+- **Keep STRUCTURE.md in sync with the code layout.** Whenever you add, remove, or move a package, class, or configuration
+  file, update STRUCTURE.md to reflect the change. Do not leave the structure map stale.
+- **Keep deep-dive docs current.** If a change affects the architecture, CLI options, output format, or any detail
+  described in `documentation/DOCLET.md`, `documentation/MCP.md`, `documentation/JACKSON.md`, `documentation/SECURITY.md`,
+  or `documentation/JDK-SOURCES.md`, update those files too.
+- **Do not update documentation "later."** If a change affects the docs, update them in the same session — before moving on.
+  Stale documentation is worse than no documentation.
 
 ## File Reading Rules
 
@@ -70,7 +80,8 @@ These rules prevent infinite loops and redundant work when reading files.
 
 ## Project References
 
-Deep-dive documentation lives in the `documentation/` directory. Consult these files before working in the areas they cover — they prevent context loss and keep AGENTS.md from growing out of control.
+Deep-dive documentation lives in the `documentation/` directory. Consult these files before working in the areas they
+cover — they prevent context loss and keep AGENTS.md from growing out of control.
 
 - **[Project Structure](documentation/STRUCTURE.md)** — High-level layout, config hierarchy, build output
 - **[Doclet](documentation/DOCLET.md)** — JSON doclet architecture, CLI options, output format, ChromaDB chunking
