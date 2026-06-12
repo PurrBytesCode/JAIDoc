@@ -1,0 +1,8 @@
+spring:
+  ai:
+    mcp:
+      server:
+        enabled: true
+        name: JaiDoc
+        protocol: streamable
+        stdio: true

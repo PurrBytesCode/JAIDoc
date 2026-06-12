@@ -1,0 +1,8 @@
+{
+  "baseUrl": "http://localhost:11434/v1/chat/completions",
+  "id": "unsloth-gemma-4-12b-it",
+  "apiType": "OpenAICompletion",
+  "primaryModel": {
+    "id": "unsloth-gemma-4-12b-it"
+  }
+}

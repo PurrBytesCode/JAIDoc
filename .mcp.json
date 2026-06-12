@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "jetbrains": {
+      "command": "npx.cmd",
+      "args": [
+        "@pyroprompts/mcp-stdio-to-streamable-http-adapter"
+      ],
+      "env": {
+        "URI": "http://127.0.0.1:64960/stream"
+      }
+    }
+  }
+}

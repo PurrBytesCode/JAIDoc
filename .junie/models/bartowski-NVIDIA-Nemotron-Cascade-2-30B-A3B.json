@@ -1,0 +1,8 @@
+{
+  "baseUrl": "http://localhost:11434/v1/chat/completions",
+  "id": "bartowski-NVIDIA-Nemotron-Cascade-2-30B-A3B",
+  "apiType": "OpenAICompletion",
+  "primaryModel": {
+    "id": "bartowski-NVIDIA-Nemotron-Cascade-2-30B-A3B"
+  }
+}
