@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:sqlite:./jaidoc.sqlite
+    driver-class-name: org.sqlite.JDBC
+    username: ${DB_USERNAME:jaidoc}
+    password: ${DB_PASSWORD}
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: create-only
+    show-sql: ${DB_SHOW_SQL:true}
+  sql:
+    init:
+      data-locations: classpath:/data/*.sql
+      mode: always
