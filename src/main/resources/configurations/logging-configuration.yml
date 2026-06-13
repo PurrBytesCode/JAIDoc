@@ -5,4 +5,4 @@ logging:
       max-history: ${LOGGING_MAX_HISTORY_DAYS:7}
   file:
     name: ${logging.file.path}/${spring.application.name}/output.log
-    path: ${LOGGING_PATH_DIRECTORY:/dev/logs}
+    path: ${LOGGING_PATH_DIRECTORY:./logs}
