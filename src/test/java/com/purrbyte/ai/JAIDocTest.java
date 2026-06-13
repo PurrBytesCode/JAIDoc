@@ -5,17 +5,12 @@ import com.purrbyte.ai.test.IntegrationTest;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.metrics.buffering.BufferingApplicationStartup;
-import tools.jackson.databind.json.JsonMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag(BaseTest.TAG_INTEGRATION)
 class JAIDocTest extends IntegrationTest {
-
-    @Autowired
-    protected JsonMapper jsonMapper;
 
     @Test
     @Order(1)

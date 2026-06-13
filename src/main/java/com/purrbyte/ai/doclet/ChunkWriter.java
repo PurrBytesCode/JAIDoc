@@ -79,7 +79,7 @@ final class ChunkWriter implements Closeable {
         out.close();
     }
 
-    private List<String> split(String text) {
+    List<String> split(String text) {
         List<String> parts = new ArrayList<>();
         if (text.length() <= maxChars) {
             parts.add(text);
@@ -101,7 +101,7 @@ final class ChunkWriter implements Closeable {
     /**
      * Finds the best cut point: paragraph > line > sentence > hard cut.
      */
-    private int bestBreak(String text, int start, int hardEnd) {
+    int bestBreak(String text, int start, int hardEnd) {
         int minAcceptable = start + (hardEnd - start) / 2; // don't cut too early
         int p = text.lastIndexOf("\n\n", hardEnd);
         if (p > minAcceptable) return p;

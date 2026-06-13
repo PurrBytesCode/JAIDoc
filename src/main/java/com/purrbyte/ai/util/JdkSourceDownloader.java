@@ -117,7 +117,7 @@ public class JdkSourceDownloader {
      * @return the version without the leading "jdk-" prefix if present
      * @throws IllegalArgumentException if the version does not conform to the expected pattern
      */
-    private static String normalizeVersion(String version) {
+    static String normalizeVersion(String version) {
         if (version != null && VERSION_PATTERN.matcher(version).matches()) {
             return version.substring(4);
         }

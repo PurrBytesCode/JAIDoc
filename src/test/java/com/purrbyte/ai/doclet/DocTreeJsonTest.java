@@ -11,11 +11,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Tag(BaseTest.TAG_UNIT)
 class DocTreeJsonTest extends UnitTest {
 
-    private final DocTreeJson docTreeJson = new DocTreeJson(jsonMapper);
-
     @Test
     @Order(1)
-    void normalize_collapsesMultipleSpaces() {
+    void normalize_collapsesMultipleConsecutiveSpaces() {
         String result = DocTreeJson.normalize("hello   world");
         assertThat(result).isEqualTo("hello world");
     }
@@ -25,13 +23,6 @@ class DocTreeJsonTest extends UnitTest {
     void normalize_preservesSingleNewline() {
         String result = DocTreeJson.normalize("hello\nworld");
         assertThat(result).isEqualTo("hello\nworld");
-    }
-
-    @Test
-    @Order(3)
-    void normalize_collapsesMultipleConsecutiveSpaces() {
-        String result = DocTreeJson.normalize("hello   world");
-        assertThat(result).isEqualTo("hello world");
     }
 
     @Test
@@ -197,14 +188,16 @@ class DocTreeJsonTest extends UnitTest {
     @Test
     @Order(26)
     void text_withNullList_returnsEmptyString() {
-        String result = docTreeJson.text(null);
+        DocTreeJson dtj = new DocTreeJson(jsonMapper);
+        String result = dtj.text(null);
         assertThat(result).isEqualTo("");
     }
 
     @Test
     @Order(27)
     void text_withEmptyList_returnsEmptyString() {
-        String result = docTreeJson.text(java.util.List.of());
+        DocTreeJson dtj = new DocTreeJson(jsonMapper);
+        String result = dtj.text(java.util.List.of());
         assertThat(result).isEqualTo("");
     }
 }
