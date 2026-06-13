@@ -2,7 +2,7 @@
 
 ## Setup
 
-The app uses Spring AI MCP Server with **streamable** protocol over **stdio**:
+The app uses Spring AI MCP Server with **streamable** protocol:
 
 ```yaml
 spring:
@@ -12,33 +12,27 @@ spring:
         enabled: true
         name: JaiDoc
         protocol: streamable
-        stdio: true
 ```
 
-Tools are not yet implemented — the MCP component is a stub.
+The `JavaDocMCP` component is a stub — no custom tools are yet implemented.
 
-## JetBrains MCP Adapter
+## JetBrains MCP Server
 
-The IDE connects via `.mcp.json` which proxies the MCP stdio server through
-`@pyroprompts/mcp-stdio-to-streamable-http-adapter`:
+The project ships with a pre-configured `.mcp.json` for direct streamable-HTTP connection to JetBrains:
 
 ```json
 {
   "mcpServers": {
-    "jetbrains": {
-      "command": "npx.cmd",
-      "args": [
-        "@pyroprompts/mcp-stdio-to-streamable-http-adapter"
-      ],
-      "env": {
-        "URI": "http://127.0.0.1:64960/stream"
-      }
+    "JetBrains": {
+      "type": "streamable-http",
+      "url": "http://127.0.0.1:64960/stream",
+      "headers": {}
     }
   }
 }
 ```
 
-The MCP server must be running on `127.0.0.1:64960` for the adapter to connect.
+This bypasses the stdio-to-HTTP adapter and connects directly to the JetBrains MCP Server plugin running on port `64960`.
 
 ### JetBrains Tools
 
@@ -48,8 +42,8 @@ Tools allow the AI model to execute actions on the host machine:
 
 | Tool                  | Description                                                                                                     | Parameters                                                                                                      |
 |-----------------------|-----------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
-| `read_file`           | Read file content from the filesystem                                                                           | `path` (string) — absolute path to the file                                                                     |
-| `write_file`          | Write content to a file, creating parent directories if needed                                                  | `path` (string) — absolute path, `content` (string) — file content                                              |
+| `read_file`           | Read file content from the filesystem                                                                           | `file_path` (string) — absolute path to the file, `mode` (string, optional), `start_line` (number, optional), `max_lines` (number, optional)          |
+| `write_file`          | Write content to a file, creating parent directories if needed                                                  | `file_path` (string) — absolute path, `content` (string) — file content                                                                       |
 | `edit_file`           | Edit a file by searching and replacing text                                                                     | `path` (string) — absolute path, `old_string` (string) — text to find, `new_string` (string) — replacement text |
 | `create_file`         | Create a new file with given content                                                                            | `path` (string) — absolute path, `content` (string) — file content                                              |
 | `delete_file`         | Delete a file from the filesystem                                                                               | `path` (string) — absolute path                                                                                 |
@@ -62,7 +56,6 @@ Tools allow the AI model to execute actions on the host machine:
 
 | Tool                         | Description                                                                                  | Parameters                                                                                                                                                        |
 |------------------------------|----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `search_in_files`            | Search for text within project files using IntelliJ's search engine                          | `searchText` (string) — substring to find, `directoryToSearch` (string, optional), `fileMask` (string, optional), `caseSensitive` (boolean, optional)             |
 | `search_in_files_by_text`    | Searches for a text substring within all files in the project using IntelliJ's search engine | `searchText` (string) — text substring to search for, `directoryToSearch` (string, optional), `fileMask` (string, optional), `caseSensitive` (boolean, optional)  |
 | `search_in_files_by_regex`   | Searches with a regex pattern within all files in the project using IntelliJ's search engine | `regexPattern` (string) — regex pattern to search for, `directoryToSearch` (string, optional), `fileMask` (string, optional), `caseSensitive` (boolean, optional) |
 | `search_regex`               | Search for regex matches within project files                                                | `q` (string) — regex pattern, `paths` (string array, optional) — glob patterns to filter results                                                                  |
@@ -106,7 +99,6 @@ Tools allow the AI model to execute actions on the host machine:
 | `build_project`             | Build the project or compile specific files                                                            | `filesToRebuild` (string array, optional), `timeout` (number, optional), `projectPath` (string, optional)                                                                                                                             |
 | `execute_run_configuration` | Run either an existing run configuration by name or a temporary run configuration from a code location | `configurationName` (string, optional), `filePath` (string, optional), `line` (number, optional), `timeout` (number, optional), `waitForExit` (boolean, optional)                                                                     |
 | `execute_terminal_command`  | Executes a specified shell command in the IDE's integrated terminal                                    | `command` (string) — command to execute, `executeInShell` (boolean, optional), `reuseExistingTerminalWindow` (boolean, optional), `timeout` (number, optional), `maxLinesCount` (number, optional), `truncateMode` (string, optional) |
-| `debug_run`                 | Debug a run configuration or executable code location                                                  | `configurationName` (string, optional), `filePath` (string, optional), `line` (number, optional)                                                                                                                                      |
 | `runNotebookCell`           | Execute one or all cells of a Jupyter notebook                                                         | `file_path` (string) — absolute path to the .ipynb notebook, `cell_id` (string, optional) — Jupyter cell ID, `projectPath` (string, optional)                                                                                         |
 
 #### Database Operations

@@ -31,7 +31,7 @@ Directory is configurable via:
 jdk:
   source:
     download:
-      directory: ${JDK_SOUCE_DOWNLOAD_ZIP:./jdk-sources}
+      directory: ${JDK_SOURCE_DOWNLOAD_ZIP:./jdk-sources}
 ```
 
 ## Version Format

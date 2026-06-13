@@ -15,9 +15,9 @@ Metrics export is disabled by default.
 
 ## Logging Paths
 
-Log file paths use Linux-style defaults:
+Log file paths use cross-platform defaults:
 
-- Directory: `/dev/logs` (override with `LOGGING_PATH_DIRECTORY`)
+- Directory: `./logs` (override with `LOGGING_PATH_DIRECTORY`)
 - File: `{dir}/{spring.application.name}/output.log`
 
-On Windows, these paths don't exist — set `LOGGING_PATH_DIRECTORY` to a valid directory.
+The default path `./logs` is resolved relative to the working directory and works on both Linux/Unix and Windows.
