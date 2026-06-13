@@ -22,11 +22,9 @@ JAIDoc/
     ├── main/
     │   ├── java/com/purrbyte/ai/
     │   │   ├── JAIDoc.java          # Spring Boot entry point
-    │   │   ├── configuration/       # JSON serialization config
-    │   │   ├── doclet/              # JSON Javadoc serialization
-    │   │   ├── mcp/                 # MCP server (stub)
-    │   │   ├── service/             # Business logic
-    │   │   └── util/                # Shared utilities
+	│   │   ├── configuration/       # JSON serialization config
+	│   │   ├── doclet/              # JSON Javadoc serialization
+	│   │   └── util/                # Shared utilities
     │   └── resources/
     │       ├── application.yaml     # Main config
     │       └── configurations/      # Profile YAMLs
