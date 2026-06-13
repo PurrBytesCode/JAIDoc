@@ -15,7 +15,8 @@ JAIDoc/
 │   ├── JDK-SOURCES.md               # JDK source downloader
 │   ├── MCP.md                       # MCP server setup
 │   ├── SECURITY.md                  # Actuator restrictions, logging paths
-│   └── STRUCTURE.md                 # This file
+│   ├── STRUCTURE.md                 # This file
+│   └── TEST.md                      # Test architecture, class hierarchy, tags
 ├── plans/                           # Implementation plans (see AGENTS.md)
 └── src/
     ├── main/

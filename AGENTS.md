@@ -49,14 +49,15 @@ Guidelines for AI agents working in this repository.
   configuration file, update STRUCTURE.md to reflect the change. Do not leave the structure map stale.
 - **Keep deep-dive docs current.** If a change affects the architecture, CLI options, output format, or any detail
   described in `documentation/DOCLET.md`, `documentation/MCP.md`, `documentation/JACKSON.md`,
-  `documentation/SECURITY.md`, or `documentation/JDK-SOURCES.md`, update those files too.
+  `documentation/SECURITY.md`, `documentation/JDK-SOURCES.md`, or `documentation/TEST.md`, update those files too.
 - **Do not update documentation "later."** If a change affects the docs, update them in the same session — before moving
   on. Stale documentation is worse than no documentation.
 
 ## MCP Tool Priority
 
 - **Prefer MCP-provided tools over shell commands.** When an MCP server provides a tool for a task (file operations,
-  searches, introspection, etc.), use it instead of spawning a shell process to achieve the same result.
+  searches, introspection, etc.), use it instead of spawning a shell process to achieve the same result. Always use
+  `mcp__jetbrains__*` tools when available instead of `Bash` or `PowerShell` for IDE-related operations.
 
 ## File Reading Rules
 
@@ -94,6 +95,7 @@ cover — they prevent context loss and keep AGENTS.md from growing out of contr
 - **[Jackson Config](documentation/JACKSON.md)** — Customizer pattern, YAML mapper convention
 - **[Security Config](documentation/SECURITY.md)** — Actuator restrictions, logging paths
 - **[JDK Sources](documentation/JDK-SOURCES.md)** — JDK source downloader, async execution, version parsing
+- **[Test Architecture](documentation/TEST.md)** — Test class hierarchy, tags, JsonMapper setup
 
 ## Plan Files Rules
 
