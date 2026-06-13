@@ -1,0 +1,8 @@
+{
+  "baseUrl": "http://localhost:11434/v1/chat/completions",
+  "id": "bartowski-Nex-N2-mini",
+  "apiType": "OpenAICompletion",
+  "primaryModel": {
+    "id": "bartowski-Nex-N2-mini"
+  }
+}
