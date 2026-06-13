@@ -1,9 +1,7 @@
 {
     "mcpServers": {
         "JetBrains": {
-            "type": "streamable-http",
-            "url": "http://127.0.0.1:64960/stream",
-            "headers": {}
+            "url": "http://127.0.0.1:64960/stream"
         }
     }
 }
