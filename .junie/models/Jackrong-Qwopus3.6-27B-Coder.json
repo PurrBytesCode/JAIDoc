@@ -1,0 +1,8 @@
+{
+  "baseUrl": "http://localhost:11434/v1/chat/completions",
+  "id": "Jackrong-Qwopus3.6-27B-Coder",
+  "apiType": "OpenAICompletion",
+  "primaryModel": {
+    "id": "Jackrong-Qwopus3.6-27B-Coder"
+  }
+}
