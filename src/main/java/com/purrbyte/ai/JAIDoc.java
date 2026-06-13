@@ -20,7 +20,7 @@ public class JAIDoc {
         springApplication.run(args);
     }
 
-    private static BufferingApplicationStartup prepareStartup() {
+    static BufferingApplicationStartup prepareStartup() {
         int startupSize = getStartupSize();
         String startupFilter = getStartupFilter();
         log.info("Preparing startup Buffer: {} - {}", startupSize, startupFilter);
@@ -29,11 +29,11 @@ public class JAIDoc {
         return bufferingApplicationStartup;
     }
 
-    private static int getStartupSize() {
+    static int getStartupSize() {
         return 2048;
     }
 
-    private static String getStartupFilter() {
+    static String getStartupFilter() {
         return "spring.beans.instantiate";
     }
 }

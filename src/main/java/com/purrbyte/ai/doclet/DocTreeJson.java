@@ -346,7 +346,7 @@ final class DocTreeJson {
             "p", "br", "li", "tr", "div", "hr", "blockquote", "pre",
             "h1", "h2", "h3", "h4", "h5", "h6", "dt", "dd");
 
-    private static String decodeEntity(String name) {
+    static String decodeEntity(String name) {
         if (name.startsWith("#")) {
             try {
                 int cp = name.startsWith("#x") || name.startsWith("#X")
@@ -390,7 +390,7 @@ final class DocTreeJson {
     /**
      * Collapses repeated spaces while preserving significant newlines.
      */
-    private static String normalize(String s) {
+    static String normalize(String s) {
         StringBuilder sb = new StringBuilder(s.length());
         boolean lastSpace = false;
         boolean lastNewline = false;
