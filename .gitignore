@@ -7,6 +7,7 @@ target/
 !**/src/test/**/target/
 data.json
 data.xml
+logs/
 
 ### AI ###
 .agents/
