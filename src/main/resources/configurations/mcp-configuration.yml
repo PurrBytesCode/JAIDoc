@@ -5,4 +5,3 @@ spring:
         enabled: true
         name: JaiDoc
         protocol: streamable
-        stdio: true
