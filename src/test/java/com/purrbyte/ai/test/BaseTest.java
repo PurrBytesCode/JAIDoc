@@ -12,4 +12,14 @@ import org.springframework.test.context.ActiveProfiles;
 @ExtendWith(TimeExtension.class)
 @ActiveProfiles({"test"})
 public abstract class BaseTest {
+
+    /**
+     * JUnit 5 tag for unit tests — run with {@code mvn test -Dgroups=UNIT} in CI.
+     */
+    public static final String TAG_UNIT = "UNIT";
+
+    /**
+     * JUnit 5 tag for integration tests — run with {@code mvn test -Dgroups=INTEGRATION} in CI.
+     */
+    public static final String TAG_INTEGRATION = "INTEGRATION";
 }

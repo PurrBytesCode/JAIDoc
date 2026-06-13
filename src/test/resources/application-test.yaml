@@ -1,0 +1,4 @@
+jdk:
+  source:
+    download:
+      directory: target/test-jdk-source
