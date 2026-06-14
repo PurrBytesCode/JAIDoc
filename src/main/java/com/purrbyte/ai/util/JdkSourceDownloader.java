@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -12,15 +11,11 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Slf4j
@@ -76,38 +71,6 @@ public class JdkSourceDownloader {
                 throw new CompletionException(new IOException("Failed to download JDK source for version: " + version, e));
             }
         }, downloadExecutor);
-    }
-
-    /**
-     * Lists the available JDK versions in the OpenJDK repository.
-     *
-     * @return a list of version strings, sorted in descending order by tag name
-     */
-    public List<String> listAvailableVersions() {
-        String githubTagsApi = "https://api.github.com/repos/openjdk/jdk/tags";
-        String body;
-        List<String> versions = new ArrayList<>();
-        try {
-            body = restClient.get()
-                    .uri(URI.create(githubTagsApi))
-                    .retrieve()
-                    .body(String.class);
-        } catch (RestClientException e) {
-            log.error("Failed to fetch tags from GitHub", e);
-            return versions;
-        }
-        if (body == null || body.isBlank()) {
-            log.error("Empty response from GitHub tags API");
-            return versions;
-        }
-        Pattern pattern = Pattern.compile("\"name\"\\s*:\\s*\"(jdk-[^\"]+)\"");
-        Matcher matcher = pattern.matcher(body);
-        while (matcher.find()) {
-            String tag = matcher.group(1);
-            versions.add(tag.substring(5));
-        }
-        versions.sort(Comparator.reverseOrder());
-        return versions;
     }
 
     /**
