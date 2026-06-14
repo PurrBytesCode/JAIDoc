@@ -47,6 +47,7 @@ Guidelines for AI agents working in this repository.
 
 - **Keep STRUCTURE.md in sync with the code layout.** Whenever you add, remove, or move a package, class, or
   configuration file, update STRUCTURE.md to reflect the change. Do not leave the structure map stale.
+- **Do not proactively update the JDK version list.** Only update when the user explicitly asks. When updating, run `scripts\update-jdk-versions.ps1`, take the output, and replace ONLY the content between `<!-- BEGIN: JDK Current Versions -->` and `<!-- END: JDK Current Versions -->` in `documentation/JDK-SOURCES.md`. Do not modify any other section of the file. See `documentation/JDK-SOURCES.md` for detailed instructions.
 - **Keep deep-dive docs current.** If a change affects the architecture, CLI options, output format, or any detail
   described in `documentation/DOCLET.md`, `documentation/MCP.md`, `documentation/JACKSON.md`,
   `documentation/SECURITY.md`, `documentation/JDK-SOURCES.md`, or `documentation/TEST.md`, update those files too.
