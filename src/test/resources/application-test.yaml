@@ -2,3 +2,9 @@ jdk:
   source:
     download:
       directory: target/test-jdk-source
+
+doclet:
+  work:
+    directory: target/test-jdk-doc-workspace
+  output:
+    directory: target/test-javadoc-output
