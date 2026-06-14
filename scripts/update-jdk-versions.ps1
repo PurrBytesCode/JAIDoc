@@ -57,14 +57,20 @@ function Format-JdkVersions {
 $lines = @()
 $lines += "## Current Versions"
 $lines += ""
-$lines += "The following update versions are currently available on [Oracle's JDK Release Notes](https://www.oracle.com/java/technologies/javase/jdk-relnotes-index.html):"
+$lines += "<!-- BEGIN: JDK Current Versions -->"
+$intro = "The following update versions are currently available on [Oracle's JDK Release Notes](https://www.oracle.com/java/technologies/javase/jdk-relnotes-index.html):"
+$lines += $intro
 $lines += ""
 
 foreach ($config in $JdkConfigs) {
     $formatted = Format-JdkVersions -JdkVersion $config.Version -UpdateNumbers $JdkVersions[$config.Version]
-    $lines += "**JDK $($config.Version)** -- Update versions: $formatted"
     $lines += ""
+    $lines += "### JDK $($config.Version)"
+    $lines += ""
+    $lines += "Update versions: $formatted"
 }
+
+$lines += "<!-- END: JDK Current Versions -->"
 
 $markdownContent = ($lines | Out-String).TrimEnd()
 
