@@ -52,7 +52,9 @@ Test class hierarchy classes carry JUnit 5 `@Tag` annotations so the CI pipeline
 independently. Tag constants are defined in `BaseTest`:
 
 - **`BaseTest.TAG_UNIT`** — run with `mvn test -Dgroups=UNIT` or `<groups>UNIT</groups>` in surefire
-- **`BaseTest.TAG_INTEGRATION`** — run with `mvn test -Dgroups=INTEGRATION` or `<groups>INTEGRATION</groups>`
+- **`BaseTest.TAG_INTEGRATION`** — run with `mvn test -Dgroups=INTEGRATION` or `<groups>INTEGRATION</groups>`.
+  Integration tests are skipped unless the property `test.integration.enabled=true` is set
+  (via environment variable, system property, or `application-test.yaml`).
 
 Concrete unit test classes reference `BaseTest.TAG_UNIT`; integration test classes reference `BaseTest.TAG_INTEGRATION`.
 This prevents integration tests from breaking the CI when Spring context startup fails.
