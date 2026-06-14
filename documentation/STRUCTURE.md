@@ -23,6 +23,9 @@ JAIDoc/
 │   ├── SECURITY.md                  # Actuator restrictions, logging paths
 │   ├── STRUCTURE.md                 # This file
 │   └── TEST.md                      # Test architecture, class hierarchy, tags
+├── features/                        # Feature workspaces (see AGENTS.md)
+│   ├── FEATURE.md                   # Feature index
+│   └── example/                     # Template feature workspace
 ├── plans/                           # Implementation plans (see AGENTS.md)
 └── src/
     ├── main/

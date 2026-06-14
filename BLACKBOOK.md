@@ -59,14 +59,11 @@ graph TB
     end
 
     subgraph FEATURES["🗺️ Feature Workspaces<br/>Actual feature tracking"]
-        FEAT1["features/auth-token-refresh/<br/>plan.md, data-flow.png, scripts/"]
-        FEAT2["features/spring-docs-ingestion/<br/>plan.md, diagrams/, helpers/"]
-        FEAT3["features-archived-docs/<br/>plan.md, mock-requests.json"]
+        FEAT1["features/example/<br/>plan.md, data-flow.md,<br/>mock-requests.json, scripts/"]
     end
 
     subgraph PLANS["🗺️ Implementation Plans<br/>Plan lifecycle tracking"]
-        PLAN1["plans/doclet-<br/>refactor.md<br/>active"]
-        PLAN2["plans/auth-<br/>refresh.md<br/>completed"]
+        PLAN1["plans/<br/>active.md"]
     end
 
     subgraph CODE["💻 Source Code"]
@@ -82,24 +79,14 @@ graph TB
     CLAUDE -->|References| JDK
     CLAUDE -->|References| TEST
     CLAUDE -->|Guides| FEAT1
-    CLAUDE -->|Guides| FEAT2
-    CLAUDE -->|Guides| FEAT3
     CLAUDE -->|Guides| PLAN1
-    CLAUDE -->|Guides| PLAN2
     AGENTS -->|Same as| CLAUDE
     BLACKBOOK -->|Logs decisions| CLAUDE
     BLACKBOOK -->|Cross - references| FEAT1
-    BLACKBOOK -->|Cross - references| FEAT2
-    BLACKBOOK -->|Cross - references| FEAT3
     BLACKBOOK -->|Cross - references| PLAN1
-    BLACKBOOK -->|Cross - references| PLAN2
     FEAT1 -->|Defines| MAIN
-    FEAT2 -->|Defines| MAIN
-    FEAT3 -->|Defines| MAIN
     PLAN1 -->|Informs| MAIN
-    PLAN2 -->|Informs| MAIN
     FEAT1 -->|Inputs| PLAN1
-    FEAT2 -->|Inputs| PLAN1
     STRUCT -->|Describes| MAIN
     STRUCT -->|Describes| TEST_SRC
     DOCLET -->|Explains| MAIN
@@ -125,20 +112,12 @@ JAIDoc/
 │   ├── 📖 JDK-SOURCES.md                 ← JDK source ingestion pipeline
 │   └── 📖 TEST.md                        ← Test class hierarchy & tags
 ├── 🗺️ features/                         ← 🗺️ Feature workspaces (actual feature tracking)
-│   ├── 📂 auth-token-refresh/            ← Feature: JWT token refresh flow
-│   │   ├── 📄 plan.md
-│   │   ├── 📄 data-flow.png
-│   │   ├── 📄 mock-requests.json
-│   │   ├── 📂 scripts/
-│   │   └── 📄 notes.md
-│   ├── 📂 spring-docs-ingestion/         ← Feature: Spring Boot docs ingestion
-│   │   ├── 📄 plan.md
-│   │   ├── 📄 diagrams/
-│   │   ├── 📂 helpers/
-│   │   └── 📄 notes.md
-│   └── 📂 archived-docs/                 ← Feature: Versioned/archived doc support
+│   ├── 📄 FEATURE.md                     ← Feature index
+│   └── 📂 example/                       ← Template feature workspace
 │       ├── 📄 plan.md
+│       ├── 📄 data-flow.md
 │       ├── 📄 mock-requests.json
+│       ├── 📂 scripts/
 │       └── 📄 notes.md
 ├── 🗺️ plans/                            ← 🗺️ Implementation plans with lifecycle tracking
 │   ├── 📄 ACTIVE.md                      ← Active/completed/deprecated plan index
@@ -163,29 +142,20 @@ JAIDoc/
 > ports, dummy credentials. No issues when running tests. In the future, this is planned to be adjusted for greater
 > flexibility.
 
-**Workspace (features/ — proposed addition to the repo)**
-
-> ⚠️ **Proposal only** — This structure is a design idea, not yet implemented. Needs validation to determine if it's
-> functional.
+**Workspace (features/ — feature tracking)**
 
 ```
 features/
-├── 📂 auth-token-refresh/               ← Feature: JWT token refresh flow
-│   ├── 📄 plan.md                       ← Implementation plan
-│   ├── 📄 data-flow.png                 ← Architecture diagram
-│   ├── 📄 mock-requests.json            ← Mock API responses
-│   ├── 📂 scripts/                      ← Helper scripts for testing
-│   └── 📄 notes.md                      ← Observations & decisions
-├── 📂 spring-docs-ingestion/            ← Feature: Spring Boot docs ingestion
-│   ├── 📄 plan.md
-│   ├── 📄 diagrams/
-│   ├── 📂 helpers/
-│   └── 📄 notes.md
-└── 📂 archived-docs/                    ← Feature: Versioned/archived doc support
-    ├── 📄 plan.md
-    ├── 📄 mock-requests.json
-    └── 📄 notes.md
+├── FEATURE.md                           ← Feature index
+└── example/                             ← Template feature workspace
+    ├── plan.md                          ← Implementation plan with YAML frontmatter
+    ├── data-flow.md                     ← Data flow description with sequence diagram
+    ├── mock-requests.json               ← Mock API responses for testing
+    ├── scripts/                         ← Helper scripts (validate.sh)
+    └── notes.md                         ← Observations & decisions
 ```
+
+See `features/` for the directory layout and the example template.
 
 #### 📊 Rule File Summary
 
@@ -239,14 +209,14 @@ features/
 
 #### 🔄 How Data Moves During a Feature
 
-| Step                  | Action                          | Files Read                                              | Files Written                | AI Context Used                        |
-|-----------------------|---------------------------------|---------------------------------------------------------|------------------------------|----------------------------------------|
-| **1. Discovery**      | Understand scope & constraints  | `CLAUDE.md` / `AGENTS.md`, `docs/*.md`                  | —                            | Rule constraints + domain context      |
-| **2. Feature Design** | Define feature workspace        | `CLAUDE.md` / `AGENTS.md`, `docs/*.md`                  | `features/<name>/*`          | Rule constraints + deep-dive docs      |
-| **3. Planning**       | Write implementation plan       | `CLAUDE.md` / `AGENTS.md`, `docs/*.md`, `features/*`    | `plans/<name>.md`            | Rule constraints + feature inputs      |
-| **4. Implementation** | Code the feature                | `CLAUDE.md` / `AGENTS.md`, `docs/*.md`, `src/main/*`    | `src/main/*`                 | Rules + reference docs + existing code |
-| **5. Verification**   | Run tests & validate            | `CLAUDE.md` / `AGENTS.md`, `docs/TEST.md`, `src/test/*` | —                            | Test conventions + rule constraints    |
-| **6. Logging**        | Record decisions & observations | `CLAUDE.md` / `AGENTS.md`, `BLACKBOOK.md`               | `BLACKBOOK.md`               | Rules for documentation format         |
+| Step                  | Action                          | Files Read                                              | Files Written       | AI Context Used                        |
+|-----------------------|---------------------------------|---------------------------------------------------------|---------------------|----------------------------------------|
+| **1. Discovery**      | Understand scope & constraints  | `CLAUDE.md` / `AGENTS.md`, `docs/*.md`                  | —                   | Rule constraints + domain context      |
+| **2. Feature Design** | Define feature workspace        | `CLAUDE.md` / `AGENTS.md`, `docs/*.md`                  | `features/<name>/*` | Rule constraints + deep-dive docs      |
+| **3. Planning**       | Write implementation plan       | `CLAUDE.md` / `AGENTS.md`, `docs/*.md`, `features/*`    | `plans/<name>.md`   | Rule constraints + feature inputs      |
+| **4. Implementation** | Code the feature                | `CLAUDE.md` / `AGENTS.md`, `docs/*.md`, `src/main/*`    | `src/main/*`        | Rules + reference docs + existing code |
+| **5. Verification**   | Run tests & validate            | `CLAUDE.md` / `AGENTS.md`, `docs/TEST.md`, `src/test/*` | —                   | Test conventions + rule constraints    |
+| **6. Logging**        | Record decisions & observations | `CLAUDE.md` / `AGENTS.md`, `BLACKBOOK.md`               | `BLACKBOOK.md`      | Rules for documentation format         |
 
 #### 🗺️ Plan File Structure
 
@@ -277,16 +247,16 @@ date: YYYY-MM-DD
 
 **Plan content structure:**
 
-| Section             | Purpose                            | Example                                          |
-|---------------------|------------------------------------|--------------------------------------------------|
-| `# Title`           | Feature name                       | `# Auth Token Refresh`                           |
-| `## Context`        | Why this feature exists            | `JWT tokens expire every 15min`                  |
-| `## Feature Inputs` | Feature workspace references       | `features/auth-token-refresh/data-flow.png`      |
-| `## Scope`          | What's in/out of scope             | `In: refresh flow, Out: token rotation`          |
-| `## Implementation` | Step-by-step approach              | `1. Add RefreshTokenService ...`                 |
-| `## Data Flow`      | How data moves through the feature | `Request → TokenService → HTTP call`             |
-| `## Tests`          | Expected test coverage             | `Unit: TokenService, Integration: /auth/refresh` |
-| `## Notes`          | Edge cases & gotchas               | `Rate limiting on refresh endpoint`              |
+| Section             | Purpose                            | Example                                        |
+|---------------------|------------------------------------|------------------------------------------------|
+| `# Title`           | Feature name                       | `# JDK Docs Ingestion`                         |
+| `## Context`        | Why this feature exists            | `JDK docs are locked in HTML, not queryable`   |
+| `## Feature Inputs` | Feature workspace references       | `features/example/data-flow.md`                |
+| `## Scope`          | What's in/out of scope             | `In: JDK source → JSON, Out: Spring Boot`      |
+| `## Implementation` | Step-by-step approach              | `1. Download JDK source ...`                   |
+| `## Data Flow`      | How data moves through the feature | `Request → Doclet → JSON output`               |
+| `## Tests`          | Expected test coverage             | `Unit: JsonDoclet, Integration: DocletService` |
+| `## Notes`          | Edge cases & gotchas               | `Zip-slip protection during extraction`        |
 
 **Key:** The `## Feature Inputs` section explicitly references feature workspace elements that inform the plan.
 A plan should never duplicate feature workspace content — it should reference it.
@@ -309,21 +279,13 @@ complete artifact that stands on its own.
 
 ```
 features/
-├── auth-token-refresh/                    ← Feature: JWT token refresh flow
-│   ├── 📄 plan.md                         ← Implementation plan for this feature
-│   ├── 📄 data-flow.png                   ← Architecture diagram
-│   ├── 📄 mock-requests.json              ← Mock API responses
-│   ├── 📂 scripts/                        ← Helper scripts for testing
-│   └── 📄 notes.md                        ← Observations & decisions
-├── spring-docs-ingestion/                 ← Feature: Spring Boot docs ingestion
-│   ├── 📄 plan.md
-│   ├── 📄 diagrams/
-│   ├── 📂 helpers/
-│   └── 📄 notes.md
-└── archived-docs/                         ← Feature: Versioned/archived doc support
-    ├── 📄 plan.md
-    ├── 📄 mock-requests.json
-    └── 📄 notes.md
+├── FEATURE.md                           ← Feature index
+└── example/                             ← Template feature workspace
+    ├── plan.md                          ← Implementation plan with YAML frontmatter
+    ├── data-flow.md                     ← Data flow description with sequence diagram
+    ├── mock-requests.json               ← Mock API responses for testing
+    ├── scripts/                         ← Helper scripts (validate.sh)
+    └── notes.md                         ← Observations & decisions
 ```
 
 **Naming rules:**
@@ -335,15 +297,15 @@ features/
 
 #### 📝 Feature Workspace Conventions
 
-| Field               | Purpose                            | Example                                          |
-|---------------------|------------------------------------|--------------------------------------------------|
-| `# Title`           | Feature name                       | `# Auth Token Refresh`                           |
-| `## Context`        | Why this feature exists            | `JWT tokens expire every 15min`                  |
-| `## Scope`          | What's in/out of scope             | `In: refresh flow, Out: token rotation`          |
-| `## Implementation` | Step-by-step approach              | `1. Add RefreshTokenService ...`                 |
-| `## Data Flow`      | How data moves through the feature | `Request → TokenService → HTTP call`             |
-| `## Tests`          | Expected test coverage             | `Unit: TokenService, Integration: /auth/refresh` |
-| `## Notes`          | Edge cases & gotchas               | `Rate limiting on refresh endpoint`              |
+| Field               | Purpose                            | Example                                        |
+|---------------------|------------------------------------|------------------------------------------------|
+| `# Title`           | Feature name                       | `# JDK Docs Ingestion`                         |
+| `## Context`        | Why this feature exists            | `JDK docs are locked in HTML, not queryable`   |
+| `## Scope`          | What's in/out of scope             | `In: JDK source → JSON, Out: Spring Boot`      |
+| `## Implementation` | Step-by-step approach              | `1. Download JDK source ...`                   |
+| `## Data Flow`      | How data moves through the feature | `Request → Doclet → JSON output`               |
+| `## Tests`          | Expected test coverage             | `Unit: JsonDoclet, Integration: DocletService` |
+| `## Notes`          | Edge cases & gotchas               | `Zip-slip protection during extraction`        |
 
 #### 🔗 Cross-Reference Map
 
@@ -364,7 +326,9 @@ BLACKBOOK.md ───┬────── CLAUDE.md / AGENTS.md  ← "Document
                 └────── src/*                 ← "Log implementation decisions"
 
 features/* ─────┬────── CLAUDE.md / AGENTS.md  ← "Follow rules for implementation"
+                ├────── FEATURE.md           ← "Feature index — read first"
                 ├────── docs/*.md             ← "Reference deep-dive context"
+                ├────── plans/*              ← "Cross-reference plan lifecycle"
                 └────── src/*                 ← "Describe implementation"
 
 plans/* ────────┬────── CLAUDE.md / AGENTS.md  ← "Follow rules for implementation"
@@ -375,12 +339,12 @@ plans/* ────────┬────── CLAUDE.md / AGENTS.md  ←
 
 #### 🎯 Key Design Principles
 
-| Principle                          | Description                                                                                                          |
-|------------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| **📐 Separation of Concerns**      | Rules (CLAUDE.md), references (docs/), and scratchpad (BLACKBOOK.md) serve different purposes                        |
-| **🔄 Single Source of Truth**      | CLAUDE.md is the canonical rule file; AGENTS.md mirrors it for other tools                                           |
-| **🔍 AI-First Context**            | Reference docs exist so AI doesn't need to read source code to understand implementation details                     |
-| **📝 Traceable Decisions**         | BLACKBOOK.md captures the "why" behind decisions, not just the "what"                                                |
-| **🗺️ Feature-Driven Development** | Every feature has a workspace folder that documents intent before implementation — **implemented**                   |
-| **📋 Plan-Driven Implementation** | Plans use feature workspace elements as inputs and drive the actual coding phase — **implemented**                    |
-| **📚 Living Documentation**        | Documentation must be updated in the same session as code changes — stale docs are worse than no docs                |
+| Principle                          | Description                                                                                           |
+|------------------------------------|-------------------------------------------------------------------------------------------------------|
+| **📐 Separation of Concerns**      | Rules (CLAUDE.md), references (docs/), and scratchpad (BLACKBOOK.md) serve different purposes         |
+| **🔄 Single Source of Truth**      | CLAUDE.md is the canonical rule file; AGENTS.md mirrors it for other tools                            |
+| **🔍 AI-First Context**            | Reference docs exist so AI doesn't need to read source code to understand implementation details      |
+| **📝 Traceable Decisions**         | BLACKBOOK.md captures the "why" behind decisions, not just the "what"                                 |
+| **🗺️ Feature-Driven Development** | Every feature has a workspace folder that documents intent before implementation — **implemented**    |
+| **📋 Plan-Driven Implementation**  | Plans use feature workspace elements as inputs and drive the actual coding phase — **implemented**    |
+| **📚 Living Documentation**        | Documentation must be updated in the same session as code changes — stale docs are worse than no docs |
