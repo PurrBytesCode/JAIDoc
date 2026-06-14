@@ -6,7 +6,7 @@
 JAIDoc/
 ├── AGENTS.md                        # AI agent guidelines (this repo's rules)
 ├── README.md                        # Project overview
-├── pom.xml                          # Maven build (Spring Boot 4.0.6, Java 25)
+├── pom.xml                          # Maven build (Spring Boot 4.1.0, Java 25)
 ├── mvnw / mvnw.cmd                  # Maven wrapper
 ├── .mcp.json                        # MCP server configuration
 ├── documentation/                   # Deep-dive docs

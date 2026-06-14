@@ -16,6 +16,11 @@ behind HTML pages, versioned separately, and not queryable by AI models in conte
 verify how a method works or what a class does, you have to leave your IDE, search Google, navigate to the docs site,
 and find the right version.
 
+JAIDoc is also an **example for the community** on how to organize, track, and expose technical documentation through
+MCP tools. Currently focused on the JDK SDK as a foundation, the project aims to grow into Spring Boot — where
+documentation is far more complex (migration guides, how-to guides, AsciiDoc formats, cross-references) — and serve as
+a reference for building your own documentation MCP servers.
+
 JAIDoc solves this by letting the local AI model (Qwen 3.6, Gemma-4, or QWOPUS — running on your machine) answer these
 questions directly, without relying on cloud APIs or sending code context to third-party services.
 
@@ -26,7 +31,8 @@ It does this by:
 3. **Exposing** it through the MCP protocol so AI models can query it directly
 
 This project demonstrates the full stack: doclet → JSON → vector DB → MCP tools. It's meant to be studied, adapted, and
-used as a reference for building your own documentation MCP servers.
+used as a reference for building your own documentation MCP servers — starting with the JDK SDK and growing into Spring
+Boot's more complex documentation ecosystem.
 
 ## Local AI Infrastructure
 
@@ -45,45 +51,53 @@ complexity:
 
 ### Models
 
-| Model                                         | Quantization | Context Size | Parallel-Slots |  Preferred agent   | Max (T/S) | Task             | URL                                                                               |
-|-----------------------------------------------|:------------:|:------------:|:--------------:|:------------------:|----------:|:-----------------|-----------------------------------------------------------------------------------|
-| LFM2.5-8B-A1B                                 |  UD-IQ4_NL   |  256K (MAX)  |       1        |       Junie        |           | Simple Code      | https://huggingface.co/unsloth/LFM2.5-8B-A1B-GGUF                                 |
-| Mellum2-12B-A2.5B                             |    Q4_K_M    |  128K (MAX)  |       1        |    AI Assistant    |           | Single task code | https://huggingface.co/JetBrains/Mellum2-12B-A2.5B-Thinking-GGUF-Q4_K_M           |
-| Nex-N2-mini                                   |    IQ4_NL    |  256K (MAX)  |       1        | Junie, Claude COde |       105 | Very Hard Code   | https://huggingface.co/bartowski/nex-agi_Nex-N2-mini-GGUFF                        |
-| NVIDIA-Nemotron-3-Nano-Omni-30B-A3B-Reasoning |  IQ4_NL_XL   |  256K (MAX)  |       1        |       Junie        |       130 | General          | https://huggingface.co/unsloth/NVIDIA-Nemotron-3-Nano-Omni-30B-A3B-Reasoning-GGUF |
-| NVIDIA-Nemotron-Cascade-2-30B-A3B             |    IQ4_NL    |   1M (MAX)   |       1        |       Junie        |       160 | Single task code | https://huggingface.co/bartowski/nvidia_Nemotron-Cascade-2-30B-A3B-GGUF           |
-| Qwen3.6-27B                                   |    IQ4_NL    |  256K (MAX)  |       1        |       Junie        |        50 | Very Hard Code   | https://huggingface.co/unsloth/Qwen3.6-27B-GGUF                                   |
-| Qwen3.6-27B-MTP                               |    IQ4_NL    |  256K (MAX)  |       1        |       Junie        |        50 | Very Hard Code   | https://huggingface.co/unsloth/Qwen3.6-27B-MTP-GGUF                               |
-| Qwen3.6-35B-A3B                               | UD-IQ4_NL_XL |  256K (MAX)  |       1        |       Junie        |       100 | Hard Code        | https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF                               |
-| Qwopus3.5-9B                                  |    Q4_K_M    |  256K (MAX)  |       1        |    Claude Code     |           | Code             | https://huggingface.co/Jackrong/Qwopus3.5-9B-v3-GGUF                              |
-| Qwopus3.5-9B-Coder                            |    IQ4_XS    |  256K (MAX)  |       1        |    Claude Code     |           | Hard Code        | https://huggingface.co/Jackrong/Qwopus3.5-9B-Coder-GGUF                           |
-| Qwopus3.6-27B-Coder                           |    IQ4_XS    |  256K (MAX)  |       1        |    Claude Code     |        40 | Very Hard Code   | https://huggingface.co/Jackrong/Qwopus3.6-27B-Coder-GGUF                          |
-| Qwopus3.6-27B-Coder-MTP                       |    IQ4_XS    |  256K (MAX)  |       1        |    Claude Code     |        40 | Very Hard Code   | https://huggingface.co/Jackrong/Qwopus3.6-27B-Coder-MTP-GGUF                      |
-| Qwopus3.6-27B-v2                              |    IQ4_XS    |  256K (MAX)  |       1        |    Claude Code     |        50 | Very Hard Code   | https://huggingface.co/Jackrong/Qwopus3.6-27B-v2-GGUF                             |
-| Qwopus3.6-27B-v2-MTP                          |    IQ4_XS    |  256K (MAX)  |       1        |    Claude Code     |        50 | Very Hard Code   | https://huggingface.co/Jackrong/Qwopus3.6-27B-v2-MTP-GGUF                         |
-| Qwopus3.6-35B-A3B-v1                          |    IQ4_XS    |  256K (MAX)  |       1        |    Claude Code     |       117 | Hard Code        | https://huggingface.co/Jackrong/Qwopus3.6-35B-A3B-v1-GGUF                         |
-| Qwopus3.6-35B-A3B-v1-agents                   |    IQ4_XS    |  256K (MAX)  |       2        |    Claude Code     |        60 | Hard Code        | https://huggingface.co/Jackrong/Qwopus3.6-35B-A3B-v1-GGUF                         |
-| gemma-4-12B-it                                |    IQ4_NL    |  128K (MAX)  |       1        | Junie,Claude Code  |           | Code             | https://huggingface.co/unsloth/gemma-4-12b-it-GGUF                                |
-| gemma-4-26B-A4B-it                            |  UD-IQ4_NL   |  256K (MAX)  |       1        | Junie,Claude Code  |           | Hard Code        | https://huggingface.co/unsloth/gemma-4-26B-A4B-it-GGUF                            |
-| gemma-4-31B-it                                |    IQ4_NL    |     128K     |       1        | Junie,Claude Code  |           | Very Hard Code   | https://huggingface.co/unsloth/gemma-4-31B-it-GGUF                                |
+#### Model Info
 
-### Setup
+| Model                                         | Quantization | Context Size | URL                                                                               |
+|-----------------------------------------------|:------------:|:------------:|-----------------------------------------------------------------------------------|
+| LFM2.5-8B-A1B                                 |  UD-IQ4_NL   |  256K (MAX)  | https://huggingface.co/unsloth/LFM2.5-8B-A1B-GGUF                                 |
+| Mellum2-12B-A2.5B                             |    Q4_K_M    |  128K (MAX)  | https://huggingface.co/JetBrains/Mellum2-12B-A2.5B-Thinking-GGUF-Q4_K_M           |
+| Nex-N2-mini                                   |    IQ4_NL    |  256K (MAX)  | https://huggingface.co/bartowski/nex-agi_Nex-N2-mini-GGUFF                        |
+| NVIDIA-Nemotron-3-Nano-Omni-30B-A3B-Reasoning |  IQ4_NL_XL   |  256K (MAX)  | https://huggingface.co/unsloth/NVIDIA-Nemotron-3-Nano-Omni-30B-A3B-Reasoning-GGUF |
+| NVIDIA-Nemotron-Cascade-2-30B-A3B             |    IQ4_NL    |   1M (MAX)   | https://huggingface.co/bartowski/nvidia_Nemotron-Cascade-2-30B-A3B-GGUF           |
+| Qwen3.6-27B                                   |    IQ4_NL    |  256K (MAX)  | https://huggingface.co/unsloth/Qwen3.6-27B-GGUF                                   |
+| Qwen3.6-27B-MTP                               |    IQ4_NL    |  256K (MAX)  | https://huggingface.co/unsloth/Qwen3.6-27B-MTP-GGUF                               |
+| Qwen3.6-35B-A3B                               | UD-IQ4_NL_XL |  256K (MAX)  | https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF                               |
+| Qwopus3.5-9B                                  |    Q4_K_M    |  256K (MAX)  | https://huggingface.co/Jackrong/Qwopus3.5-9B-v3-GGUF                              |
+| Qwopus3.5-9B-Coder                            |    IQ4_XS    |  256K (MAX)  | https://huggingface.co/Jackrong/Qwopus3.5-9B-Coder-GGUF                           |
+| Qwopus3.6-27B-Coder                           |    IQ4_XS    |  256K (MAX)  | https://huggingface.co/Jackrong/Qwopus3.6-27B-Coder-GGUF                          |
+| Qwopus3.6-27B-Coder-MTP                       |    IQ4_XS    |  256K (MAX)  | https://huggingface.co/Jackrong/Qwopus3.6-27B-Coder-MTP-GGUF                      |
+| Qwopus3.6-27B-v2                              |    IQ4_XS    |  256K (MAX)  | https://huggingface.co/Jackrong/Qwopus3.6-27B-v2-GGUF                             |
+| Qwopus3.6-27B-v2-MTP                          |    IQ4_XS    |  256K (MAX)  | https://huggingface.co/Jackrong/Qwopus3.6-27B-v2-MTP-GGUF                         |
+| Qwopus3.6-35B-A3B-v1                          |    IQ4_XS    |  256K (MAX)  | https://huggingface.co/Jackrong/Qwopus3.6-35B-A3B-v1-GGUF                         |
+| Qwopus3.6-35B-A3B-v1-agents                   |    IQ4_XS    |  256K (MAX)  | https://huggingface.co/Jackrong/Qwopus3.6-35B-A3B-v1-GGUF                         |
+| gemma-4-12B-it                                |    IQ4_NL    |  128K (MAX)  | https://huggingface.co/unsloth/gemma-4-12b-it-GGUF                                |
+| gemma-4-26B-A4B-it                            |  UD-IQ4_NL   |  256K (MAX)  | https://huggingface.co/unsloth/gemma-4-26B-A4B-it-GGUF                            |
+| gemma-4-31B-it                                |    IQ4_NL    |     128K     | https://huggingface.co/unsloth/gemma-4-31B-it-GGUF                                |
 
-1. Start the Llama.cpp Server with your preferred model(s):
-   ```bash
-   llama.cpp-server --model <path-to-model> --host 127.0.0.1 --port 8080
-   ```
+#### Model Performance
 
-2. Configure the MCP server to connect to the local LLM endpoint in `application.yaml`:
-   ```yaml
-   spring:
-     ai:
-       openai:
-         api-key: dummy
-         base-url: http://127.0.0.1:8080/v1
-   ```
-
-3. Start the JAIDoc server — the MCP tools will be available for the local model to call.
+| Model                                         | Parallel-Slots | Preferred agent    | Max (T/S) | Task             |
+|-----------------------------------------------|:--------------:|:-------------------|----------:|:-----------------|
+| LFM2.5-8B-A1B                                 |       1        | Junie              |           | Simple Code      |
+| Mellum2-12B-A2.5B                             |       1        | AI Assistant       |           | Single task code |
+| Nex-N2-mini                                   |       1        | Junie, Claude Code |       105 | Very Hard Code   |
+| NVIDIA-Nemotron-3-Nano-Omni-30B-A3B-Reasoning |       1        | Junie              |       130 | General          |
+| NVIDIA-Nemotron-Cascade-2-30B-A3B             |       1        | Junie              |       160 | Single task code |
+| Qwen3.6-27B                                   |       1        | Junie              |        50 | Very Hard Code   |
+| Qwen3.6-27B-MTP                               |       1        | Junie              |        50 | Very Hard Code   |
+| Qwen3.6-35B-A3B                               |       1        | Junie              |       100 | Hard Code        |
+| Qwopus3.5-9B                                  |       1        | Claude Code        |           | Code             |
+| Qwopus3.5-9B-Coder                            |       1        | Claude Code        |           | Hard Code        |
+| Qwopus3.6-27B-Coder                           |       1        | Claude Code        |        40 | Very Hard Code   |
+| Qwopus3.6-27B-Coder-MTP                       |       1        | Claude Code        |        40 | Very Hard Code   |
+| Qwopus3.6-27B-v2                              |       1        | Claude Code        |        50 | Very Hard Code   |
+| Qwopus3.6-27B-v2-MTP                          |       1        | Claude Code        |        50 | Very Hard Code   |
+| Qwopus3.6-35B-A3B-v1                          |       1        | Claude Code        |       117 | Hard Code        |
+| Qwopus3.6-35B-A3B-v1-agents                   |       2        | Claude Code        |        60 | Hard Code        |
+| gemma-4-12B-it                                |       1        | Junie,Claude Code  |           | Code             |
+| gemma-4-26B-A4B-it                            |       1        | Junie,Claude Code  |           | Hard Code        |
+| gemma-4-31B-it                                |       1        | Junie,Claude Code  |           | Very Hard Code   |
 
 ### AI Agents
 
@@ -123,6 +137,11 @@ Once connected, the MCP server exposes tools for querying documentation. Here's 
 You can ask the AI model: *"How do I create a WebClient in Spring Boot?"* and the model will query the MCP server for
 Spring Boot documentation, returning the precise API reference with parameters and usage examples.
 
+### Example: Find migration changes (future)
+
+When Spring Boot documentation is ingested, you'll be able to ask: *"What changed in the migration from 3.3 to 3.4?"*
+and the model will return the relevant migration guide section with version-specific changes.
+
 ## How It Works
 
 ### The Doclet Pipeline
@@ -138,16 +157,44 @@ The JDK doesn't ship its Javadoc as JSON, so we need to generate it from the sou
    search, or semantic similarity.
 
 This pipeline is modular and version-aware: each JDK version gets its own ingestion run, and the vector DB stores them
-separately so users can query documentation for any supported version. The same approach will be reused for Spring
-Framework, where we'll parse Spring's API docs (which are more complex due to annotations, generics, and
-cross-references).
+separately so users can query documentation for any supported version.
+
+### The Spring Boot Pipeline (planned)
+
+Spring Boot documentation goes beyond API reference — it includes migration guides, how-to guides, and AsciiDoc
+(`.adoc`) formats with richer structure than Javadoc. Ingestion will require a different approach: parsing adoc files,
+extracting sections, preserving cross-references, and organizing the data so MCP tools can expose structured queries (
+e.g., "what changed in Spring Boot 3.4 migration", "how to configure a custom bean").
+
+This pipeline will also serve as an example for the community on how to organize, track, and expose complex
+documentation formats through MCP — a foundation that can be extrapolated to other ecosystems beyond Spring Boot.
 
 ## Roadmap
 
 - **Phase 1** — JDK documentation ingestion and MCP tools for querying (current)
-- **Phase 2** — Spring Framework documentation ingestion (annotations, generics, cross-references)
-- **Phase 3** — Support for additional ecosystems (Quarkus, Micronaut, etc.)
-- **Phase 4** — Multi-model support with prompt templates per ecosystem
+- **Phase 2** — Spring Boot ingestion: adoc parsing, migration guides, how-to guides, and structured MCP tools
+- **Phase 3** — Spring Framework API docs: annotations, generics, cross-references
+- **Phase 4** — Support for additional ecosystems (Quarkus, Micronaut, etc.)
+- **Phase 5** — Multi-model support with prompt templates per ecosystem
+
+### Phase 2: Spring Boot Integration
+
+Spring Boot documentation is structured around AsciiDoc (`.adoc`) files — migration guides, how-to guides, and
+reference documentation. Unlike JDK Javadoc (which a custom doclet can serialize to JSON), adoc requires a different
+ingestion pipeline:
+
+1. **adoc Parsing** — Extract sections, subsections, cross-references, and code examples from Spring Boot's adoc source
+2. **Section Organization** — Structure the parsed content hierarchically so MCP tools can query by section, not just by
+   keyword
+3. **Migration Guide Tracking** — Preserve version-to-version migration paths so queries like "what changed in 3.4"
+   return the relevant migration section
+4. **How-To Expose** — Register MCP tools that let AI models query "how to do X" by matching natural language to adoc
+   section titles and content
+5. **Community Example** — Document the ingestion approach so others can replicate it for their own documentation
+   ecosystems
+
+Currently this work starts with the Java SDK as a foundation, then extrapolates to Spring Boot — which is where the real
+complexity lives (huge MCP schema, complex cross-references, versioned migration guides).
 
 ## Architecture
 
@@ -156,24 +203,23 @@ graph LR
     ai["🤖 AI / LLM"]
     server["🖥️ JAIDoc Server<br/>MCP Protocol / stdio"]
     vdb["📊 Vector DB<br/>JDK · Spring · …"]
-    docs["📄 Docs<br/>JDK · Spring"]
+    jdkdocs["📄 JDK Docs<br/>Javadoc JSON"]
+    sbdocs["📄 Spring Boot Docs<br/>adoc · Migration · How-To"]
     ai <-->|" MCP "| server
     server -->|" Search "| vdb
-    server -->|" Ingest "| docs
+    server -->|" Ingest (Doclet) "| jdkdocs
+    server -->|" Ingest (adoc) "| sbdocs
 ```
 
 ## Tech Stack
 
-| Component   | Technology                                                                                                 |
-|-------------|------------------------------------------------------------------------------------------------------------|
-| Runtime     | Java 25, Spring Boot 4.1.0                                                                                 |
-| Build       | Maven 3.9.15                                                                                               |
-| MCP         | Spring AI MCP Server (streamable protocol, stdio)                                                          |
-| JSON        | Jackson 3 (`tools.jackson.*`)                                                                              |
-| Doclet      | JDK `jdk.javadoc.doclet` API                                                                               |
-| IDE Adapter | `@pyroprompts/mcp-stdio-to-streamable-http-adapter`                                                        |
-| Local LLM   | Llama.cpp Server (routing mode)                                                                            |
-| Models      | Qwen 3.6 (27B dense / 35B MOE), Gemma-4 (31B dense / 26B MOE), QWOPUS (27B dense / 35B MOE) — all with MTP |
+| Component | Technology                                                          |
+|-----------|---------------------------------------------------------------------|
+| Runtime   | Java 25, Spring Boot 4.1.0                                          |
+| Build     | Maven 3.9.15                                                        |
+| MCP       | Spring AI MCP Server (streamable protocol, stdio)                   |
+| JSON      | Jackson 3 (`tools.jackson.*`)                                       |
+| Local LLM | Llama.cpp Server (routing mode) (b9637 but use last version always) |
 
 ## Philosophy
 
@@ -201,8 +247,8 @@ the privacy.
 
 ## Contributing
 
-Contributions are welcome. Whether you want to extend the Doclet to handle new JDK features, add support for additional
-ecosystems, or improve the MCP tools — please open an issue or submit a PR.
+Contributions are welcome. Whether you want to extend the Doclet to handle new JDK features, add Spring Boot adoc
+parsing, add support for additional ecosystems, or improve the MCP tools — please open an issue or submit a PR.
 
 ## License
 
