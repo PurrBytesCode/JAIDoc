@@ -1,7 +1,7 @@
 # JAIDoc
 
 [![Java](https://img.shields.io/badge/Java-25-red.svg)](https://www.oracle.com/java/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.6-green.svg)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-green.svg)](https://spring.io/projects/spring-boot)
 [![Maven](https://img.shields.io/badge/Maven-3.9.15-blue.svg)](https://maven.apache.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
@@ -127,15 +127,14 @@ Spring Boot documentation, returning the precise API reference with parameters a
 
 ### The Doclet Pipeline
 
-The JDK doesn't ship its Javadoc as JSON, so we need to generate it ourselves. JAIDoc handles this entirely:
+The JDK doesn't ship its Javadoc as JSON, so we need to generate it from the source. JAIDoc handles this entirely:
 
-1. **Download / Extract** — Fetch the official JDK source or binary distribution for a given version.
-2. **Javadoc Generation** — Run `javadoc` on the JDK source to produce HTML Javadoc (or parse existing HTML if sources
-   aren't available).
-3. **HTML → JSON Conversion** — Transform the generated HTML into structured JSON, extracting class signatures, method
-   descriptions, parameters, return types, and annotations in a format optimized for LLM comprehension.
-4. **Vector Indexing** — Embed and index the JSON data into a vector database for semantic search.
-5. **MCP Tools Exposure** — Register MCP tools that allow AI models to query by class name, method signature, keyword
+1. **Download / Extract** — Fetch the official JDK source for a given version.
+2. **Javadoc Serialization** — Run a custom doclet (`JsonDoclet`) on the JDK source to produce structured JSON directly,
+   extracting class signatures, method descriptions, parameters, return types, and annotations in a format optimized for
+   LLM comprehension.
+3. **Vector Indexing** — Embed and index the JSON data into a vector database for semantic search.
+4. **MCP Tools Exposure** — Register MCP tools that allow AI models to query by class name, method signature, keyword
    search, or semantic similarity.
 
 This pipeline is modular and version-aware: each JDK version gets its own ingestion run, and the vector DB stores them
@@ -167,7 +166,7 @@ graph LR
 
 | Component   | Technology                                                                                                 |
 |-------------|------------------------------------------------------------------------------------------------------------|
-| Runtime     | Java 25, Spring Boot 4.0.6                                                                                 |
+| Runtime     | Java 25, Spring Boot 4.1.0                                                                                 |
 | Build       | Maven 3.9.15                                                                                               |
 | MCP         | Spring AI MCP Server (streamable protocol, stdio)                                                          |
 | JSON        | Jackson 3 (`tools.jackson.*`)                                                                              |
