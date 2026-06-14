@@ -125,6 +125,9 @@ src/test/java/com/purrbyte/ai/
 │   ├── IntegrationTest.java
 │   └── extension/
 │       └── TimeExtension.java
+├── service/
+│   ├── DocumentationServiceIntegrationTest.java  # E2E JavaDoc generation (JDK 25.0.3)
+│   └── DocumentationServiceTest.java
 ├── util/
 │   ├── JdkSourceDownloaderTest.java
 │   └── JdkSourceDownloaderIntegrationTest.java
@@ -199,6 +202,18 @@ Path tempDir;
 The directory is unique per test method and is deleted after the test completes. This is used for testing file I/O
 operations without polluting the filesystem.
 
+### Test configuration overrides
+
+When an integration test needs to override Spring properties (e.g., to use a different download directory for `JdkSourceDownloader`),
+it can construct the required beans directly instead of relying on `@SpringBootTest`'s bean wiring:
+
+```java
+var downloader = createDownloader(tempDirectory);
+var service = new DocumentationService(downloader, workDir, outputDir);
+```
+
+This avoids the Spring context startup for tests that only need a subset of the application's beans.
+
 ### `@Order` on integration tests
 
 Integration tests that involve multiple steps (e.g., download → extract → run) use `@Order` to ensure execution
@@ -210,6 +225,13 @@ sequence. The `@Order` values are typically sequential integers (1, 2, 3...).
 
 Some integration tests make real network calls (e.g., `JdkSourceDownloaderIntegrationTest` downloads JDK source ZIPs
 from GitHub). These tests require network access and may be slow. They are disabled by default via `@Disabled`.
+
+### E2E JavaDoc generation pipeline
+
+`DocumentationServiceIntegrationTest` runs the full JavaDoc generation pipeline — download JDK source, extract it,
+run javadoc with the JsonDoclet, and verify the JSON output files (`index.json`, `packages.json`). This test uses the
+real JDK 25.0.3 source and the real `javadoc` CLI tool. It requires network access, JDK 25 installed on the test
+machine, and may take 15-20 minutes. Disabled by default via the `INTEGRATION` tag.
 
 ### File system operations
 
