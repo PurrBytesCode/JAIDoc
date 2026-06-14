@@ -3,7 +3,6 @@ package com.purrbyte.ai.util;
 import com.purrbyte.ai.test.IntegrationTest;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.http.client.ClientHttpRequestFactory;
@@ -23,14 +22,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Slf4j
 class JdkSourceDownloaderIntegrationTest extends IntegrationTest {
 
-    private static final boolean INTEGRATION_TESTS_ENABLED = Boolean.getBoolean("integration-test-enabled");
-
     @TempDir
     Path tempDirectory;
 
     @Test
     void downloadSource_jdk8_returnsFilePath() throws ExecutionException, InterruptedException {
-        Assumptions.assumeTrue(INTEGRATION_TESTS_ENABLED, "Integration tests disabled — skip with -Dintegration-test-enabled=true");
         JdkSourceDownloader downloader = createDownloader();
         CompletableFuture<Path> future = downloader.downloadSource("8.0.492", progress -> log.info("Download progress [8.0.492]: {}%", progress));
         Path result = future.get();
@@ -41,7 +37,6 @@ class JdkSourceDownloaderIntegrationTest extends IntegrationTest {
 
     @Test
     void downloadSource_jdk11_returnsFilePath() throws ExecutionException, InterruptedException {
-        Assumptions.assumeTrue(INTEGRATION_TESTS_ENABLED, "Integration tests disabled — skip with -Dintegration-test-enabled=true");
         JdkSourceDownloader downloader = createDownloader();
         CompletableFuture<Path> future = downloader.downloadSource("11.0.28", progress -> log.info("Download progress [11.0.28]: {}%", progress));
         Path result = future.get();
@@ -52,7 +47,6 @@ class JdkSourceDownloaderIntegrationTest extends IntegrationTest {
 
     @Test
     void downloadSource_jdk17_returnsFilePath() throws ExecutionException, InterruptedException {
-        Assumptions.assumeTrue(INTEGRATION_TESTS_ENABLED, "Integration tests disabled — skip with -Dintegration-test-enabled=true");
         JdkSourceDownloader downloader = createDownloader();
         CompletableFuture<Path> future = downloader.downloadSource("17.0.13", progress -> log.info("Download progress [17.0.13]: {}%", progress));
         Path result = future.get();
@@ -63,7 +57,6 @@ class JdkSourceDownloaderIntegrationTest extends IntegrationTest {
 
     @Test
     void downloadSource_jdk21_returnsFilePath() throws ExecutionException, InterruptedException {
-        Assumptions.assumeTrue(INTEGRATION_TESTS_ENABLED, "Integration tests disabled — skip with -Dintegration-test-enabled=true");
         JdkSourceDownloader downloader = createDownloader();
         CompletableFuture<Path> future = downloader.downloadSource("21.0.11", progress -> log.info("Download progress [21.0.11]: {}%", progress));
         Path result = future.get();
@@ -74,7 +67,6 @@ class JdkSourceDownloaderIntegrationTest extends IntegrationTest {
 
     @Test
     void downloadSource_jdk25_returnsFilePath() throws ExecutionException, InterruptedException {
-        Assumptions.assumeTrue(INTEGRATION_TESTS_ENABLED, "Integration tests disabled — skip with -Dintegration-test-enabled=true");
         JdkSourceDownloader downloader = createDownloader();
         CompletableFuture<Path> future = downloader.downloadSource("25.0.1", progress -> log.info("Download progress [25.0.1]: {}%", progress));
         Path result = future.get();

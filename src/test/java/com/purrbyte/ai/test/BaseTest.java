@@ -20,6 +20,7 @@ public abstract class BaseTest {
 
     /**
      * JUnit 5 tag for integration tests — run with {@code mvn test -Dgroups=INTEGRATION} in CI.
+     * Integration tests are skipped unless the property {@code test.integration.enabled=true} is set.
      */
     public static final String TAG_INTEGRATION = "INTEGRATION";
 }
