@@ -19,7 +19,8 @@ Guidelines for AI agents working in this repository.
   `UPPER_SNAKE_CASE` for constants.
 - **Prefer constructor injection.** Use constructor-based dependency injection instead of `@Autowired` on fields. This
   facilitates testing and makes dependencies explicit.
-- **Do not leave commented-out code.** If code is not used, remove it. Git history preserves it.
+- **Do not leave commented-out code.** If code is not used, remove it. Git history preserves it. Stop after one pass —
+  do not re-check files for commented-out code after the initial cleanup.
 - **Do not use `@SuppressWarnings` without justification.** If a warning needs to be suppressed, add a comment
   explaining why.
 - **Prefer `Optional` over `null`.** Use `Optional` as a return type when a value may be absent, instead of returning
@@ -55,9 +56,8 @@ Guidelines for AI agents working in this repository.
 
 ## MCP Tool Priority
 
-- **Prefer MCP-provided tools over shell commands.** When an MCP server provides a tool for a task (file operations,
-  searches, introspection, etc.), use it instead of spawning a shell process to achieve the same result. Always use
-  `mcp__jetbrains__*` tools when available instead of `Bash` or `PowerShell` for IDE-related operations.
+- **Prefer MCP-provided tools over shell commands.** When an MCP server provides a tool for a task, use it first.
+  If an MCP tool fails after 2 attempts, fall back to a shell command. Do not retry a failing MCP tool indefinitely.
 
 ## File Reading & Loop Prevention Rules
 
@@ -92,6 +92,15 @@ These rules prevent infinite loops, redundant work, and exploration traps when r
   reading. Do not keep exploring "just in case".
 - **Ask when stuck.** If the necessary information cannot be found within the read budget, ask for clarification rather
   than looping over the same files indefinitely.
+
+### Tool Call Loops
+
+- **Do not retry the same failing tool call.** If a Bash command fails, try at most 2 variations. If it still fails,
+  stop and ask for help instead of retrying indefinitely.
+- **Do not retry MCP tool calls in a loop.** If an MCP tool fails twice, fall back to a shell command or ask for
+  clarification. Do not keep retrying the same MCP tool.
+- **Set a tool call budget.** Limit yourself to a bounded number of tool calls per task. If you exceed it without
+  progress, stop and reassess your approach.
 
 ## Project References
 
