@@ -21,7 +21,7 @@ import java.util.Set;
  *       {@code kind} and own fields ({@code {@link}} references, HTML
  *       attributes, block tags, etc.).</li>
  *   <li><b>Plain text</b>: a human-readable representation (no HTML) designed for
- *       generating embeddings in ChromaDB.</li>
+ *       producing plain text output.</li>
  * </ul>
  *
  * <p>Forward compatibility: nodes whose type does not exist in JDK 17

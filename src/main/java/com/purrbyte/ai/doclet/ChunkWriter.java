@@ -15,9 +15,7 @@ import java.util.List;
 
 /**
  * Writes {@code chunks.jsonl}: one JSON line per documented element with the
- * shape {@code {"id": ..., "text": ..., "metadata": {...}}}, designed to be
- * ingested directly into ChromaDB (ids → ids, text → documents,
- * metadata → metadatas; metadata values are always primitives).
+ * shape {@code {"id": ..., "text": ..., "metadata": {...}}}.
  *
  * <p>If an element's text exceeds {@code maxChars}, it is split into several
  * overlapping fragments, preferring to cut at paragraph boundaries

@@ -363,8 +363,8 @@ final class TypeJsonBuilder {
     }
 
     /**
-     * Emits a chunk for ChromaDB: text = header (signature) + full comment
-     * in plain text; metadata = only primitive values (ChromaDB requirement).
+     * Emits a chunk: text = header (signature) + full comment in plain text;
+     * metadata = only primitive values.
      */
     private void emitChunk(Element e, String header, ObjectNode json) {
         if (chunks == null) return;

@@ -1,7 +1,7 @@
 # JAIDoc — Java Doclet to JSON
 
-JAIDoc serializes the complete Javadoc of a Java project into structured JSON, then produces JSONL chunks ready for
-ChromaDB ingestion and AI-driven semantic search.
+JAIDoc serializes the complete Javadoc of a Java project into structured JSON with every element (types, fields, methods,
+constructors, annotations, block tags, etc.).
 
 ## Overview
 
@@ -19,7 +19,7 @@ com.purrbyte.ai.doclet
 ├── JsonDoclet          # Main doclet — orchestrates option parsing, element iteration, JSON writing
 ├── TypeJsonBuilder     # Converts javax.lang.model elements into JSON nodes
 ├── DocTreeJson         # Serializes Javadoc comment trees (com.sun.source.doctree) into structured JSON and plain text
-└── ChunkWriter         # Writes JSONL chunks for ChromaDB ingestion (splits oversized text)
+└── ChunkWriter         # Writes JSONL chunks (splits oversized text)
 ```
 
 **Key dependencies:**
@@ -90,7 +90,7 @@ structure:
 ```
 output-json/
 ├── index.json                          # Manifest: generator, counts, paths
-├── chunks.jsonl                        # 1 JSON line per element → ChromaDB
+├── chunks.jsonl                        # 1 JSON line per element (splits oversized text)
 ├── module-<name>.json                  # Module documentation (if any)
 └── api/
     └── com/mycompany/
@@ -330,9 +330,9 @@ and the `doc` block with:
 ]
 ```
 
-### chunks.jsonl — JSONL for ChromaDB
+### chunks.jsonl — JSONL chunk file
 
-One JSON line per documented element, formatted for direct ChromaDB ingestion:
+One JSON line per documented element, splitting oversized text at paragraph/line boundaries:
 
 ```json
 {
@@ -356,7 +356,10 @@ One JSON line per documented element, formatted for direct ChromaDB ingestion:
 When the text exceeds `--max-chunk-chars`, the `ChunkWriter` splits it into overlapping fragments at paragraph/line
 boundaries.
 
-## Chunk metadata fields
+## Chunk metadata fields (optional)
+
+The `ChunkWriter` emits optional metadata for each chunk. These fields are useful when chunks are used for downstream
+processing:
 
 | Field        | Description                               |
 |--------------|-------------------------------------------|
