@@ -108,6 +108,11 @@ cover — they prevent context loss and keep AGENTS.md from growing out of contr
 
 ## Plan Files Rules
 
+- **Do not use completed or deprecated plans.** Only follow plans marked `status: active` in their YAML frontmatter.
+  Skip plans with `status: completed` or `status: deprecated`. Read the YAML frontmatter header of every plan file
+  before following it.
+- **Read the ACTIVE.md index first.** Always check `plans/ACTIVE.md` to see which plans are active and which are
+  completed/deprecated. This is the authoritative list — never infer plan status from a plan file alone.
 - **Save plans in the project `plans/` directory.** Any implementation plan, task breakdown, or design document must be
   stored under `<project-root>/plans/` (e.g., `plans/documentation-service-approach-a-fat-jar.md`). This is a real
   directory inside the project — NOT a hidden directory like `~/.claude/plans/`. Do NOT save plans in hidden
@@ -116,3 +121,17 @@ cover — they prevent context loss and keep AGENTS.md from growing out of contr
   `auth-token-refresh.md`).
 - **Keep plans up to date.** If implementation deviates from the plan, update it to reflect reality. Do not leave
   outdated plans as guides.
+- **Mark completed plans.** When a plan is fully implemented, change its status from `active` to `completed`. Also
+  update `plans/ACTIVE.md` to move the plan to the Completed section.
+- **Use YAML frontmatter.** Every plan file must start with a YAML frontmatter block:
+
+  ```yaml
+  ---
+  name: <descriptive-name>
+  status: active | completed | deprecated
+  date: YYYY-MM-DD
+  ---
+  ```
+
+  `name` — a kebab-case identifier for the plan. `status` — one of `active`, `completed`, or `deprecated`.
+  `date` — the date the plan was created.
