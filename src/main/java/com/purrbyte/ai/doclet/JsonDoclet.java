@@ -40,7 +40,7 @@ import java.util.*;
  *   <li>{@code module-<name>.json} — documentation for each module.</li>
  *   <li>{@code index.json} — manifest with all types/packages/modules.</li>
  *   <li>{@code chunks.jsonl} — one "chunk" per documented element (JSON line with
- *       flat id, text and metadata), ready to embed and insert into ChromaDB.</li>
+ *       flat id, text and metadata), ready to embed.</li>
  * </ul>
  */
 public class JsonDoclet implements Doclet {

@@ -99,7 +99,7 @@ Deep-dive documentation lives in the `documentation/` directory. Consult these f
 cover — they prevent context loss and keep AGENTS.md from growing out of control.
 
 - **[Project Structure](documentation/STRUCTURE.md)** — High-level layout, config hierarchy, build output
-- **[Doclet](documentation/DOCLET.md)** — JSON doclet architecture, CLI options, output format, ChromaDB chunking
+- **[Doclet](documentation/DOCLET.md)** — JSON doclet architecture, CLI options, output format, chunking
 - **[MCP Server](documentation/MCP.md)** — MCP server setup and JetBrains adapter
 - **[Jackson Config](documentation/JACKSON.md)** — Customizer pattern, YAML mapper convention
 - **[Security Config](documentation/SECURITY.md)** — Actuator restrictions, logging paths
