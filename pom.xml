@@ -11,7 +11,8 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.purrbyte.ai</groupId>
     <artifactId>JAIDoc</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
+    <description>MCP server that makes JDK and Spring Boot documentation searchable and consumable by AI models</description>
     <properties>
         <openapi.version>3.0.3</openapi.version>
         <hibernate-search.version>8.4.0.Final</hibernate-search.version>
@@ -23,7 +24,8 @@
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webmvc</artifactId>
+<!--            <artifactId>spring-boot-starter-webmvc</artifactId>-->
+            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -51,7 +53,8 @@
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+<!--            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>-->
+            <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
             <version>${openapi.version}</version>
         </dependency>
         <!-- Complements -->
@@ -137,6 +140,12 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <executions>
+                    <execution>
+                        <id>process-aot</id>
+                        <goals>
+                            <goal>process-aot</goal>
+                        </goals>
+                    </execution>
                     <execution>
                         <id>build-info</id>
                         <goals>
