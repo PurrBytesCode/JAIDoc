@@ -8,7 +8,8 @@ date: 2026-06-14
 
 ## Context
 
-Need an integration test to verify the `DocumentationService` works end-to-end — downloading JDK 25.0.3 source, extracting it, running the JsonDoclet javadoc processor, and producing JSON documentation files.
+Need an integration test to verify the `DocumentationService` works end-to-end — downloading JDK 25.0.3 source,
+extracting it, running the JsonDoclet javadoc processor, and producing JSON documentation files.
 
 ## Changes
 
@@ -27,10 +28,10 @@ doclet:
 - Extends `BaseTest` (no Spring context needed — constructs service manually)
 - Uses `@TempDir` for the JdkSourceDownloader download directory
 - Test method `generateJdkDocumentation_jdk25_0_3_producesJsonOutput()`:
-  1. Creates a JdkSourceDownloader with temp directory
-  2. Calls `documentationService.generateJdkDocumentation("25.0.3", null)`
-  3. Waits for the `CompletableFuture<Path>` to complete
-  4. Verifies `index.json`, `packages.json`, and `index.json` content
+    1. Creates a JdkSourceDownloader with temp directory
+    2. Calls `documentationService.generateJdkDocumentation("25.0.3", null)`
+    3. Waits for the `CompletableFuture<Path>` to complete
+    4. Verifies `index.json`, `packages.json`, and `index.json` content
 
 ## Verification
 
