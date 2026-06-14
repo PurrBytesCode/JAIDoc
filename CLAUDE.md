@@ -59,20 +59,16 @@ Guidelines for AI agents working in this repository.
   searches, introspection, etc.), use it instead of spawning a shell process to achieve the same result. Always use
   `mcp__jetbrains__*` tools when available instead of `Bash` or `PowerShell` for IDE-related operations.
 
-## File Reading Rules
+## File Reading & Loop Prevention Rules
 
-These rules prevent infinite loops and redundant work when reading files.
+These rules prevent infinite loops, redundant work, and exploration traps when reading files or investigating code.
+
+### File Reading
 
 - **Read each file once.** Do not re-open, re-query, or re-search a file whose content you already got, unless it was
   modified after you read it. Cache and reuse what you already have in context.
 - **Track files you have already read.** Keep a mental (or explicit) list of inspected files and their key findings and
   consult that list before issuing another read.
-- **Stop after the goal is met.** As soon as you have the information needed to answer or to make a change, stop
-  reading. Do not keep exploring "just in case".
-- **Set a read budget.** Limit yourself to a bounded number of file reads per task. If you exceed it without progress,
-  stop and reassess your approach instead of reading more files.
-- **Detect repetition.** If you find yourself reading the same file, directory, or symbol more than twice, treat it as a
-  loop signal: stop, summarize what you know, and change strategy.
 - **Prefer targeted reads.** Use structure queries, symbol search, or line-range reads to locate the relevant section
   instead of repeatedly scanning entire files.
 - **Avoid circular navigation.** When following references between files (imports, includes, links), track visited paths
@@ -81,6 +77,19 @@ These rules prevent infinite loops and redundant work when reading files.
   generated or binary artifacts (e.g., `target`, build output, large binaries).
 - **Respect symbolic links.** Do not follow symlinks that point back into an already-visited directory; this is a common
   source of infinite loops.
+
+### Loop Prevention
+
+- **Do not fall into exploration loops.** After two rounds of investigation (reading code, searching, verifying), stop
+  and proceed with planning or implementation. Do not add a third or fourth round of "just one more check."
+- **Always launch up to 3 Explore agents in parallel** (single message, multiple tool calls) rather than sequentially.
+  If one agent can answer multiple questions, use it instead of splitting across sequential agents.
+- **Set a read budget.** Limit yourself to a bounded number of file reads per task. If you exceed it without progress,
+  stop and reassess your approach instead of reading more files.
+- **Detect repetition.** If you find yourself reading the same file, directory, or symbol more than twice, treat it as a
+  loop signal: stop, summarize what you know, and change strategy.
+- **Stop after the goal is met.** As soon as you have the information needed to answer or to make a change, stop
+  reading. Do not keep exploring "just in case".
 - **Ask when stuck.** If the necessary information cannot be found within the read budget, ask for clarification rather
   than looping over the same files indefinitely.
 
