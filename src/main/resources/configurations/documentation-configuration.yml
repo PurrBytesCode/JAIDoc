@@ -2,3 +2,9 @@ jdk:
   source:
     download:
       directory: ${JDK_SOURCE_DOWNLOAD_ZIP:./jdk-sources}
+
+doclet:
+  work:
+    directory: ${DOCLET_WORK_DIR:./jdk-doc-workspace}
+  output:
+    directory: ${DOCLET_OUTPUT_DIR:data}
