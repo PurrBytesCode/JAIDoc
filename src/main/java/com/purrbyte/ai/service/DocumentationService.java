@@ -49,16 +49,21 @@ public class DocumentationService {
     private final Path workDirectory;
     private final Path outputDirectory;
     private final Path docletDirectory;
+    private final Path javadocHome;
     private final List<String> configuredModules;
 
     public DocumentationService(
             @Value("${doclet.work.directory}") Path workDirectory,
             @Value("${doclet.output.directory}") Path outputDirectory,
             @Value("${doclet.modules:}") String modulesCsv,
-            @Value("${doclet.jar.directory:doclet}") Path docletDirectory) {
+            @Value("${doclet.jar.directory:doclet}") Path docletDirectory,
+            @Value("${doclet.javadoc.home:}") String javadocHome) {
         this.workDirectory = workDirectory;
         this.outputDirectory = outputDirectory;
         this.docletDirectory = docletDirectory;
+        this.javadocHome = (javadocHome == null || javadocHome.isBlank())
+                ? Path.of(System.getProperty("java.home"))
+                : Path.of(javadocHome);
         this.configuredModules = parseModules(modulesCsv);
     }
 
@@ -196,9 +201,10 @@ public class DocumentationService {
         Path tempOutputDir = workDirectory.resolve("javadoc-out").resolve(version);
         Files.createDirectories(tempOutputDir);
         String osName = System.getProperty("os.name").toLowerCase();
-        Path javadocBin = Path.of(System.getProperty("java.home"), "bin", osName.contains("win") ? "javadoc.exe" : "javadoc");
+        Path javadocBin = javadocHome.resolve("bin").resolve(osName.contains("win") ? "javadoc.exe" : "javadoc");
         if (!Files.exists(javadocBin)) {
-            throw new IllegalStateException("javadoc binary not found at: " + javadocBin);
+            throw new IllegalStateException("javadoc binary not found at: " + javadocBin
+                    + " (configure doclet.javadoc.home to a valid JDK home)");
         }
         List<String> command = new ArrayList<>();
         command.add(javadocBin.toString());
