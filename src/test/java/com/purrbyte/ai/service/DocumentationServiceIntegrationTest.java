@@ -1,7 +1,9 @@
 package com.purrbyte.ai.service;
 
 import com.purrbyte.ai.test.BaseTest;
+import com.purrbyte.ai.test.IntegrationTest;
 import com.purrbyte.ai.util.JdkSourceDownloader;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Tag;
@@ -27,8 +29,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * and the real javadoc tool. Skipped by default; enable with
  * {@code -Dtest.integration.enabled=true}.
  */
+@Slf4j
 @Tag(BaseTest.TAG_INTEGRATION)
-class DocumentationServiceIntegrationTest extends BaseTest {
+class DocumentationServiceIntegrationTest extends IntegrationTest {
 
     @TempDir
     Path tempDirectory;
@@ -42,7 +45,7 @@ class DocumentationServiceIntegrationTest extends BaseTest {
                 Path.of("target/test-jdk-doc-workspace"),
                 Path.of("target/test-javadoc-output")
         );
-        var future = service.generateJdkDocumentation("25.0.3", null);
+        var future = service.generateJdkDocumentation("25.0.3", p -> log.info("Progress: {}%", p));
         Path result = future.get();
         assertThat(result).isNotNull();
         assertThat(result).isDirectory();

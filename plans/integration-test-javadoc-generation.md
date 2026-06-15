@@ -25,11 +25,11 @@ doclet:
 
 ### 2. `src/test/java/com/purrbyte/ai/service/DocumentationServiceIntegrationTest.java` — New integration test
 
-- Extends `BaseTest` (no Spring context needed — constructs service manually)
+- Extends `IntegrationTest` (no Spring context needed — constructs service manually)
 - Uses `@TempDir` for the JdkSourceDownloader download directory
 - Test method `generateJdkDocumentation_jdk25_0_3_producesJsonOutput()`:
     1. Creates a JdkSourceDownloader with temp directory
-    2. Calls `documentationService.generateJdkDocumentation("25.0.3", null)`
+    2. Calls `documentationService.generateJdkDocumentation("25.0.3", p -> log.info("Progress: {}%", p))`
     3. Waits for the `CompletableFuture<Path>` to complete
     4. Verifies `index.json`, `packages.json`, and `index.json` content
 
