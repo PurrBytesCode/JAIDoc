@@ -7,9 +7,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -17,7 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -94,15 +94,7 @@ public class DocumentationService {
                 });
     }
 
-    /**
-     * Extracts a JDK source zip to the work directory.
-     *
-     * @param zipFile          path to the downloaded zip
-     * @param version          JDK version
-     * @param progressCallback progress callback (0.0 to 100.0 for this phase)
-     * @return path to the extracted source root directory
-     */
-   private Path extractSourceZip(Path zipFile, String version, Consumer<Double> progressCallback) throws IOException {
+    private Path extractSourceZip(Path zipFile, String version, Consumer<Double> progressCallback) throws IOException {
         Path extractDir = workDirectory.resolve("jdk-sources").resolve(version);
         if (Files.exists(extractDir)) {
             Path existingRoot = findSourceRoot(extractDir);
@@ -143,61 +135,51 @@ public class DocumentationService {
         return sourceRoot;
     }
 
-    /**
-     * Finds the top-level directory in the extracted zip.
-     * The zip contains a single top-level directory (e.g. "jdk-25.0.3-ga/").
-     */
     private Path findSourceRoot(Path extractDir) throws IOException {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(extractDir)) {
-            Iterator<Path> it = stream.iterator();
-            if (it.hasNext()) {
-                Path entry = it.next();
+            for (Path entry : stream) {
                 if (Files.isDirectory(entry)) return entry;
             }
         }
         return extractDir;
     }
 
-    /**
-     * Runs javadoc with the JsonDoclet to generate JSON documentation.
-     *
-     * <p>Output goes to a temp directory first, then is copied to the persistent data/ directory.
-     *
-     * @param sourceRoot       path to the extracted JDK source root
-     * @param version          JDK version
-     * @param progressCallback progress callback (0.0 to 100.0 for this phase)
-     * @return path to the generated documentation directory in data/
-     */
     private Path runJavadocDoclet(Path sourceRoot, String version, Consumer<Progress> progressCallback) throws IOException {
         Path tempOutputDir = workDirectory.resolve("javadoc-out").resolve(version);
         Files.createDirectories(tempOutputDir);
-        String javaHome = System.getProperty("java.home");
         String osName = System.getProperty("os.name").toLowerCase();
-        Path javadocBin = Path.of(javaHome, "bin", osName.contains("win") ? "javadoc.exe" : "javadoc");
+        Path javadocBin = Path.of(System.getProperty("java.home"), "bin", osName.contains("win") ? "javadoc.exe" : "javadoc");
         if (!Files.exists(javadocBin)) {
             throw new IllegalStateException("javadoc binary not found at: " + javadocBin);
         }
-        String fatJarPath = resolveFatJarPath();
         List<String> command = new ArrayList<>();
         command.add(javadocBin.toString());
-        if (fatJarPath != null) {
+        String docletPath = resolveDocletPath();
+        if (docletPath != null) {
             command.add("-docletpath");
-            command.add(fatJarPath);
+            command.add(docletPath);
         }
         command.add("-doclet");
         command.add("com.purrbyte.ai.doclet.JsonDoclet");
         command.add("-sourcepath");
-        // The sourcepath must point to the parent of the source root directory,
-        // so javadoc can find the packages (java, jdk, etc.) within it.
-        Path sourcepath = findSourcepathForSourceRoot(sourceRoot);
-        command.add(sourcepath.toString());
+        Path srcDir = sourceRoot.resolve("src");
+        if (!Files.exists(srcDir)) {
+            throw new IllegalStateException("Source directory not found: " + srcDir);
+        }
+        command.add(srcDir.toString());
         command.add("-source");
         command.add(String.valueOf(JdkSourceDownloader.extractMajorVersion(version)));
         command.add("-d");
         command.add(tempOutputDir.toString());
         command.add("--pretty");
         command.add("-subpackages");
-        command.add("java;jdk;com.sun;javax;org.ietf;org.w3c;org.xml.sax");
+        command.add("java");
+        command.add("jdk");
+        command.add("com.sun");
+        command.add("javax");
+        command.add("org.ietf");
+        command.add("org.w3c");
+        command.add("org.xml.sax");
         log.info("Executing javadoc: {}", String.join(" ", command));
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.redirectErrorStream(true);
@@ -222,22 +204,22 @@ public class DocumentationService {
         } catch (InterruptedException e) {
             progressTicker.cancel(true);
             Thread.currentThread().interrupt();
-            cleanupOutput(tempOutputDir);
+            deleteDirectory(tempOutputDir);
             throw new IOException("javadoc process interrupted", e);
         }
         progressTicker.cancel(true);
         if (!exited) {
             process.destroyForcibly();
-            cleanupOutput(tempOutputDir);
+            deleteDirectory(tempOutputDir);
             throw new IOException("javadoc process timed out after " + JAVADOC_TIMEOUT_SECONDS + " seconds");
         }
         int exitCode = process.exitValue();
         if (exitCode != 0) {
-            cleanupOutput(tempOutputDir);
+            deleteDirectory(tempOutputDir);
             throw new IOException("javadoc exited with code " + exitCode);
         }
         if (!Files.exists(tempOutputDir.resolve("index.json"))) {
-            cleanupOutput(tempOutputDir);
+            deleteDirectory(tempOutputDir);
             throw new IOException("javadoc completed but index.json was not created");
         }
         Path dataDir = outputDirectory.resolve(version);
@@ -257,91 +239,26 @@ public class DocumentationService {
     }
 
     /**
-     * Finds the correct sourcepath for javadoc given a source root directory.
+     * Resolves the path to the doclet JAR in the doclet/ directory.
      *
-     * <p>The JDK source structure has modules inside src/, and packages inside
-     * the modules (e.g., src/java.base/share/classes/java/lang/). The sourcepath
-     * must point to the parent of the source root directory so javadoc can find
-     * the packages within it.
+     * <p>Looks for the JAR {@code JAIDoc-doclet.jar} in the project's doclet/ directory.
+     * Returns null if not found — javadoc will then use its own classpath.
      */
-    private Path findSourcepathForSourceRoot(Path sourceRoot) throws IOException {
-        Path parent = sourceRoot.getParent();
-        if (parent == null) return sourceRoot;
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(parent)) {
-            for (Path entry : stream) {
-                if (Files.isDirectory(entry) && Files.exists(entry.resolve("src"))) {
-                    // Found the module directory — use its parent as sourcepath
-                    return entry.getParent();
-                }
-            }
-        }
-        return sourceRoot;
-    }
-
-    /**
-     * Resolves the path to the Spring Boot fat JAR at runtime.
-     *
-     * <p>Three strategies, tried in order:
-     * <ol>
-     *   <li>ProtectionDomain — in production (java -jar), this returns the fat JAR URI</li>
-     *   <li>Classpath scan — in dev/IDE mode, look for JAIDoc-*.jar</li>
-     *   <li>Fallback: null — if no JAR found, javadoc will use its own classpath</li>
-     * </ol>
-     */
-    String resolveFatJarPath() {
-        try {
-            java.net.URL location = DocumentationService.class.getProtectionDomain().getCodeSource().getLocation();
-            java.net.URI locationUri = location.toURI();
-            Path jarPath = Path.of(locationUri);
-            if (Files.exists(jarPath) && Files.isRegularFile(jarPath)) {
-                // Validate it's a Spring Boot fat JAR by checking for BOOT-INF/classes entry
-                if (isFatJar(jarPath)) {
-                    log.debug("Fat JAR resolved via ProtectionDomain: {}", jarPath);
-                    return jarPath.toString();
-                }
-            }
-        } catch (Exception e) {
-            log.debug("ProtectionDomain resolution failed: {}", e.getMessage());
-        }
-        String classpath = System.getProperty("java.class.path");
-        if (classpath != null) {
-            String[] entries = classpath.split(File.pathSeparator);
-            for (String entry : entries) {
-                if (entry.contains("JAIDoc-") && entry.endsWith(".jar")) {
-                    Path jarPath = Path.of(entry);
-                    if (Files.exists(jarPath)) {
-                        log.debug("Fat JAR resolved via classpath scan: {}", jarPath);
-                        return jarPath.toString();
-                    }
-                }
-            }
-        }
-        // In dev/test mode, fall back to the compiled classes directory
+    String resolveDocletPath() {
         String projDir = System.getProperty("user.dir");
-        Path classesDir = Path.of(projDir, "target", "classes");
-        if (Files.exists(classesDir)) {
-            log.debug("Fat JAR resolved via classes dir: {}", classesDir);
-            return classesDir.toString();
-        }
-        log.debug("No fat JAR found on classpath; javadoc will use its own classpath");
-        return null;
-    }
-
-    /**
-     * Validates that a JAR file is a Spring Boot fat JAR by checking for the BOOT-INF/classes entry.
-     */
-    private boolean isFatJar(Path jarPath) {
-        try (java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(Files.newInputStream(jarPath))) {
-            java.util.zip.ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-                if ("BOOT-INF/classes/".equals(entry.getName())) {
-                    return true;
-                }
-            }
+        Path docletDir = Path.of(projDir, "doclet");
+        try (var stream = Files.list(docletDir)) {
+            return stream.filter(p -> p.getFileName().toString().equals("JAIDoc-doclet.jar"))
+                .findFirst()
+                .map(path -> {
+                    log.debug("Doclet JAR resolved: {}", path);
+                    return path.toString();
+                })
+                .orElse(null);
         } catch (IOException e) {
-            log.debug("Failed to read JAR entries from {}: {}", jarPath, e.getMessage());
+            log.debug("Failed to list doclet directory: {}", e.getMessage());
+            return null;
         }
-        return false;
     }
 
   /**
@@ -356,7 +273,6 @@ public class DocumentationService {
         return CompletableFuture.runAsync(() -> {
             int i = 0;
             while (!Thread.currentThread().isInterrupted()) {
-                // Progress from 5% to 95% during javadoc execution
                 double progress = 5.0 + (95.0 * Math.min(i / 100.0, 1.0));
                 progressCallback.accept(progress);
                 i++;
@@ -373,17 +289,18 @@ public class DocumentationService {
      * Copies all contents from the source directory to the destination directory.
      */
     private void copyDirectory(Path source, Path destination) throws IOException {
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(source)) {
-            for (Path entry : stream) {
-                Path dest = destination.resolve(entry.getFileName());
-                if (Files.isDirectory(entry)) {
+        Files.walk(source).forEach(path -> {
+            try {
+                Path dest = destination.resolve(source.relativize(path));
+                if (Files.isDirectory(path)) {
                     Files.createDirectories(dest);
-                    copyDirectory(entry, dest);
                 } else {
-                    Files.copy(entry, dest, StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(path, dest, StandardCopyOption.REPLACE_EXISTING);
                 }
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
             }
-        }
+        });
     }
 
     /**
@@ -391,28 +308,13 @@ public class DocumentationService {
      */
     private void deleteDirectory(Path dir) throws IOException {
         if (!Files.exists(dir)) return;
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
-            for (Path entry : stream) {
-                if (Files.isDirectory(entry)) {
-                    deleteDirectory(entry);
-                } else {
-                    Files.delete(entry);
-                }
+        Files.walk(dir).sorted(Comparator.reverseOrder()).forEach(p -> {
+            try {
+                Files.delete(p);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
             }
-        }
-        Files.delete(dir);
-    }
-
-    /**
-     * Cleans up the output directory on failure (temp dir or partial output).
-     */
-    private void cleanupOutput(Path outputDir) {
-        try {
-            deleteDirectory(outputDir);
-            log.debug("Cleaned up output directory: {}", outputDir);
-        } catch (IOException e) {
-            log.warn("Failed to clean up output directory {}: {}", outputDir, e.getMessage());
-        }
+        });
     }
 
     /**
