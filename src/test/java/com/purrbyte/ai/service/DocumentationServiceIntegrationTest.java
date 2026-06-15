@@ -41,7 +41,7 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
                 Path.of("target/test-jdk-doc-workspace"),
                 Path.of("target/test-javadoc-output")
         );
-        var future = service.generateJdkDocumentation("25.0.3", p -> log.info("Progress [{}]: {}%", p.module(), p.percentage()));
+        var future = service.generateJdkDocumentation("25.0.3", p -> log.info("Progress [{}]: {}%", p.getModule(), p.getPercentage()));
         Path result = future.get();
         assertThat(result).isNotNull();
         assertThat(result).isDirectory();

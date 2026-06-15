@@ -1,12 +1,17 @@
 package com.purrbyte.ai.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 /**
  * Progress update for the JDK documentation generation pipeline.
- *
- * @param percentage progress percentage within the phase (0.0 to 100.0)
- * @param module     name of the process/module performing the progress
  */
-public record Progress(double percentage, String module) {
+@Getter
+@Setter
+public class Progress {
 
     /**
      * Phase: downloading JDK source
@@ -23,29 +28,28 @@ public record Progress(double percentage, String module) {
      */
     public static final String MODULE_JAVADOC = "javadoc";
 
+    private final double percentage;
+    private final String module;
+
     /**
-     * Computes the overall progress percentage across all phases.
+     * Creates a progress update.
      *
-     * <p>The pipeline is:
-     * <ol>
-     *   <li>Download — 0% to 40%</li>
-     *   <li>Extract — 40% to 55%</li>
-     *   <li>Javadoc — 55% to 100%</li>
-     * </ol>
-     *
-     * @return overall progress (0.0 to 100.0), or the raw percentage if module is null
+     * @param percentage progress percentage within the phase (0.0 to 100.0)
+     * @param module     name of the process/module performing the progress
      */
-    public double overallProgress() {
-        if (module == null) return percentage;
-        switch (module) {
-            case MODULE_DOWNLOAD:
-                return percentage * 0.40;
-            case MODULE_EXTRACT:
-                return 40.0 + percentage * 0.15;
-            case MODULE_JAVADOC:
-                return 55.0 + percentage * 0.45;
-            default:
-                return percentage;
-        }
+    public Progress(double percentage, String module) {
+        this.percentage = BigDecimal.valueOf(percentage)
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue();
+        this.module = module;
+    }
+
+    /**
+     * Factory method for creating a progress update.
+     * Equivalent to {@link #Progress(double, String)} — the constructor already
+     * rounds the percentage to 2 decimal places.
+     */
+    public static Progress of(double percentage, String module) {
+        return new Progress(percentage, module);
     }
 }
