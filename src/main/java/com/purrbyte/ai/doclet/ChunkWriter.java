@@ -32,8 +32,7 @@ final class ChunkWriter implements Closeable {
     private final boolean onlyDocumented;
     private long count = 0;
 
-    ChunkWriter(Path file, JsonMapper mapper, int maxChars, int overlap,
-                boolean onlyDocumented) throws IOException {
+    ChunkWriter(Path file, JsonMapper mapper, int maxChars, int overlap, boolean onlyDocumented) throws IOException {
         if (file.getParent() != null) Files.createDirectories(file.getParent());
         this.out = Files.newBufferedWriter(file, StandardCharsets.UTF_8);
         this.mapper = mapper;
