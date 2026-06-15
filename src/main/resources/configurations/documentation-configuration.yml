@@ -8,3 +8,8 @@ doclet:
     directory: ${DOCLET_WORK_DIR:./jdk-doc-workspace}
   output:
     directory: ${DOCLET_OUTPUT_DIR:data}
+  jar:
+    # Directory containing JAIDoc-doclet.jar (passed to javadoc via -docletpath).
+    directory: ${DOCLET_JAR_DIR:doclet}
+  # Comma-separated JDK modules to document. Empty = all modules found in the JDK's lib/src.zip.
+  modules: ${DOCLET_MODULES:}

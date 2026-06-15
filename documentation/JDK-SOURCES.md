@@ -2,9 +2,9 @@
 
 ## Purpose
 
-`JdkSourceDownloader` downloads JDK source code archives from the official OpenJDK GitHub repositories. This is used to
-document
-Java 8 sources via the `javadoc` CLI (see [DOCLET.md](DOCLET.md) for the JDK 8 bug workaround).
+`JdkSourceDownloader` downloads JDK source-code archives from the official OpenJDK GitHub repositories. For a given JDK
+version it resolves the correct repository and release tag, downloads the source ZIP asynchronously (virtual threads),
+and reports progress through a `Consumer<Progress>` callback.
 
 ## Repositories
 

@@ -204,12 +204,11 @@ operations without polluting the filesystem.
 
 ### Test configuration overrides
 
-When an integration test needs to override Spring properties (e.g., to use a different download directory for `JdkSourceDownloader`),
-it can construct the required beans directly instead of relying on `@SpringBootTest`'s bean wiring:
+When an integration test needs to override Spring properties (e.g., to use a different work directory or a reduced
+module list), it can construct the required beans directly instead of relying on `@SpringBootTest`'s bean wiring:
 
 ```java
-var downloader = createDownloader(tempDirectory);
-var service = new DocumentationService(downloader, workDir, outputDir);
+var service = new DocumentationService(workDir, outputDir, "java.base");
 ```
 
 This avoids the Spring context startup for tests that only need a subset of the application's beans.
@@ -228,10 +227,11 @@ from GitHub). These tests require network access and may be slow. They are disab
 
 ### E2E JavaDoc generation pipeline
 
-`DocumentationServiceIntegrationTest` runs the full JavaDoc generation pipeline — download JDK source, extract it,
-run javadoc with the JsonDoclet, and verify the JSON output files (`index.json`, `packages.json`). This test uses the
-real JDK 25.0.3 source and the real `javadoc` CLI tool. It requires network access, JDK 25 installed on the test
-machine, and may take 15-20 minutes. Disabled by default via the `INTEGRATION` tag.
+`DocumentationServiceIntegrationTest` runs the full JavaDoc generation pipeline — extract the running JDK's
+`lib/src.zip`, run javadoc with the JsonDoclet in module mode, and verify the JSON output (`index.json` plus the
+`api/` directory). It uses the running JDK's own complete sources and the real `javadoc` CLI tool, scoped to the
+`java.base` module to keep it fast (no network required; JDK 25 must be the running JDK). Disabled by default via the
+`INTEGRATION` tag and `-Dtest.integration.enabled=true`.
 
 ### File system operations
 

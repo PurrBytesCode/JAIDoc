@@ -16,34 +16,50 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
+/**
+ * Generates JSON documentation for the JDK using the {@code JsonDoclet}.
+ *
+ * <p>The source is the complete {@code lib/src.zip} that ships with the running JDK (the GitHub
+ * source tree is incomplete because many classes — e.g. the {@code java.nio} buffers — are generated
+ * at build time). Because the archive belongs to the running JDK, this service can only document the
+ * JDK version that matches {@code JAVA_HOME}.
+ */
 @Service
 @Slf4j
 public class DocumentationService {
 
     private static final long JAVADOC_TIMEOUT_SECONDS = 600;
+    private static final int JAVADOC_MAX_DIAGNOSTICS = 100_000;
 
-    private final JdkSourceDownloader jdkSourceDownloader;
+    private final Executor documentationExecutor = Executors.newVirtualThreadPerTaskExecutor();
     private final Path workDirectory;
     private final Path outputDirectory;
+    private final Path docletDirectory;
+    private final List<String> configuredModules;
 
     public DocumentationService(
-            JdkSourceDownloader jdkSourceDownloader,
             @Value("${doclet.work.directory}") Path workDirectory,
-            @Value("${doclet.output.directory}") Path outputDirectory) {
-        this.jdkSourceDownloader = jdkSourceDownloader;
+            @Value("${doclet.output.directory}") Path outputDirectory,
+            @Value("${doclet.modules:}") String modulesCsv,
+            @Value("${doclet.jar.directory:doclet}") Path docletDirectory) {
         this.workDirectory = workDirectory;
         this.outputDirectory = outputDirectory;
+        this.docletDirectory = docletDirectory;
+        this.configuredModules = parseModules(modulesCsv);
     }
 
     /**
@@ -51,100 +67,132 @@ public class DocumentationService {
      *
      * <p>The pipeline is:
      * <ol>
-     *   <li>Download JDK source zip — 0 to 40%</li>
-     *   <li>Extract source zip — 40 to 55%</li>
-     *   <li>Run javadoc with JsonDoclet and copy to data/ — 55 to 100%</li>
+     *   <li>Locate the running JDK's {@code lib/src.zip} (must match the requested major version)</li>
+     *   <li>Extract the source archive — reports {@link Progress#MODULE_EXTRACT}</li>
+     *   <li>Run javadoc with the JsonDoclet in module mode and copy to the output directory —
+     *       reports {@link Progress#MODULE_JAVADOC}</li>
      * </ol>
      *
-     * @param version          JDK version (e.g. "25.0.3", "21.0.11")
+     * @param version          JDK version (e.g. "25.0.3"); its major must match the running JDK
      * @param progressCallback callback for progress updates (each phase reports its own 0-100%)
-     * @return future with the path to the generated documentation directory in data/
+     * @return future with the path to the generated documentation directory in the output directory
      */
     public CompletableFuture<Path> generateJdkDocumentation(String version, Consumer<Progress> progressCallback) {
-        return jdkSourceDownloader.downloadSource(version, p -> {
-                    if (progressCallback != null) progressCallback.accept(p);
-                })
-                .thenApply(zippedPath -> {
+        return CompletableFuture.supplyAsync(() -> {
                     try {
-                        return extractSourceZip(zippedPath, version,
-                                p -> {
-                                    if (progressCallback != null) {
-                                        progressCallback.accept(Progress.of(p, Progress.MODULE_EXTRACT));
-                                    }
-                                });
+                        Path srcZip = locateSrcZip(version);
+                        Path moduleRoot = extractSourceZip(srcZip, version, p -> {
+                            if (progressCallback != null) {
+                                progressCallback.accept(Progress.of(p, Progress.MODULE_EXTRACT));
+                            }
+                        });
+                        List<String> modules = resolveModules(moduleRoot);
+                        log.info("Documenting JDK {} ({} modules)", version, modules.size());
+                        return runJavadocDoclet(moduleRoot, version, modules, progressCallback);
                     } catch (IOException e) {
                         throw new CompletionException(e);
                     }
-                })
-                .thenApply(sourceRoot -> {
-                    try {
-                        return runJavadocDoclet(sourceRoot, version,
-                                p -> {
-                                    if (progressCallback != null) {
-                                        progressCallback.accept(Progress.of(p.getPercentage(), Progress.MODULE_JAVADOC));
-                                    }
-                                });
-                    } catch (IOException e) {
-                        throw new CompletionException(e);
-                    }
-                })
+                }, documentationExecutor)
                 .exceptionally(ex -> {
                     log.error("JDK documentation generation failed for version {}: {}", version, ex.getMessage());
                     throw new CompletionException(ex);
                 });
     }
 
+    /**
+     * Locates the {@code lib/src.zip} of the running JDK, validating that its major version matches
+     * the requested version.
+     *
+     * @param version requested JDK version (e.g. "25.0.3")
+     * @return path to {@code lib/src.zip}
+     * @throws IOException if the major version does not match the running JDK or the archive is missing
+     */
+    private Path locateSrcZip(String version) throws IOException {
+        int requestedMajor = JdkSourceDownloader.extractMajorVersion(version);
+        int runningMajor = Runtime.version().feature();
+        if (requestedMajor != runningMajor) {
+            throw new IOException("Cannot document JDK " + version + ": lib/src.zip belongs to the running JDK "
+                    + Runtime.version() + " (major " + runningMajor + "). Run with a JDK whose major version is "
+                    + requestedMajor + ".");
+        }
+        Path srcZip = Path.of(System.getProperty("java.home"), "lib", "src.zip");
+        if (!Files.exists(srcZip)) {
+            throw new IOException("JDK source archive not found at " + srcZip
+                    + " — this JDK distribution does not ship lib/src.zip.");
+        }
+        return srcZip;
+    }
+
+    /**
+     * Extracts a source zip into {@code <work>/jdk-sources/<version>} with zip-slip protection.
+     * The extraction is idempotent: if the directory already exists it is reused.
+     *
+     * @return the extract directory, which is the {@code --module-source-path} root (its immediate
+     * subdirectories are JDK modules)
+     */
     private Path extractSourceZip(Path zipFile, String version, Consumer<Double> progressCallback) throws IOException {
         Path extractDir = workDirectory.resolve("jdk-sources").resolve(version);
         if (Files.exists(extractDir)) {
-            Path existingRoot = findSourceRoot(extractDir);
-            log.info("Source already extracted at {}", existingRoot);
-            return existingRoot;
+            log.info("Source already extracted at {}", extractDir);
+            return extractDir;
         }
         Files.createDirectories(extractDir);
         int totalEntries;
         try (ZipFile zipFileObj = new ZipFile(zipFile.toFile())) {
-            long count = zipFileObj.stream().filter(e -> !e.isDirectory()).count();
-            totalEntries = (int) count;
+            totalEntries = (int) zipFileObj.stream().filter(e -> !e.isDirectory()).count();
         }
         int processed = 0;
         try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipFile))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
-                if (!entry.isDirectory()) {
-                    Path dest = extractDir.resolve(entry.getName()).normalize();
-                    if (!dest.startsWith(extractDir)) {
-                        log.warn("Skipping zip-slip entry: {}", entry.getName());
-                        zis.closeEntry();
-                        continue;
-                    }
+                Path dest = extractDir.resolve(entry.getName()).normalize();
+                if (!dest.startsWith(extractDir)) {
+                    log.warn("Skipping zip-slip entry: {}", entry.getName());
+                    zis.closeEntry();
+                    continue;
+                }
+                if (entry.isDirectory()) {
+                    Files.createDirectories(dest);
+                } else {
                     Files.createDirectories(dest.getParent());
                     Files.copy(zis, dest, StandardCopyOption.REPLACE_EXISTING);
                     processed++;
-                    if (progressCallback != null) {
+                    if (progressCallback != null && totalEntries > 0) {
                         progressCallback.accept(processed / (double) totalEntries * 100.0);
                     }
-                } else {
-                    Files.createDirectories(extractDir.resolve(entry.getName()).normalize());
                 }
                 zis.closeEntry();
             }
         }
-        Path sourceRoot = findSourceRoot(extractDir);
-        log.info("JDK source extracted to: {}", sourceRoot);
-        return sourceRoot;
-    }
-
-    private Path findSourceRoot(Path extractDir) throws IOException {
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(extractDir)) {
-            for (Path entry : stream) {
-                if (Files.isDirectory(entry)) return entry;
-            }
-        }
+        log.info("JDK source extracted to: {}", extractDir);
         return extractDir;
     }
 
-    private Path runJavadocDoclet(Path sourceRoot, String version, Consumer<Progress> progressCallback) throws IOException {
+    /**
+     * Resolves the modules to document: the configured list if any, otherwise every module found under
+     * the source root (a directory is a module when it contains a {@code module-info.java}).
+     */
+    private List<String> resolveModules(Path moduleRoot) throws IOException {
+        if (!configuredModules.isEmpty()) {
+            return configuredModules;
+        }
+        List<String> modules = new ArrayList<>();
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(moduleRoot)) {
+            for (Path entry : stream) {
+                if (Files.isDirectory(entry) && Files.exists(entry.resolve("module-info.java"))) {
+                    modules.add(entry.getFileName().toString());
+                }
+            }
+        }
+        Collections.sort(modules);
+        return modules;
+    }
+
+    private Path runJavadocDoclet(Path moduleRoot, String version, List<String> modules,
+                                  Consumer<Progress> progressCallback) throws IOException {
+        if (modules.isEmpty()) {
+            throw new IOException("No modules found to document under " + moduleRoot);
+        }
         Path tempOutputDir = workDirectory.resolve("javadoc-out").resolve(version);
         Files.createDirectories(tempOutputDir);
         String osName = System.getProperty("os.name").toLowerCase();
@@ -161,25 +209,21 @@ public class DocumentationService {
         }
         command.add("-doclet");
         command.add("com.purrbyte.ai.doclet.JsonDoclet");
-        command.add("-sourcepath");
-        Path srcDir = sourceRoot.resolve("src");
-        if (!Files.exists(srcDir)) {
-            throw new IllegalStateException("Source directory not found: " + srcDir);
-        }
-        command.add(srcDir.toString());
-        command.add("-source");
-        command.add(String.valueOf(JdkSourceDownloader.extractMajorVersion(version)));
+        command.add("--module-source-path");
+        command.add(moduleRoot.toString());
+        command.add("--module");
+        command.add(String.join(",", modules));
         command.add("-d");
         command.add(tempOutputDir.toString());
         command.add("--pretty");
-        command.add("-subpackages");
-        command.add("java");
-        command.add("jdk");
-        command.add("com.sun");
-        command.add("javax");
-        command.add("org.ietf");
-        command.add("org.w3c");
-        command.add("org.xml.sax");
+        command.add("--doc-version");
+        command.add(version);
+        // The JDK source references build-time-generated symbols that may be absent; raise the
+        // diagnostic limits so javadoc still runs the doclet instead of aborting at the default cap.
+        command.add("-Xmaxerrs");
+        command.add(String.valueOf(JAVADOC_MAX_DIAGNOSTICS));
+        command.add("-Xmaxwarns");
+        command.add(String.valueOf(JAVADOC_MAX_DIAGNOSTICS));
         log.info("Executing javadoc: {}", String.join(" ", command));
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.redirectErrorStream(true);
@@ -214,20 +258,22 @@ public class DocumentationService {
             throw new IOException("javadoc process timed out after " + JAVADOC_TIMEOUT_SECONDS + " seconds");
         }
         int exitCode = process.exitValue();
-        if (exitCode != 0) {
-            deleteDirectory(tempOutputDir);
-            throw new IOException("javadoc exited with code " + exitCode);
-        }
+        // The doclet runs only after type attribution; missing generated symbols can leave a non-zero
+        // exit code even though valid output was produced. Treat the presence of index.json as success.
         if (!Files.exists(tempOutputDir.resolve("index.json"))) {
             deleteDirectory(tempOutputDir);
-            throw new IOException("javadoc completed but index.json was not created");
+            throw new IOException("javadoc did not produce index.json (exit code " + exitCode + ")");
+        }
+        if (exitCode != 0) {
+            log.warn("javadoc exited with code {} but index.json was produced; continuing with partial documentation",
+                    exitCode);
         }
         Path dataDir = outputDirectory.resolve(version);
         Files.createDirectories(dataDir);
         try {
             copyDirectory(tempOutputDir, dataDir);
         } catch (IOException e) {
-            throw new IOException("Failed to copy javadoc output to data/: " + e.getMessage(), e);
+            throw new IOException("Failed to copy javadoc output to output directory: " + e.getMessage(), e);
         }
         try {
             deleteDirectory(tempOutputDir);
@@ -239,15 +285,13 @@ public class DocumentationService {
     }
 
     /**
-     * Resolves the path to the doclet JAR in the doclet/ directory.
+     * Resolves the path to the doclet JAR in the configured doclet directory.
      *
-     * <p>Looks for the JAR {@code JAIDoc-doclet.jar} in the project's doclet/ directory.
-     * Returns null if not found — javadoc will then use its own classpath.
+     * <p>Looks for the JAR {@code JAIDoc-doclet.jar} in {@code doclet.jar.directory} (default
+     * {@code doclet}). Returns null if not found — javadoc will then use its own classpath.
      */
     String resolveDocletPath() {
-        String projDir = System.getProperty("user.dir");
-        Path docletDir = Path.of(projDir, "doclet");
-        try (var stream = Files.list(docletDir)) {
+        try (var stream = Files.list(docletDirectory)) {
             return stream.filter(p -> p.getFileName().toString().equals("JAIDoc-doclet.jar"))
                     .findFirst()
                     .map(path -> {
@@ -315,6 +359,19 @@ public class DocumentationService {
                 throw new UncheckedIOException(e);
             }
         });
+    }
+
+    /**
+     * Parses a comma-separated module list, trimming blanks. An empty value means "all modules".
+     */
+    private static List<String> parseModules(String modulesCsv) {
+        if (modulesCsv == null || modulesCsv.isBlank()) {
+            return List.of();
+        }
+        return Arrays.stream(modulesCsv.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
     }
 
     /**

@@ -50,6 +50,7 @@ javadoc \
 | Option                     | Argument count | Default              | Description                                          |
 |----------------------------|----------------|----------------------|------------------------------------------------------|
 | `-d`, `--output-directory` | 1              | `json-doclet-out`    | Output directory                                     |
+| `--doc-version <v>`        | 1              | —                    | Version recorded as `version` in `index.json`        |
 | `--pretty`                 | 0              | —                    | Format JSON with indentation                         |
 | `--no-chunks`              | 0              | —                    | Do not generate chunks.jsonl                         |
 | `--chunks-file <path>`     | 1              | `<out>/chunks.jsonl` | Path of the JSONL chunks file                        |
@@ -105,6 +106,7 @@ output-json/
 ```json
 {
   "generator": "json-doclet 1.0.0",
+  "version": "25.0.3",
   "generatedAt": "2026-06-10T04:19:29Z",
   "javaRuntime": "21.0.11",
   "modules": [],
