@@ -183,6 +183,8 @@ public class DocumentationService {
         command.add("com.purrbyte.ai.doclet.JsonDoclet");
         command.add("-sourcepath");
         command.add(sourceRoot.toString());
+        command.add("-source");
+        command.add(String.valueOf(JdkSourceDownloader.extractMajorVersion(version)));
         command.add("-d");
         command.add(tempOutputDir.toString());
         command.add("--pretty");
