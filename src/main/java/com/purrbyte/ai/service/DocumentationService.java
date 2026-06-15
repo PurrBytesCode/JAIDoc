@@ -69,7 +69,7 @@ public class DocumentationService {
                         return extractSourceZip(zippedPath, version,
                                 p -> {
                                     if (progressCallback != null) {
-                                        progressCallback.accept(new Progress(p, Progress.MODULE_EXTRACT));
+                                        progressCallback.accept(Progress.of(p, Progress.MODULE_EXTRACT));
                                     }
                                 });
                     } catch (IOException e) {
@@ -81,7 +81,7 @@ public class DocumentationService {
                         return runJavadocDoclet(sourceRoot, version,
                                 p -> {
                                     if (progressCallback != null) {
-                                        progressCallback.accept(new Progress(p.percentage(), Progress.MODULE_JAVADOC));
+                                        progressCallback.accept(Progress.of(p.getPercentage(), Progress.MODULE_JAVADOC));
                                     }
                                 });
                     } catch (IOException e) {
@@ -185,10 +185,10 @@ public class DocumentationService {
         pb.redirectErrorStream(true);
         Process process = pb.start();
         CompletableFuture<Void> progressTicker = startProgressTicker(p -> {
-                    if (progressCallback != null) {
-                        progressCallback.accept(new Progress(p, Progress.MODULE_JAVADOC));
-                    }
-                });
+            if (progressCallback != null) {
+                progressCallback.accept(Progress.of(p, Progress.MODULE_JAVADOC));
+            }
+        });
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
@@ -249,19 +249,19 @@ public class DocumentationService {
         Path docletDir = Path.of(projDir, "doclet");
         try (var stream = Files.list(docletDir)) {
             return stream.filter(p -> p.getFileName().toString().equals("JAIDoc-doclet.jar"))
-                .findFirst()
-                .map(path -> {
-                    log.debug("Doclet JAR resolved: {}", path);
-                    return path.toString();
-                })
-                .orElse(null);
+                    .findFirst()
+                    .map(path -> {
+                        log.debug("Doclet JAR resolved: {}", path);
+                        return path.toString();
+                    })
+                    .orElse(null);
         } catch (IOException e) {
             log.debug("Failed to list doclet directory: {}", e.getMessage());
             return null;
         }
     }
 
-  /**
+    /**
      * Creates an async progress ticker that increments progress during the javadoc phase.
      *
      * @param progressCallback callback for raw progress percentage (0.0 to 100.0)

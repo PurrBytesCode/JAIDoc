@@ -1,7 +1,13 @@
 package com.purrbyte.ai.util;
 
+import com.purrbyte.ai.model.Progress;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpRequest;
+import org.springframework.http.client.ClientHttpRequestExecution;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -12,13 +18,11 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
-
-import com.purrbyte.ai.model.Progress;
 
 @Slf4j
 @Component
@@ -33,10 +37,20 @@ public class JdkSourceDownloader {
     private final Executor downloadExecutor = Executors.newVirtualThreadPerTaskExecutor();
     private final String defaultJDKSourceDirectory;
     private final RestClient restClient;
+    private final ContentLengthInterceptor contentLengthInterceptor = new ContentLengthInterceptor();
 
     public JdkSourceDownloader(@Value("${jdk.source.download.directory}") String defaultJDKSourceDirectory, RestClient.Builder builder) {
         this.defaultJDKSourceDirectory = defaultJDKSourceDirectory;
-        this.restClient = builder.build();
+        this.restClient = builder
+                .requestFactory(new org.springframework.http.client.SimpleClientHttpRequestFactory() {
+                    @Override
+                    protected void prepareConnection(java.net.@NonNull HttpURLConnection connection, @NonNull String httpMethod) throws java.io.IOException {
+                        super.prepareConnection(connection, httpMethod);
+                        connection.setInstanceFollowRedirects(true);
+                    }
+                })
+                .requestInterceptor(contentLengthInterceptor)
+                .build();
     }
 
     public CompletableFuture<Path> downloadSource(String version, Consumer<Progress> progressCallback) {
@@ -54,6 +68,7 @@ public class JdkSourceDownloader {
             log.info("JDK source already downloaded at {}", targetFile);
             return CompletableFuture.completedFuture(targetFile);
         }
+        long total = extractContentLength(zipUrl);
         return CompletableFuture.supplyAsync(() -> {
             try (InputStream input = restClient.get()
                     .uri(URI.create(zipUrl))
@@ -63,16 +78,14 @@ public class JdkSourceDownloader {
                     throw new IOException("Empty response from server");
                 }
                 Files.createDirectories(targetDirectory);
-                long total = input.available();
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                 byte[] bufferBytes = new byte[8192];
                 int read;
                 while ((read = input.read(bufferBytes)) != -1) {
                     byteArrayOutputStream.write(bufferBytes, 0, read);
                     if (total > 0 && progressCallback != null) {
-                        double progress = (double) byteArrayOutputStream.size()
-                                / total * 100.0;
-                        progressCallback.accept(new Progress(progress, Progress.MODULE_DOWNLOAD));
+                        double progress = (double) byteArrayOutputStream.size() / total * 100.0;
+                        progressCallback.accept(Progress.of(Math.min(progress, 100.0), Progress.MODULE_DOWNLOAD));
                     }
                 }
                 Files.write(targetFile, byteArrayOutputStream.toByteArray());
@@ -81,6 +94,26 @@ public class JdkSourceDownloader {
                 throw new CompletionException(new IOException("Failed to download JDK source for version: " + version, e));
             }
         }, downloadExecutor);
+    }
+
+    /**
+     * Extracts the Content-Length header from the HTTP response using a HEAD request.
+     *
+     * @param url the URL to fetch headers for
+     * @return the Content-Length in bytes, or -1 if not present
+     */
+    private long extractContentLength(String url) {
+        try {
+            contentLengthInterceptor.reset();
+            restClient.head()
+                    .uri(URI.create(url))
+                    .retrieve()
+                    .body(Void.class);
+            return contentLengthInterceptor.getContentLength();
+        } catch (Exception e) {
+            log.debug("Failed to fetch Content-Length header for {}: {}", url, e.getMessage());
+            return -1L;
+        }
     }
 
     /**
@@ -196,5 +229,32 @@ public class JdkSourceDownloader {
             return Integer.parseInt(parts[1]);
         }
         return 0;
+    }
+
+    /**
+     * A request interceptor that captures the Content-Length header from HTTP responses.
+     */
+    private static class ContentLengthInterceptor implements ClientHttpRequestInterceptor {
+
+        private long contentLength = -1L;
+
+        void reset() {
+            contentLength = -1L;
+        }
+
+        long getContentLength() {
+            return contentLength;
+        }
+
+        @Override
+        public @NonNull ClientHttpResponse intercept(@NonNull HttpRequest request, byte @NonNull [] body, ClientHttpRequestExecution execution) throws java.io.IOException {
+            ClientHttpResponse response = execution.execute(request, body);
+            long contentLengthValue = response.getHeaders().getContentLength();
+            if (contentLengthValue > 0) {
+                this.contentLength = contentLengthValue;
+                log.debug("Content-Length for {}: {}", request.getURI(), contentLength);
+            }
+            return response;
+        }
     }
 }
