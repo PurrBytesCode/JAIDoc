@@ -196,7 +196,7 @@ class DocumentationServiceTest extends UnitTest {
     }
 
     private DocumentationService createService() {
-        return new DocumentationService(workDirectory, outputDirectory, "", docletDirectory, "");
+        return new DocumentationService(null, workDirectory, outputDirectory, "", docletDirectory, "");
     }
 
     private Path invokeExtractSourceZip(DocumentationService service, Path zipFile, String version, Consumer<Double> progressCallback) throws Exception {

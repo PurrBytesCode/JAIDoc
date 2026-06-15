@@ -2,6 +2,10 @@ jdk:
   source:
     download:
       directory: ${JDK_SOURCE_DOWNLOAD_ZIP:./jdk-sources}
+  distribution:
+    download:
+      # Directory where downloaded JDK distributions (for documenting non-running versions) are cached.
+      directory: ${JDK_DIST_DOWNLOAD_DIR:./jdk-distributions}
 
 doclet:
   work:

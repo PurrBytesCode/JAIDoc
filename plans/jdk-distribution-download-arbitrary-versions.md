@@ -1,6 +1,6 @@
 ---
 name: jdk-distribution-download-arbitrary-versions
-status: pending
+status: completed
 date: 2026-06-15
 ---
 
