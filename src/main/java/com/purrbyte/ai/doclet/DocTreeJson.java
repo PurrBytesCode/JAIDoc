@@ -42,16 +42,19 @@ final class DocTreeJson {
      */
     ObjectNode comment(DocTrees trees, Element e) {
         DocCommentTree dct = trees.getDocCommentTree(e);
-        if (dct == null) return null;
-
+        if (dct == null) {
+            return null;
+        }
         ObjectNode n = mapper.createObjectNode();
         String first = text(dct.getFirstSentence());
-        if (!first.isEmpty()) n.put("firstSentence", first);
-
+        if (!first.isEmpty()) {
+            n.put("firstSentence", first);
+        }
         String bodyText = text(dct.getFullBody());
-        if (!bodyText.isEmpty()) n.put("bodyText", bodyText);
+        if (!bodyText.isEmpty()) {
+            n.put("bodyText", bodyText);
+        }
         n.set("body", nodes(dct.getFullBody()));
-
         List<? extends DocTree> blockTags = dct.getBlockTags();
         if (!blockTags.isEmpty()) {
             ArrayNode tags = n.putArray("blockTags");
@@ -65,15 +68,17 @@ final class DocTreeJson {
      */
     String fullText(DocTrees trees, Element e) {
         DocCommentTree dct = trees.getDocCommentTree(e);
-        if (dct == null) return "";
+        if (dct == null) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder(text(dct.getFullBody()).trim());
         StringBuilder tags = new StringBuilder();
         for (DocTree t : dct.getBlockTags()) {
             String line = plainBlockTag(t).trim();
             if (!line.isEmpty()) tags.append(line).append('\n');
         }
-        if (tags.length() > 0) {
-            if (sb.length() > 0) sb.append("\n\n");
+        if (!tags.isEmpty()) {
+            if (!sb.isEmpty()) sb.append("\n\n");
             sb.append(tags.toString().trim());
         }
         return sb.toString().trim();
@@ -85,7 +90,9 @@ final class DocTreeJson {
     Map<String, String> paramDescriptions(DocTrees trees, Element e, boolean typeParams) {
         Map<String, String> out = new LinkedHashMap<>();
         DocCommentTree dct = trees.getDocCommentTree(e);
-        if (dct == null) return out;
+        if (dct == null) {
+            return out;
+        }
         for (DocTree t : dct.getBlockTags()) {
             if (t instanceof ParamTree pt && pt.isTypeParameter() == typeParams) {
                 out.put(pt.getName().getName().toString(), text(pt.getDescription()).trim());
@@ -114,7 +121,9 @@ final class DocTreeJson {
      */
     String deprecatedDescription(DocTrees trees, Element e) {
         DocCommentTree dct = trees.getDocCommentTree(e);
-        if (dct == null) return null;
+        if (dct == null) {
+            return null;
+        }
         for (DocTree t : dct.getBlockTags()) {
             if (t instanceof DeprecatedTree dt) return text(dt.getBody()).trim();
         }
@@ -126,14 +135,14 @@ final class DocTreeJson {
      */
     String sinceTag(DocTrees trees, Element e) {
         DocCommentTree dct = trees.getDocCommentTree(e);
-        if (dct == null) return null;
+        if (dct == null) {
+            return null;
+        }
         for (DocTree t : dct.getBlockTags()) {
             if (t instanceof SinceTree st) return text(st.getBody()).trim();
         }
         return null;
     }
-
-    // ------------------------------------------------------------------ JSON estructurado
 
     ArrayNode nodes(List<? extends DocTree> list) {
         ArrayNode arr = mapper.createArrayNode();
@@ -144,7 +153,6 @@ final class DocTreeJson {
     ObjectNode node(DocTree t) {
         ObjectNode n = mapper.createObjectNode();
         n.put("kind", t.getKind().name());
-
         if (t instanceof TextTree tt) {
             n.put("text", tt.getBody());
         } else if (t instanceof LiteralTree lt) {           // {@code} y {@literal}
@@ -198,7 +206,7 @@ final class DocTreeJson {
         } else if (t instanceof ValueTree vt) {
             if (vt.getReference() != null) n.put("reference", vt.getReference().getSignature());
         } else if (t instanceof InheritDocTree) {
-            // sin campos extra: {"kind":"INHERIT_DOC"}
+            // No extra fields: {"kind":"INHERIT_DOC"}
         } else if (t instanceof IndexTree it) {
             n.put("term", plainInline(it.getSearchTerm()));
             n.put("description", text(it.getDescription()));
@@ -301,44 +309,61 @@ final class DocTreeJson {
      * Renders a block tag as a "@tag ..." line.
      */
     private String plainBlockTag(DocTree t) {
-        if (t instanceof ParamTree pt) {
-            String name = pt.getName().getName().toString();
-            if (pt.isTypeParameter()) name = "<" + name + ">";
-            return "@param " + name + " " + text(pt.getDescription());
-        } else if (t instanceof ReturnTree rt) {
-            return "@return " + text(rt.getDescription());
-        } else if (t instanceof ThrowsTree tt) {
-            return "@throws " + tt.getExceptionName().getSignature()
-                    + " " + text(tt.getDescription());
-        } else if (t instanceof SeeTree st) {
-            return "@see " + text(st.getReference());
-        } else if (t instanceof SinceTree st) {
-            return "@since " + text(st.getBody());
-        } else if (t instanceof AuthorTree at) {
-            return "@author " + text(at.getName());
-        } else if (t instanceof VersionTree vt) {
-            return "@version " + text(vt.getBody());
-        } else if (t instanceof DeprecatedTree dt) {
-            return "@deprecated " + text(dt.getBody());
-        } else if (t instanceof SerialTree st) {
-            return "@serial " + text(st.getDescription());
-        } else if (t instanceof SerialDataTree st) {
-            return "@serialData " + text(st.getDescription());
-        } else if (t instanceof SerialFieldTree st) {
-            return "@serialField " + st.getName().getName() + " "
-                    + st.getType().getSignature() + " " + text(st.getDescription());
-        } else if (t instanceof HiddenTree ht) {
-            return "@hidden " + text(ht.getBody());
-        } else if (t instanceof ProvidesTree pt) {
-            return "@provides " + pt.getServiceType().getSignature()
-                    + " " + text(pt.getDescription());
-        } else if (t instanceof UsesTree ut) {
-            return "@uses " + ut.getServiceType().getSignature()
-                    + " " + text(ut.getDescription());
-        } else if (t instanceof UnknownBlockTagTree ut) {
-            return "@" + ut.getTagName() + " " + text(ut.getContent());
-        } else {
-            return t.toString();
+        switch (t) {
+            case ParamTree pt -> {
+                String name = pt.getName().getName().toString();
+                if (pt.isTypeParameter()) name = "<" + name + ">";
+                return "@param " + name + " " + text(pt.getDescription());
+            }
+            case ReturnTree rt -> {
+                return "@return " + text(rt.getDescription());
+            }
+            case ThrowsTree tt -> {
+                return "@throws " + tt.getExceptionName().getSignature()
+                        + " " + text(tt.getDescription());
+            }
+            case SeeTree st -> {
+                return "@see " + text(st.getReference());
+            }
+            case SinceTree st -> {
+                return "@since " + text(st.getBody());
+            }
+            case AuthorTree at -> {
+                return "@author " + text(at.getName());
+            }
+            case VersionTree vt -> {
+                return "@version " + text(vt.getBody());
+            }
+            case DeprecatedTree dt -> {
+                return "@deprecated " + text(dt.getBody());
+            }
+            case SerialTree st -> {
+                return "@serial " + text(st.getDescription());
+            }
+            case SerialDataTree st -> {
+                return "@serialData " + text(st.getDescription());
+            }
+            case SerialFieldTree st -> {
+                return "@serialField " + st.getName().getName() + " "
+                        + st.getType().getSignature() + " " + text(st.getDescription());
+            }
+            case HiddenTree ht -> {
+                return "@hidden " + text(ht.getBody());
+            }
+            case ProvidesTree pt -> {
+                return "@provides " + pt.getServiceType().getSignature()
+                        + " " + text(pt.getDescription());
+            }
+            case UsesTree ut -> {
+                return "@uses " + ut.getServiceType().getSignature()
+                        + " " + text(ut.getDescription());
+            }
+            case UnknownBlockTagTree ut -> {
+                return "@" + ut.getTagName() + " " + text(ut.getContent());
+            }
+            default -> {
+                return t.toString();
+            }
         }
     }
 
@@ -357,34 +382,21 @@ final class DocTreeJson {
                 return "&" + name + ";";
             }
         }
-        switch (name) {
-            case "amp":
-                return "&";
-            case "lt":
-                return "<";
-            case "gt":
-                return ">";
-            case "quot":
-                return "\"";
-            case "apos":
-                return "'";
-            case "nbsp":
-                return " ";
-            case "copy":
-                return "\u00a9";
-            case "reg":
-                return "\u00ae";
-            case "trade":
-                return "\u2122";
-            case "hellip":
-                return "\u2026";
-            case "mdash":
-                return "\u2014";
-            case "ndash":
-                return "\u2013";
-            default:
-                return "&" + name + ";";
-        }
+        return switch (name) {
+            case "amp" -> "&";
+            case "lt" -> "<";
+            case "gt" -> ">";
+            case "quot" -> "\"";
+            case "apos" -> "'";
+            case "nbsp" -> " ";
+            case "copy" -> "©";
+            case "reg" -> "®";
+            case "trade" -> "™";
+            case "hellip" -> "…";
+            case "mdash" -> "—";
+            case "ndash" -> "–";
+            default -> "&" + name + ";";
+        };
     }
 
     /**
