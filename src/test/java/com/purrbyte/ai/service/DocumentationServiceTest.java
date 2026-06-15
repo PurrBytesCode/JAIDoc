@@ -233,7 +233,7 @@ class DocumentationServiceTest extends UnitTest {
     }
 
     private Path invokeExtractSourceZip(DocumentationService service, Path zipFile, String version, Consumer<Double> progressCallback) throws Exception {
-        Method method = DocumentationService.class.getDeclaredMethod("extractSourceZip", Path.class, String.class, java.util.function.Consumer.class);
+        Method method = DocumentationService.class.getDeclaredMethod("extractSourceZip", Path.class, String.class, Consumer.class);
         method.setAccessible(true);
         return (Path) method.invoke(service, zipFile, version, progressCallback);
     }

@@ -8,7 +8,6 @@ import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
@@ -33,9 +32,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Tag(BaseTest.TAG_INTEGRATION)
 class DocumentationServiceIntegrationTest extends IntegrationTest {
 
-    @TempDir
-    Path tempDirectory;
-
     @Test
     @Order(1)
     void generateJdkDocumentation_jdk25_0_3_producesJsonOutput() throws ExecutionException, InterruptedException {
@@ -45,7 +41,7 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
                 Path.of("target/test-jdk-doc-workspace"),
                 Path.of("target/test-javadoc-output")
         );
-        var future = service.generateJdkDocumentation("25.0.3", p -> log.info("Progress: {}%", p));
+        var future = service.generateJdkDocumentation("25.0.3", p -> log.info("Progress [{}]: {}%", p.module(), p.percentage()));
         Path result = future.get();
         assertThat(result).isNotNull();
         assertThat(result).isDirectory();
@@ -71,7 +67,7 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
             }
         };
         return new JdkSourceDownloader(
-                tempDirectory.toString(),
+                Path.of("target/test-jdk-sources").toString(),
                 RestClient.builder()
                         .requestFactory(factory)
         );
