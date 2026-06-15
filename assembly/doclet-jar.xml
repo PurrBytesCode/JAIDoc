@@ -29,6 +29,7 @@
                 <include>tools.jackson.core:jackson-databind</include>
                 <include>tools.jackson.core:jackson-core</include>
                 <include>com.fasterxml.jackson.core:jackson-annotations</include>
+                <include>org.slf4j:slf4j-api</include>
             </includes>
             <unpackOptions>
                 <excludes>
