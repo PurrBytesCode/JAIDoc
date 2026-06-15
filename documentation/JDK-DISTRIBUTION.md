@@ -2,11 +2,10 @@
 
 ## Purpose
 
-`JdkDistributionDownloader` downloads full JDK distributions from **Adoptium / Temurin** so that
-`DocumentationService` can document a JDK version that is **not** the running JDK. The distribution's
-`lib/src.zip` is the complete, compilable source the doclet needs (the OpenJDK GitHub source tree is
-incomplete — many classes are generated at build time). See [JDK-SOURCES.md](JDK-SOURCES.md) for the
-separate GitHub source downloader.
+`JdkDistributionDownloader` downloads full JDK distributions from **Adoptium / Temurin** so that `DocumentationService`
+can document a JDK version that is **not** the running JDK. The distribution's `lib/src.zip` is the complete, compilable
+source the doclet needs (the OpenJDK GitHub source tree is incomplete — many classes are generated at build time).
+See [JDK-SOURCES.md](JDK-SOURCES.md) for the separate GitHub source downloader.
 
 ## How a version is documented
 
@@ -16,9 +15,9 @@ separate GitHub source downloader.
 2. **Requested major == running JDK** → use the running JDK's local `lib/src.zip` (no download).
 3. **Otherwise** → download the Adoptium distribution, extract its `lib/src.zip`, then extract that.
 
-The javadoc tool that runs the doclet is the one configured by `doclet.javadoc.home` (default = the
-running JDK). It must be a JDK **17+** (the doclet needs Jackson 3) whose major is **>=** the documented
-version — a newer javadoc reads older source, not the other way around.
+The javadoc tool that runs the doclet is the one configured by `doclet.javadoc.home` (default = the running JDK). It
+must be a JDK **17+** (the doclet needs Jackson 3) whose major is **>=** the documented version — a newer javadoc reads
+older source, not the other way around.
 
 ## Adoptium resolution
 
@@ -30,17 +29,16 @@ GET https://api.adoptium.net/v3/assets/feature_releases/{major}/ga
       &os={os}&vendor=eclipse&page={n}&page_size=50&sort_order=DESC
 ```
 
-It pages through the GA releases (newest first), matches the requested `major[.minor[.security]]`
-against each release's `version_data`, and takes the first matching JDK binary's `package` (link, name,
-size). OS/arch are mapped from `os.name`/`os.arch` to Adoptium tokens (`windows`/`mac`/`linux`,
-`x64`/`aarch64`).
+It pages through the GA releases (newest first), matches the requested `major[.minor[.security]]` against each release's
+`version_data`, and takes the first matching JDK binary's `package` (link, name, size). OS/arch are mapped from
+`os.name`/`os.arch` to Adoptium tokens (`windows`/`mac`/`linux`,`x64`/`aarch64`).
 
 ## Archive handling
 
-| OS            | Archive   | Extraction                                |
-|---------------|-----------|-------------------------------------------|
-| Windows       | `.zip`    | `java.util.zip`                           |
-| Linux / macOS | `.tar.gz` | Apache Commons Compress (`tar` + `gzip`)  |
+| OS            | Archive   | Extraction                               |
+|---------------|-----------|------------------------------------------|
+| Windows       | `.zip`    | `java.util.zip`                          |
+| Linux / macOS | `.tar.gz` | Apache Commons Compress (`tar` + `gzip`) |
 
 Only the `*/lib/src.zip` entry is extracted from the distribution; the rest of the JDK is not unpacked.
 
@@ -59,9 +57,9 @@ doclet:
 ## Key behaviors
 
 - **Async execution** — virtual-thread executor (`Executors.newVirtualThreadPerTaskExecutor()`).
-- **Progress callback** — optional `Consumer<Progress>`; the download phase reports
-  `Progress.MODULE_DOWNLOAD` using the size from the Adoptium API.
-- **Caching** — an already-downloaded archive (and already-extracted source) is reused; downloads write
-  to a `.part` file that is renamed on completion.
-- **Scope** — modular JDKs (11+). JDK 8 (flat, non-modular layout) is not handled yet; requesting it
-  fails with a clear message.
+- **Progress callback** — optional `Consumer<Progress>`; the download phase reports `Progress.MODULE_DOWNLOAD` using the
+  size from the Adoptium API.
+- **Caching** — an already-downloaded archive (and already-extracted source) is reused; downloads write to a `.part`
+  file that is renamed on completion.
+- **Scope** — modular JDKs (11+). JDK 8 (flat, non-modular layout) is not handled yet; requesting it fails with a clear
+  message.
