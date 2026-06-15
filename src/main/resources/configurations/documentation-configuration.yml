@@ -11,5 +11,9 @@ doclet:
   jar:
     # Directory containing JAIDoc-doclet.jar (passed to javadoc via -docletpath).
     directory: ${DOCLET_JAR_DIR:doclet}
+  javadoc:
+    # JDK home whose bin/javadoc runs the doclet. Empty = the running JDK (java.home).
+    # Must be a JDK >= 17 (the doclet needs Jackson 3).
+    home: ${DOCLET_JAVADOC_HOME:}
   # Comma-separated JDK modules to document. Empty = all modules found in the JDK's lib/src.zip.
   modules: ${DOCLET_MODULES:}

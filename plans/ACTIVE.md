@@ -5,7 +5,8 @@ plans are historical records.
 
 ## Pending
 
-_N/A_
+- [jdk-distribution-download-arbitrary-versions](jdk-distribution-download-arbitrary-versions.md) — Document
+  arbitrary JDK versions by downloading the Adoptium distribution and extracting its `lib/src.zip`.
 
 ## Completed
 
