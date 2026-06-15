@@ -34,11 +34,12 @@ com.purrbyte.ai.doclet
 mvn clean package
 ```
 
-The build produces a Spring Boot fat JAR in `target/`. The doclet is invoked through the standard javadoc CLI:
+The build produces a Spring Boot fat JAR in `target/` and a doclet JAR in `doclet/`. The doclet is invoked through the
+standard javadoc CLI:
 
 ```bash
 javadoc \
-  -docletpath target/JAIDoc-0.1.0.jar \
+  -docletpath doclet/JAIDoc-doclet.jar \
   -doclet com.purrbyte.ai.doclet.JsonDoclet \
   -d output-json --pretty \
   -sourcepath src -subpackages com.mycompany
@@ -68,14 +69,14 @@ throws an `AssertionError` from the module system. Workarounds:
 
 ```bash
 find src -name '*.java' > sources.txt
-javadoc --release 8 -docletpath target/JAIDoc-0.1.0.jar \
+javadoc --release 8 -docletpath doclet/JAIDoc-doclet.jar \
         -doclet com.purrbyte.ai.doclet.JsonDoclet -d output-json @sources.txt
 ```
 
 **Option (b): Use `--release 11` with `-subpackages`** — if the code compiles as Java 11+:
 
 ```bash
-javadoc --release 11 -docletpath target/JAIDoc-0.1.0.jar \
+javadoc --release 11 -docletpath doclet/JAIDoc-doclet.jar \
         -doclet com.purrbyte.ai.doclet.JsonDoclet \
         -d output-json -sourcepath src -subpackages com.mycompany
 ```

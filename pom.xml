@@ -170,6 +170,27 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <finalName>JAIDoc</finalName>
+                    <descriptors>
+                        <descriptor>assembly/doclet-jar.xml</descriptor>
+                    </descriptors>
+                    <ignoreDirFormatExtensions>true</ignoreDirFormatExtensions>
+                    <outputDirectory>${project.basedir}/doclet</outputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <executions>
                     <execution>
