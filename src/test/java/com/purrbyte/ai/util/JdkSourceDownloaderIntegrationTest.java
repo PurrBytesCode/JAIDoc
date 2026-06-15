@@ -4,7 +4,6 @@ import com.purrbyte.ai.test.IntegrationTest;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
@@ -22,13 +21,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Slf4j
 class JdkSourceDownloaderIntegrationTest extends IntegrationTest {
 
-    @TempDir
-    Path tempDirectory;
-
     @Test
     void downloadSource_jdk8_returnsFilePath() throws ExecutionException, InterruptedException {
         JdkSourceDownloader downloader = createDownloader();
-        CompletableFuture<Path> future = downloader.downloadSource("8.0.492", progress -> log.info("Download progress [8.0.492]: {}%", progress));
+        CompletableFuture<Path> future = downloader.downloadSource("8.0.492", p -> log.info("Download progress [8.0.492] {}: {}%", p.module(), p.percentage()));
         Path result = future.get();
         assertThat(result).isNotNull();
         assertThat(result).isRegularFile();
@@ -38,7 +34,7 @@ class JdkSourceDownloaderIntegrationTest extends IntegrationTest {
     @Test
     void downloadSource_jdk11_returnsFilePath() throws ExecutionException, InterruptedException {
         JdkSourceDownloader downloader = createDownloader();
-        CompletableFuture<Path> future = downloader.downloadSource("11.0.28", progress -> log.info("Download progress [11.0.28]: {}%", progress));
+        CompletableFuture<Path> future = downloader.downloadSource("11.0.28", p -> log.info("Download progress [11.0.28] {}: {}%", p.module(), p.percentage()));
         Path result = future.get();
         assertThat(result).isNotNull();
         assertThat(result).isRegularFile();
@@ -48,7 +44,7 @@ class JdkSourceDownloaderIntegrationTest extends IntegrationTest {
     @Test
     void downloadSource_jdk17_returnsFilePath() throws ExecutionException, InterruptedException {
         JdkSourceDownloader downloader = createDownloader();
-        CompletableFuture<Path> future = downloader.downloadSource("17.0.13", progress -> log.info("Download progress [17.0.13]: {}%", progress));
+        CompletableFuture<Path> future = downloader.downloadSource("17.0.13", p -> log.info("Download progress [17.0.13] {}: {}%", p.module(), p.percentage()));
         Path result = future.get();
         assertThat(result).isNotNull();
         assertThat(result).isRegularFile();
@@ -58,7 +54,7 @@ class JdkSourceDownloaderIntegrationTest extends IntegrationTest {
     @Test
     void downloadSource_jdk21_returnsFilePath() throws ExecutionException, InterruptedException {
         JdkSourceDownloader downloader = createDownloader();
-        CompletableFuture<Path> future = downloader.downloadSource("21.0.11", progress -> log.info("Download progress [21.0.11]: {}%", progress));
+        CompletableFuture<Path> future = downloader.downloadSource("21.0.11", p -> log.info("Download progress [21.0.11] {}: {}%", p.module(), p.percentage()));
         Path result = future.get();
         assertThat(result).isNotNull();
         assertThat(result).isRegularFile();
@@ -68,7 +64,7 @@ class JdkSourceDownloaderIntegrationTest extends IntegrationTest {
     @Test
     void downloadSource_jdk25_returnsFilePath() throws ExecutionException, InterruptedException {
         JdkSourceDownloader downloader = createDownloader();
-        CompletableFuture<Path> future = downloader.downloadSource("25.0.1", progress -> log.info("Download progress [25.0.1]: {}%", progress));
+        CompletableFuture<Path> future = downloader.downloadSource("25.0.1", p -> log.info("Download progress [25.0.1] {}: {}%", p.module(), p.percentage()));
         Path result = future.get();
         assertThat(result).isNotNull();
         assertThat(result).isRegularFile();
@@ -84,7 +80,7 @@ class JdkSourceDownloaderIntegrationTest extends IntegrationTest {
             }
         };
         return new JdkSourceDownloader(
-                tempDirectory.toString(),
+                Path.of("target/test-jdk-sources").toString(),
                 RestClient.builder()
                         .requestFactory(factory)
         );

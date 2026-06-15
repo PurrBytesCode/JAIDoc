@@ -1,5 +1,6 @@
 package com.purrbyte.ai.service;
 
+import com.purrbyte.ai.model.Progress;
 import com.purrbyte.ai.util.JdkSourceDownloader;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,27 +51,27 @@ public class DocumentationService {
      *
      * <p>The pipeline is:
      * <ol>
-     *   <li>Download JDK source zip (40%)</li>
-     *   <li>Extract source zip (15%)</li>
-     *   <li>Run javadoc with JsonDoclet and copy to data/ (45%)</li>
+     *   <li>Download JDK source zip — 0 to 40%</li>
+     *   <li>Extract source zip — 40 to 55%</li>
+     *   <li>Run javadoc with JsonDoclet and copy to data/ — 55 to 100%</li>
      * </ol>
      *
      * @param version          JDK version (e.g. "25.0.3", "21.0.11")
-     * @param progressCallback callback for progress updates (0.0 to 1.0)
+     * @param progressCallback callback for progress updates (each phase reports its own 0-100%)
      * @return future with the path to the generated documentation directory in data/
      */
-    public CompletableFuture<Path> generateJdkDocumentation(String version, Consumer<Double> progressCallback) {
-        final double DOWNLOAD_WEIGHT = 0.40;
-        final double EXTRACT_WEIGHT = 0.15;
-        final double JAVADOC_WEIGHT = 0.45;
-        Consumer<Double> downloadProgress = p -> {
-            if (progressCallback != null) progressCallback.accept(p * DOWNLOAD_WEIGHT);
-        };
-        return jdkSourceDownloader.downloadSource(version, downloadProgress)
+    public CompletableFuture<Path> generateJdkDocumentation(String version, Consumer<Progress> progressCallback) {
+        return jdkSourceDownloader.downloadSource(version, p -> {
+                    if (progressCallback != null) progressCallback.accept(p);
+                })
                 .thenApply(zippedPath -> {
                     try {
                         return extractSourceZip(zippedPath, version,
-                                p -> progressCallback.accept(DOWNLOAD_WEIGHT + p * EXTRACT_WEIGHT));
+                                p -> {
+                                    if (progressCallback != null) {
+                                        progressCallback.accept(new Progress(p, Progress.MODULE_EXTRACT));
+                                    }
+                                });
                     } catch (IOException e) {
                         throw new CompletionException(e);
                     }
@@ -78,7 +79,11 @@ public class DocumentationService {
                 .thenApply(sourceRoot -> {
                     try {
                         return runJavadocDoclet(sourceRoot, version,
-                                p -> progressCallback.accept(DOWNLOAD_WEIGHT + EXTRACT_WEIGHT + p * JAVADOC_WEIGHT));
+                                p -> {
+                                    if (progressCallback != null) {
+                                        progressCallback.accept(new Progress(p.percentage(), Progress.MODULE_JAVADOC));
+                                    }
+                                });
                     } catch (IOException e) {
                         throw new CompletionException(e);
                     }
@@ -94,10 +99,10 @@ public class DocumentationService {
      *
      * @param zipFile          path to the downloaded zip
      * @param version          JDK version
-     * @param progressCallback progress callback (0.0 to 1.0 for this phase)
+     * @param progressCallback progress callback (0.0 to 100.0 for this phase)
      * @return path to the extracted source root directory
      */
-    private Path extractSourceZip(Path zipFile, String version, Consumer<Double> progressCallback) throws IOException {
+   private Path extractSourceZip(Path zipFile, String version, Consumer<Double> progressCallback) throws IOException {
         Path extractDir = workDirectory.resolve("jdk-sources").resolve(version);
         if (Files.exists(extractDir)) {
             Path existingRoot = findSourceRoot(extractDir);
@@ -160,10 +165,10 @@ public class DocumentationService {
      *
      * @param sourceRoot       path to the extracted JDK source root
      * @param version          JDK version
-     * @param progressCallback progress callback (0.0 to 1.0 for this phase)
+     * @param progressCallback progress callback (0.0 to 100.0 for this phase)
      * @return path to the generated documentation directory in data/
      */
-    private Path runJavadocDoclet(Path sourceRoot, String version, Consumer<Double> progressCallback) throws IOException {
+    private Path runJavadocDoclet(Path sourceRoot, String version, Consumer<Progress> progressCallback) throws IOException {
         Path tempOutputDir = workDirectory.resolve("javadoc-out").resolve(version);
         Files.createDirectories(tempOutputDir);
         String javaHome = System.getProperty("java.home");
@@ -197,7 +202,11 @@ public class DocumentationService {
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.redirectErrorStream(true);
         Process process = pb.start();
-        CompletableFuture<Void> progressTicker = startProgressTicker(progressCallback);
+        CompletableFuture<Void> progressTicker = startProgressTicker(p -> {
+                    if (progressCallback != null) {
+                        progressCallback.accept(new Progress(p, Progress.MODULE_JAVADOC));
+                    }
+                });
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
@@ -335,8 +344,10 @@ public class DocumentationService {
         return false;
     }
 
-    /**
+  /**
      * Creates an async progress ticker that increments progress during the javadoc phase.
+     *
+     * @param progressCallback callback for raw progress percentage (0.0 to 100.0)
      */
     private CompletableFuture<Void> startProgressTicker(Consumer<Double> progressCallback) {
         if (progressCallback == null) {

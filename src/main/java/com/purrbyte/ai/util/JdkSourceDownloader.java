@@ -12,11 +12,13 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
+
+import com.purrbyte.ai.model.Progress;
 
 @Slf4j
 @Component
@@ -37,16 +39,21 @@ public class JdkSourceDownloader {
         this.restClient = builder.build();
     }
 
-    public CompletableFuture<Path> downloadSource(String version, Consumer<Double> progressCallback) {
+    public CompletableFuture<Path> downloadSource(String version, Consumer<Progress> progressCallback) {
         return downloadSource(version, Path.of(defaultJDKSourceDirectory), progressCallback);
     }
 
-    public CompletableFuture<Path> downloadSource(String version, Path targetDirectory, Consumer<Double> progressCallback) {
+    public CompletableFuture<Path> downloadSource(String version, Path targetDirectory, Consumer<Progress> progressCallback) {
         String normalizedVersion = normalizeVersion(version);
         String repo = getRepoForVersion(version);
         String tagName = getTagNameForVersion(version);
         String zipUrl = "https://github.com/" + repo + "/archive/refs/tags/" + tagName + ".zip";
         Path targetFile = targetDirectory.resolve("jdk-" + normalizedVersion + ".zip");
+        // Skip download if the zip already exists
+        if (Files.exists(targetFile)) {
+            log.info("JDK source already downloaded at {}", targetFile);
+            return CompletableFuture.completedFuture(targetFile);
+        }
         return CompletableFuture.supplyAsync(() -> {
             try (InputStream input = restClient.get()
                     .uri(URI.create(zipUrl))
@@ -65,7 +72,7 @@ public class JdkSourceDownloader {
                     if (total > 0 && progressCallback != null) {
                         double progress = (double) byteArrayOutputStream.size()
                                 / total * 100.0;
-                        progressCallback.accept(progress);
+                        progressCallback.accept(new Progress(progress, Progress.MODULE_DOWNLOAD));
                     }
                 }
                 Files.write(targetFile, byteArrayOutputStream.toByteArray());
