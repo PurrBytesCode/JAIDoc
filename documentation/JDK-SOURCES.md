@@ -55,13 +55,14 @@ Update versions: 25.0.3, 25.0.2, 25.0.1
 
 ```java
 // Download a specific version (async, returns a Path to the zip)
-CompletableFuture<Path> future = downloader.downloadSource("17.0.1", progress -> System.out.println(progress + "%"));
+CompletableFuture<Path> future = downloader.downloadSource("17.0.1", p -> System.out.println(p.module() + ": " + p.percentage() + "%"));
 ```
 
 ## Key Behaviors
 
 - **Async execution** — Uses a virtual thread executor (`Executors.newVirtualThreadPerTaskExecutor()`)
-- **Progress callback** — Optional `Consumer<Double>` for progress reporting
+- **Progress callback** — Optional `Consumer<Progress>` for progress reporting; each update includes a phase name (
+  download/extract/javadoc) and percentage (0.0–100.0)
 - **Version normalization** — Accepts version strings in various formats, validates format
 - **Multi-repo support** — Automatically selects the correct GitHub repository based on the JDK version
 
