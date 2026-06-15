@@ -21,10 +21,10 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
-import java.util.function.Consumer;
 
 @Service
 @Slf4j
@@ -55,7 +55,7 @@ public class DocumentationService {
      *   <li>Run javadoc with JsonDoclet and copy to data/ (45%)</li>
      * </ol>
      *
-     * @param version JDK version (e.g. "25.0.3", "21.0.11")
+     * @param version          JDK version (e.g. "25.0.3", "21.0.11")
      * @param progressCallback callback for progress updates (0.0 to 1.0)
      * @return future with the path to the generated documentation directory in data/
      */
@@ -92,8 +92,8 @@ public class DocumentationService {
     /**
      * Extracts a JDK source zip to the work directory.
      *
-     * @param zipFile path to the downloaded zip
-     * @param version JDK version
+     * @param zipFile          path to the downloaded zip
+     * @param version          JDK version
      * @param progressCallback progress callback (0.0 to 1.0 for this phase)
      * @return path to the extracted source root directory
      */
@@ -158,8 +158,8 @@ public class DocumentationService {
      *
      * <p>Output goes to a temp directory first, then is copied to the persistent data/ directory.
      *
-     * @param sourceRoot path to the extracted JDK source root
-     * @param version JDK version
+     * @param sourceRoot       path to the extracted JDK source root
+     * @param version          JDK version
      * @param progressCallback progress callback (0.0 to 1.0 for this phase)
      * @return path to the generated documentation directory in data/
      */
@@ -182,7 +182,10 @@ public class DocumentationService {
         command.add("-doclet");
         command.add("com.purrbyte.ai.doclet.JsonDoclet");
         command.add("-sourcepath");
-        command.add(sourceRoot.toString());
+        // The sourcepath must point to the parent of the source root directory,
+        // so javadoc can find the packages (java, jdk, etc.) within it.
+        Path sourcepath = findSourcepathForSourceRoot(sourceRoot);
+        command.add(sourcepath.toString());
         command.add("-source");
         command.add(String.valueOf(JdkSourceDownloader.extractMajorVersion(version)));
         command.add("-d");
@@ -190,7 +193,7 @@ public class DocumentationService {
         command.add("--pretty");
         command.add("-subpackages");
         command.add("java;jdk;com.sun;javax;org.ietf;org.w3c;org.xml.sax");
-        log.info("Executing javadoc: {}", command);
+        log.info("Executing javadoc: {}", String.join(" ", command));
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.redirectErrorStream(true);
         Process process = pb.start();
@@ -199,7 +202,7 @@ public class DocumentationService {
                 new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                log.debug("[javadoc] {}", line);
+                log.info("[javadoc] {}", line);
             }
         } catch (IOException e) {
             log.warn("Error reading javadoc output: {}", e.getMessage());
@@ -245,6 +248,28 @@ public class DocumentationService {
     }
 
     /**
+     * Finds the correct sourcepath for javadoc given a source root directory.
+     *
+     * <p>The JDK source structure has modules inside src/, and packages inside
+     * the modules (e.g., src/java.base/share/classes/java/lang/). The sourcepath
+     * must point to the parent of the source root directory so javadoc can find
+     * the packages within it.
+     */
+    private Path findSourcepathForSourceRoot(Path sourceRoot) throws IOException {
+        Path parent = sourceRoot.getParent();
+        if (parent == null) return sourceRoot;
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(parent)) {
+            for (Path entry : stream) {
+                if (Files.isDirectory(entry) && Files.exists(entry.resolve("src"))) {
+                    // Found the module directory — use its parent as sourcepath
+                    return entry.getParent();
+                }
+            }
+        }
+        return sourceRoot;
+    }
+
+    /**
      * Resolves the path to the Spring Boot fat JAR at runtime.
      *
      * <p>Three strategies, tried in order:
@@ -281,6 +306,13 @@ public class DocumentationService {
                     }
                 }
             }
+        }
+        // In dev/test mode, fall back to the compiled classes directory
+        String projDir = System.getProperty("user.dir");
+        Path classesDir = Path.of(projDir, "target", "classes");
+        if (Files.exists(classesDir)) {
+            log.debug("Fat JAR resolved via classes dir: {}", classesDir);
+            return classesDir.toString();
         }
         log.debug("No fat JAR found on classpath; javadoc will use its own classpath");
         return null;

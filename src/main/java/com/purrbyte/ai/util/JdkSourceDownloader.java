@@ -173,7 +173,7 @@ public class JdkSourceDownloader {
     /**
      * Extracts the major version number from a version string.
      */
-    static int extractMajorVersion(String version) {
+    public static int extractMajorVersion(String version) {
         String cleanVersion = version.startsWith("jdk-") ? version.substring(4) : version;
         String[] parts = cleanVersion.split("\\.");
         return Integer.parseInt(parts[0]);
