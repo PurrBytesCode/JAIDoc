@@ -48,6 +48,7 @@ public class JsonDoclet implements Doclet {
     private Reporter reporter;
 
     private Path outputDir = Path.of("json-doclet-out");
+    private String docVersion = null;        // optional documented JDK/artifact version
     private boolean pretty = false;
     private boolean noChunks = false;
     private boolean onlyDocumented = false;
@@ -80,6 +81,14 @@ public class JsonDoclet implements Doclet {
             @Override
             public boolean process(String opt, List<String> args) {
                 outputDir = Path.of(args.get(0));
+                return true;
+            }
+        });
+        opts.add(new SimpleOption(List.of("--doc-version"), 1,
+                "Version recorded in index.json (e.g. the documented JDK version)") {
+            @Override
+            public boolean process(String opt, List<String> args) {
+                docVersion = args.get(0);
                 return true;
             }
         });
@@ -170,6 +179,9 @@ public class JsonDoclet implements Doclet {
 
                 ObjectNode index = mapper.createObjectNode();
                 index.put("generator", "json-doclet 1.0.0");
+                if (docVersion != null) {
+                    index.put("version", docVersion);
+                }
                 index.put("generatedAt", OffsetDateTime.now(ZoneOffset.UTC).toString());
                 index.put("javaRuntime", Runtime.version().toString());
                 ArrayNode idxModules = index.putArray("modules");

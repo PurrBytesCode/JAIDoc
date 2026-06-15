@@ -24,50 +24,15 @@ class DocumentationServiceTest extends UnitTest {
 
     private Path workDirectory;
     private Path outputDirectory;
+    private Path docletDirectory;
 
     private void setupDirectories() throws IOException {
         workDirectory = tempDir.resolve("work");
         outputDirectory = tempDir.resolve("data");
+        docletDirectory = tempDir.resolve("doclet");
         Files.createDirectories(workDirectory);
         Files.createDirectories(outputDirectory);
-    }
-
-    @Nested
-    class FindSourceRootTest {
-
-        @Test
-        void singleDirectory_returnsIt() throws Exception {
-            setupDirectories();
-            Path extractDir = workDirectory.resolve("jdk-sources").resolve("25.0.3");
-            Files.createDirectories(extractDir);
-            Path sourceDir = extractDir.resolve("jdk-25.0.3-ga");
-            Files.createDirectories(sourceDir);
-            DocumentationService service = createService();
-            Path result = invokeFindSourceRoot(service, extractDir);
-            assertThat(result).isEqualTo(sourceDir);
-        }
-
-        @Test
-        void noSubdirectory_returnsExtractDir() throws Exception {
-            setupDirectories();
-            Path extractDir = workDirectory.resolve("jdk-sources").resolve("25.0.3");
-            Files.createDirectories(extractDir);
-            DocumentationService service = createService();
-            Path result = invokeFindSourceRoot(service, extractDir);
-            assertThat(result).isEqualTo(extractDir);
-        }
-
-        @Test
-        void multipleSubdirectories_returnsFirst() throws Exception {
-            setupDirectories();
-            Path extractDir = workDirectory.resolve("jdk-sources").resolve("25.0.3");
-            Files.createDirectories(extractDir);
-            Files.createDirectories(extractDir.resolve("first"));
-            Files.createDirectories(extractDir.resolve("second"));
-            DocumentationService service = createService();
-            Path result = invokeFindSourceRoot(service, extractDir);
-            assertThat(result).isEqualTo(extractDir.resolve("first"));
-        }
+        Files.createDirectories(docletDirectory);
     }
 
     @Nested
@@ -76,21 +41,7 @@ class DocumentationServiceTest extends UnitTest {
         @Test
         void noDocletJarInDocletDir_returnsNull() throws IOException {
             setupDirectories();
-            // Ensure no doclet jar exists in the real doclet dir
-            String projDir = System.getProperty("user.dir");
-            Path realDocletDir = Path.of(projDir, "doclet");
-            if (Files.exists(realDocletDir)) {
-                try (var stream = Files.list(realDocletDir)) {
-                    stream.filter(p -> p.getFileName().toString().equals("JAIDoc-doclet.jar"))
-                        .forEach(p -> {
-                            try {
-                                Files.delete(p);
-                            } catch (IOException e) {
-                                // ignore cleanup failures
-                            }
-                        });
-                }
-            }
+            // docletDirectory is an empty temp dir — no JAIDoc-doclet.jar present
             DocumentationService service = createService();
             String result = service.resolveDocletPath();
             assertThat(result).isNull();
@@ -99,15 +50,10 @@ class DocumentationServiceTest extends UnitTest {
         @Test
         void docletJarInDocletDir_returnsIt() throws IOException {
             setupDirectories();
-            String projDir = System.getProperty("user.dir");
-            Path realDocletDir = Path.of(projDir, "doclet");
-            Files.createDirectories(realDocletDir);
-            Files.writeString(realDocletDir.resolve("JAIDoc-doclet.jar"), "fake-jar");
+            Files.writeString(docletDirectory.resolve("JAIDoc-doclet.jar"), "fake-jar");
             DocumentationService service = createService();
             String result = service.resolveDocletPath();
-            assertThat(result).isEqualTo(realDocletDir.resolve("JAIDoc-doclet.jar").toString());
-            // Clean up
-            Files.delete(realDocletDir.resolve("JAIDoc-doclet.jar"));
+            assertThat(result).isEqualTo(docletDirectory.resolve("JAIDoc-doclet.jar").toString());
         }
     }
 
@@ -211,30 +157,28 @@ class DocumentationServiceTest extends UnitTest {
     class ExtractSourceZipTest {
 
         @Test
-        void extractAndFindSourceRoot() throws Exception {
+        void extract_returnsExtractDirWithContents() throws Exception {
             setupDirectories();
             Path zipFile = createFakeJdkZip("jdk-25.0.3-ga");
             DocumentationService service = createService();
             Path result = invokeExtractSourceZip(service, zipFile, "25.0.3", null);
-            assertThat(result).isEqualTo(workDirectory.resolve("jdk-sources").resolve("25.0.3").resolve("jdk-25.0.3-ga"));
-            assertThat(Files.exists(result)).isTrue();
+            Path extractDir = workDirectory.resolve("jdk-sources").resolve("25.0.3");
+            assertThat(result).isEqualTo(extractDir);
+            assertThat(Files.exists(result.resolve("jdk-25.0.3-ga").resolve("Test.java"))).isTrue();
         }
 
         @Test
-        void idempotent_returnsExistingRoot() throws Exception {
+        void idempotent_returnsExistingDir() throws Exception {
             setupDirectories();
             Path extractDir = workDirectory.resolve("jdk-sources").resolve("25.0.3");
-            Files.createDirectories(extractDir);
-            Path sourceDir = extractDir.resolve("jdk-25.0.3-ga");
-            Files.createDirectories(sourceDir);
+            Files.createDirectories(extractDir.resolve("jdk-25.0.3-ga"));
             DocumentationService service = createService();
             Path zipFile = createFakeJdkZip("jdk-25.0.3-ga");
-            // First call should extract
             Path result1 = invokeExtractSourceZip(service, zipFile, "25.0.3", null);
-            assertThat(result1).isEqualTo(sourceDir);
-            // Second call should return existing root (idempotent)
+            assertThat(result1).isEqualTo(extractDir);
+            // Second call should return the existing dir (idempotent)
             Path result2 = invokeExtractSourceZip(service, zipFile, "25.0.3", null);
-            assertThat(result2).isEqualTo(sourceDir);
+            assertThat(result2).isEqualTo(extractDir);
         }
 
         @Test
@@ -244,7 +188,7 @@ class DocumentationServiceTest extends UnitTest {
             DocumentationService service = createService();
             // Zip-slip entry should be skipped, extraction should succeed
             Path result = invokeExtractSourceZip(service, zipFile, "25.0.3", null);
-            assertThat(result).isEqualTo(workDirectory.resolve("jdk-sources").resolve("25.0.3").resolve("jdk-25.0.3-ga"));
+            assertThat(result).isEqualTo(workDirectory.resolve("jdk-sources").resolve("25.0.3"));
             // The evil.txt should NOT exist
             Path evilFile = Path.of("/etc/evil.txt");
             assertThat(Files.exists(evilFile)).isFalse();
@@ -252,13 +196,7 @@ class DocumentationServiceTest extends UnitTest {
     }
 
     private DocumentationService createService() {
-        return new DocumentationService(null, workDirectory, outputDirectory);
-    }
-
-    private Path invokeFindSourceRoot(DocumentationService service, Path extractDir) throws Exception {
-        Method method = DocumentationService.class.getDeclaredMethod("findSourceRoot", Path.class);
-        method.setAccessible(true);
-        return (Path) method.invoke(service, extractDir);
+        return new DocumentationService(workDirectory, outputDirectory, "", docletDirectory);
     }
 
     private Path invokeExtractSourceZip(DocumentationService service, Path zipFile, String version, Consumer<Double> progressCallback) throws Exception {
