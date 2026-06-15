@@ -71,14 +71,43 @@ class DocumentationServiceTest extends UnitTest {
     }
 
     @Nested
-    class ResolveFatJarPathTest {
+    class ResolveDocletJarPathTest {
 
         @Test
-        void noFatJarOnClasspath_returnsNull() throws IOException {
+        void noDocletJarInDocletDir_returnsNull() throws IOException {
             setupDirectories();
+            // Ensure no doclet jar exists in the real doclet dir
+            String projDir = System.getProperty("user.dir");
+            Path realDocletDir = Path.of(projDir, "doclet");
+            if (Files.exists(realDocletDir)) {
+                try (var stream = Files.list(realDocletDir)) {
+                    stream.filter(p -> p.getFileName().toString().equals("JAIDoc-doclet.jar"))
+                        .forEach(p -> {
+                            try {
+                                Files.delete(p);
+                            } catch (IOException e) {
+                                // ignore cleanup failures
+                            }
+                        });
+                }
+            }
             DocumentationService service = createService();
-            String result = service.resolveFatJarPath();
+            String result = service.resolveDocletPath();
             assertThat(result).isNull();
+        }
+
+        @Test
+        void docletJarInDocletDir_returnsIt() throws IOException {
+            setupDirectories();
+            String projDir = System.getProperty("user.dir");
+            Path realDocletDir = Path.of(projDir, "doclet");
+            Files.createDirectories(realDocletDir);
+            Files.writeString(realDocletDir.resolve("JAIDoc-doclet.jar"), "fake-jar");
+            DocumentationService service = createService();
+            String result = service.resolveDocletPath();
+            assertThat(result).isEqualTo(realDocletDir.resolve("JAIDoc-doclet.jar").toString());
+            // Clean up
+            Files.delete(realDocletDir.resolve("JAIDoc-doclet.jar"));
         }
     }
 
