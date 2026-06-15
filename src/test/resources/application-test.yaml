@@ -2,6 +2,9 @@ jdk:
   source:
     download:
       directory: target/test-jdk-source
+  distribution:
+    download:
+      directory: target/test-jdk-distributions
 
 doclet:
   work:

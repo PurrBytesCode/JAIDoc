@@ -126,11 +126,12 @@ src/test/java/com/purrbyte/ai/
 │   └── extension/
 │       └── TimeExtension.java
 ├── service/
-│   ├── DocumentationServiceIntegrationTest.java  # E2E JavaDoc generation (JDK 25.0.3)
+│   ├── DocumentationServiceIntegrationTest.java  # E2E JavaDoc generation (local JDK + downloaded JDK)
 │   └── DocumentationServiceTest.java
 ├── util/
 │   ├── JdkSourceDownloaderTest.java
-│   └── JdkSourceDownloaderIntegrationTest.java
+│   ├── JdkSourceDownloaderIntegrationTest.java
+│   └── JdkDistributionDownloaderTest.java        # Adoptium OS/arch/version mapping (no network)
 ├── doclet/
 │   ├── DocTreeJsonTest.java
 │   └── ChunkWriterTest.java
@@ -227,11 +228,11 @@ from GitHub). These tests require network access and may be slow. They are disab
 
 ### E2E JavaDoc generation pipeline
 
-`DocumentationServiceIntegrationTest` runs the full JavaDoc generation pipeline — extract the running JDK's
-`lib/src.zip`, run javadoc with the JsonDoclet in module mode, and verify the JSON output (`index.json` plus the
-`api/` directory). It uses the running JDK's own complete sources and the real `javadoc` CLI tool, scoped to the
-`java.base` module to keep it fast (no network required; JDK 25 must be the running JDK). Disabled by default via the
-`INTEGRATION` tag and `-Dtest.integration.enabled=true`.
+`DocumentationServiceIntegrationTest` runs the full JavaDoc generation pipeline — obtain a complete `lib/src.zip`, run
+javadoc with the JsonDoclet in module mode, and verify the JSON output (`index.json` plus the `api/` directory), scoped
+to `java.base`. The first test documents the running JDK from its local `lib/src.zip` (no network). The second
+downloads a non-running version's distribution from Adoptium and documents it (needs network and downloads a full JDK).
+Both are disabled by default via the `INTEGRATION` tag and `-Dtest.integration.enabled=true`.
 
 ### File system operations
 

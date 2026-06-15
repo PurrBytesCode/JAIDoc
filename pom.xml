@@ -15,6 +15,7 @@
     <description>MCP server that makes JDK and Spring Boot documentation searchable and consumable by AI models</description>
     <properties>
         <openapi.version>3.0.3</openapi.version>
+        <commons-compress.version>1.28.0</commons-compress.version>
         <hibernate-search.version>8.4.0.Final</hibernate-search.version>
         <spring-ai.version>2.0.0-RC2</spring-ai.version>
         <spring-cloud.version>2025.1.2</spring-cloud.version>
@@ -96,6 +97,11 @@
         <dependency>
             <groupId>tools.jackson.module</groupId>
             <artifactId>jackson-module-blackbird</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>${commons-compress.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
