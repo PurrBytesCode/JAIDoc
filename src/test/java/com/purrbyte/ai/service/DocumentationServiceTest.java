@@ -199,12 +199,14 @@ class DocumentationServiceTest extends UnitTest {
         return new DocumentationService(null, workDirectory, outputDirectory, "", docletDirectory, "");
     }
 
+    @SuppressWarnings("SameParameterValue")
     private Path invokeExtractSourceZip(DocumentationService service, Path zipFile, String version, Consumer<Double> progressCallback) throws Exception {
         Method method = DocumentationService.class.getDeclaredMethod("extractSourceZip", Path.class, String.class, Consumer.class);
         method.setAccessible(true);
         return (Path) method.invoke(service, zipFile, version, progressCallback);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private Path createFakeJdkZip(String sourceDirName) throws IOException {
         Path zipFile = tempDir.resolve("jdk-25.0.3.zip");
         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipFile))) {

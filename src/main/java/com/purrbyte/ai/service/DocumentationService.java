@@ -2,7 +2,6 @@ package com.purrbyte.ai.service;
 
 import com.purrbyte.ai.model.Progress;
 import com.purrbyte.ai.util.JdkDistributionDownloader;
-import com.purrbyte.ai.util.JdkSourceDownloader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -10,26 +9,14 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -100,7 +87,7 @@ public class DocumentationService {
     public CompletableFuture<Path> generateJdkDocumentation(String version, Consumer<Progress> progressCallback) {
         return CompletableFuture.supplyAsync(() -> {
                     try {
-                        int requestedMajor = JdkSourceDownloader.extractMajorVersion(version);
+                        int requestedMajor = JdkDistributionDownloader.extractMajorVersion(version);
                         validateRequest(version, requestedMajor);
                         Consumer<Double> extractCallback = p -> {
                             if (progressCallback != null) {
@@ -165,7 +152,7 @@ public class DocumentationService {
                 for (String line : Files.readAllLines(release)) {
                     if (line.startsWith("JAVA_VERSION=")) {
                         String value = line.substring("JAVA_VERSION=".length()).replace("\"", "").trim();
-                        return JdkSourceDownloader.extractMajorVersion(value);
+                        return JdkDistributionDownloader.extractMajorVersion(value);
                     }
                 }
             } catch (Exception e) {

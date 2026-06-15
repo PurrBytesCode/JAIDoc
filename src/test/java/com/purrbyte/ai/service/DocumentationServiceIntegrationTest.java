@@ -1,5 +1,6 @@
 package com.purrbyte.ai.service;
 
+import com.purrbyte.ai.model.Progress;
 import com.purrbyte.ai.test.BaseTest;
 import com.purrbyte.ai.test.IntegrationTest;
 import com.purrbyte.ai.util.JdkDistributionDownloader;
@@ -13,12 +14,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Integration tests for {@link DocumentationService} that verify the full JavaDoc generation
- * pipeline — obtain a complete {@code lib/src.zip}, run javadoc with the JsonDoclet in module mode, and
+ * Integration tests for {@link DocumentationService} that verify the full Javadoc generation
+ * pipeline — obtain a complete {@code lib/src.zip}, run Javadoc with the JsonDoclet in module mode, and
  * produce JSON documentation files.
  *
  * <p>The first test documents the running JDK from its local {@code lib/src.zip}; the second downloads
@@ -33,6 +35,8 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
     @Autowired
     private JdkDistributionDownloader distributionDownloader;
 
+    private final Consumer<Progress> progressCallback = progress -> log.info("Progress [{}]: {}%", progress.getModule(), progress.getPercentage());
+
     @Test
     @Order(1)
     void generateJdkDocumentation_jdk25_0_3_producesJsonOutput() throws ExecutionException, InterruptedException {
@@ -44,8 +48,7 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
                 Path.of(System.getProperty("user.dir"), "doclet"),
                 ""
         );
-        var future = service.generateJdkDocumentation("25.0.3",
-                p -> log.info("Progress [{}]: {}%", p.getModule(), p.getPercentage()));
+        var future = service.generateJdkDocumentation("25.0.3", progressCallback);
         Path result = future.get();
         assertThat(result).isNotNull();
         assertThat(result).isDirectory();
@@ -65,8 +68,7 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
 
     @Test
     @Order(2)
-    void generateJdkDocumentation_downloadsNonRunningVersion_producesJsonOutput()
-            throws ExecutionException, InterruptedException {
+    void generateJdkDocumentation_downloadsNonRunningVersion_producesJsonOutput() throws ExecutionException, InterruptedException {
         // 21.x is a modular JDK that is not the running JDK (25) → triggers an Adoptium download.
         String version = "21.0.11";
         var service = new DocumentationService(
@@ -77,8 +79,7 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
                 Path.of(System.getProperty("user.dir"), "doclet"),
                 ""
         );
-        var future = service.generateJdkDocumentation(version,
-                p -> log.info("Progress [{}]: {}%", p.getModule(), p.getPercentage()));
+        var future = service.generateJdkDocumentation(version, progressCallback);
         Path result = future.get();
         assertThat(result).isDirectory();
         assertThat(result.getFileName().toString()).isEqualTo(version);

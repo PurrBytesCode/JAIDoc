@@ -24,6 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
+@Deprecated
 @Slf4j
 @Component
 public class JdkSourceDownloader {

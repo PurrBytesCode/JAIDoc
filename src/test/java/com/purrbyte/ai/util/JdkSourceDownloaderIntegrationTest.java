@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Integration tests for {@link JdkSourceDownloader} that verify actual downloads from
  * the OpenJDK GitHub repositories.
  */
+@Deprecated
 @Slf4j
 class JdkSourceDownloaderIntegrationTest extends IntegrationTest {
 
