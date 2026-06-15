@@ -125,7 +125,7 @@ cover — they prevent context loss and keep AGENTS.md from growing out of contr
 - **Save plans in the project `plans/` directory.** Any implementation plan, task breakdown, or design document must be
   stored under `<project-root>/plans/` (e.g., `plans/documentation-service-approach-a-fat-jar.md`). This is a real
   directory inside the project — NOT a hidden directory like `~/.claude/plans/`. Do NOT save plans in hidden
-  directories; always use `plans/` at the project root.
+  directories; always use `plans/` at the project root. **Always verify the plan file exists at `plans/<name>.md` before moving on.**
 - **Name plan files descriptively.** Use a clear, concise name that reflects the feature or fix being planned (e.g.,
   `auth-token-refresh.md`).
 - **Keep plans up to date.** If implementation deviates from the plan, update it to reflect reality. Do not leave

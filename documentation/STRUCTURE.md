@@ -75,7 +75,14 @@ JDK version gets its own subdirectory with one `index.json`, `chunks.jsonl`, and
 
 ## Build output
 
-Maven produces a Spring Boot fat JAR in `target/`.
+Maven produces a Spring Boot fat JAR in `target/` and a doclet JAR in `doclet/`:
+
+```
+doclet/
+└── JAIDoc-doclet.jar
+```
+
+The doclet jar is used by `javadoc -docletpath` to generate JSON documentation via the `JsonDoclet`.
 
 ## Maintenance
 
