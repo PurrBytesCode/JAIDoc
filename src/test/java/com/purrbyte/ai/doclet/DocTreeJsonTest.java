@@ -36,7 +36,7 @@ class DocTreeJsonTest extends UnitTest {
     @Order(5)
     void normalize_preservesNewlineAfterTrim() {
         String result = DocTreeJson.normalize("  hello\n\nworld  ");
-        // Trimming removes leading/trailing spaces, and collapses consecutive newlines
+        // Trimming removes leading/trailing spaces and collapses consecutive newlines
         assertThat(result).isEqualTo("hello\nworld");
     }
 
