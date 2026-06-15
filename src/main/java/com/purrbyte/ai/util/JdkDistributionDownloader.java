@@ -47,14 +47,10 @@ public class JdkDistributionDownloader {
     private final RestClient restClient;
     private final JsonMapper jsonMapper;
 
-    public JdkDistributionDownloader(
-            @Value("${jdk.distribution.download.directory}") String downloadDirectory,
-            RestClient.Builder builder,
-            JsonMapper jsonMapper) {
+    public JdkDistributionDownloader(@Value("${jdk.distribution.download.directory}") String downloadDirectory, RestClient.Builder builder, JsonMapper jsonMapper) {
         this.downloadDirectory = downloadDirectory;
         this.jsonMapper = jsonMapper;
-        this.restClient = builder
-                .requestFactory(new org.springframework.http.client.SimpleClientHttpRequestFactory() {
+        this.restClient = builder.requestFactory(new org.springframework.http.client.SimpleClientHttpRequestFactory() {
                     @Override
                     protected void prepareConnection(java.net.@NonNull HttpURLConnection connection, @NonNull String httpMethod) throws java.io.IOException {
                         super.prepareConnection(connection, httpMethod);
@@ -68,8 +64,8 @@ public class JdkDistributionDownloader {
      * Downloads the JDK distribution for the given version, for the current OS and architecture.
      *
      * @param version          requested JDK version (e.g. "21", "21.0.11")
-     * @param progressCallback callback reporting {@link Progress#MODULE_DOWNLOAD} progress (may be null)
-     * @return future with the path to the downloaded archive (cached on subsequent calls)
+     * @param progressCallback callback reporting {@link Progress#MODULE_DOWNLOAD} progress (maybe null)
+     * @return future with the path to the downloaded archive (cached on later calls)
      */
     public CompletableFuture<Path> downloadDistribution(String version, Consumer<Progress> progressCallback) {
         String os = mapOs(System.getProperty("os.name"));
@@ -115,10 +111,10 @@ public class JdkDistributionDownloader {
     }
 
     /**
-     * Resolves the Adoptium JDK binary (link, name and size) for a version + OS + architecture by
+     * Resolves the Adoptium JDK binary (link, name, and size) for a version + OS + architecture by
      * paging through the GA feature releases and matching the requested major/minor/security.
      */
-    Optional<AdoptiumPackage> resolveBinary(String version, String os, String arch) throws IOException {
+    Optional<AdoptiumPackage> resolveBinary(String version, String os, String arch) {
         int[] req = parseVersion(version);
         for (int page = 0; page < MAX_PAGES; page++) {
             String url = ADOPTIUM_BASE + "/assets/feature_releases/" + req[0] + "/ga"
@@ -166,7 +162,7 @@ public class JdkDistributionDownloader {
 
     /**
      * Returns true if the release's version matches the requested {@code [major, minor, security]}
-     * (minor/security are only compared when requested, i.e. not {@code -1}).
+     * (minor/security are only compared when requested, i.e., not {@code -1}).
      */
     static boolean matchesVersion(VersionData versionData, int[] req) {
         if (versionData == null) {
@@ -193,6 +189,16 @@ public class JdkDistributionDownloader {
             return "mac";
         }
         return "linux";
+    }
+
+    /**
+     * Extracts the major version number from a version string.
+     */
+    @SuppressWarnings("JavaExistingMethodCanBeUsed")
+    public static int extractMajorVersion(String version) {
+        String cleanVersion = version.startsWith("jdk-") ? version.substring(4) : version;
+        String[] parts = cleanVersion.split("\\.");
+        return Integer.parseInt(parts[0]);
     }
 
     /**
