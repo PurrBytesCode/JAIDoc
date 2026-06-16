@@ -22,6 +22,9 @@ JAIDoc/
 │   ├── SECURITY.md                  # Actuator restrictions, logging paths
 │   ├── STRUCTURE.md                 # This file
 │   └── TEST.md                      # Test architecture, class hierarchy, tags
+├── blackbook/                       # Black Book — dev log (rules + dated notes)
+│   ├── BLACKBOOK.md                 # Rules for creating entries
+│   └── YYYY-MM-DD.html / .md       # Dated note entries
 ├── features/                        # Feature workspaces (see AGENTS.md)
 │   ├── FEATURE.md                   # Feature index
 │   └── example/                     # Template feature workspace

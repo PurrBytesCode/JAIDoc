@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026-06-15 — Black Book</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            color: #1a1a1a;
+        }
+        h1 {
+            border-bottom: 2px solid #333;
+            padding-bottom: 0.5rem;
+        }
+        h2 {
+            margin-top: 2rem;
+        }
+        ul {
+            padding-left: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>2026-06-15</h1>
+
+    <h2>🔄 JDK Source Approach Abandoned</h2>
+
+    <p>Found that using JDK source was not the right approach. Needed to use pre-compiled versions instead to be able to generate JSON javadoc and have a working flow. The source-only approach didn't work for the intended goal.</p>
+
+    <h2>🏗️ Current Status</h2>
+
+    <ul>
+        <li>Pre-compiled JDK versions are now being used</li>
+        <li>JSON javadoc generation is working</li>
+        <li>The DB is pre-configured — only the DB connection itself remains</li>
+        <li>The MCP server implementation is the remaining work</li>
+    </ul>
+
+    <h2>📋 Next Steps</h2>
+
+    <ul>
+        <li>Leave a basic example in a dedicated folder as a reference/template</li>
+        <li>Start populating the DB with information</li>
+        <li>Build out the MCP server logic on top of the existing data layer</li>
+    </ul>
+</body>
+</html>

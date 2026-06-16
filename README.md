@@ -242,7 +242,7 @@ the privacy.
 - **MCP setup** — [`documentation/MCP.md`](documentation/MCP.md)
 - **Project structure** — [`documentation/STRUCTURE.md`](documentation/STRUCTURE.md)
 - **Jackson configuration** — [`documentation/JACKSON.md`](documentation/JACKSON.md)
-- **Development log** — [`BLACKBOOK.md`](BLACKBOOK.md)
+- **Development log** — [`blackbook/BLACKBOOK.md`](blackbook/BLACKBOOK.md)
 
 ## Contributing
 

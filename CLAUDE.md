@@ -118,6 +118,7 @@ cover — they prevent context loss and keep AGENTS.md from growing out of contr
 - **[JDK Distribution](documentation/JDK-DISTRIBUTION.md)** — Adoptium distribution downloader, source selection,
   archive handling
 - **[Test Architecture](documentation/TEST.md)** — Test class hierarchy, tags, JsonMapper setup
+- **[Black Book](blackbook/BLACKBOOK.md)** — AI dev log: thoughts, decisions, gotchas
 
 ## Plan Files Rules
 
