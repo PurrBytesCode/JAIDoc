@@ -49,7 +49,6 @@ graph TB
         MCP["📖 MCP.md<br/>MCP server setup"]
         JACK["📖 JACKSON.md<br/>Jackson config"]
         SEC["📖 SECURITY.md<br/>Security config"]
-        JDK["📖 JDK-SOURCES.md<br/>JDK source ingestion"]
         TEST["📖 TEST.md<br/>Test architecture"]
     end
 
@@ -109,7 +108,6 @@ JAIDoc/
 │   ├── 📖 MCP.md                         ← MCP server setup
 │   ├── 📖 JACKSON.md                     ← Jackson customizer pattern
 │   ├── 📖 SECURITY.md                    ← Security config details
-│   ├── 📖 JDK-SOURCES.md                 ← JDK source ingestion pipeline
 │   └── 📖 TEST.md                        ← Test class hierarchy & tags
 ├── 🗺️ features/                         ← 🗺️ Feature workspaces (actual feature tracking)
 │   ├── 📄 FEATURE.md                     ← Feature index
@@ -176,7 +174,6 @@ See `features/` for the directory layout and the example template.
 | `MCP.md`         | MCP server setup & JetBrains adapter            | **HIGH** — Core protocol detail       |
 | `JACKSON.md`     | Customizer pattern, YAML mapper convention      | **HIGH** — Config system detail       |
 | `SECURITY.md`    | Actuator restrictions, logging paths            | **MEDIUM** — Security policy          |
-| `JDK-SOURCES.md` | JDK source downloader, async execution          | **HIGH** — Ingestion pipeline detail  |
 | `TEST.md`        | Test class hierarchy, tags, JsonMapper setup    | **MEDIUM** — Test conventions         |
 
 #### 🔀 Data Flow: Feature Development Lifecycle
@@ -316,9 +313,8 @@ CLAUDE.md ──────┬────── AGENTS.md        ← Same cont
                 ├────── docs/DOCLET.md    ← "Keep deep-dive docs current"
                 ├────── docs/MCP.md       ← "Keep deep-dive docs current"
                 ├────── docs/JACKSON.md   ← "Keep deep-dive docs current"
-                ├────── docs/SECURITY.md  ← "Keep deep-dive docs current"
-                ├────── docs/JDK-SOURCES.md ← "Keep deep-dive docs current"
-                └────── docs/TEST.md      ← "Keep deep-dive docs current"
+                ├────── docs/SECURITY.md   ← "Keep deep-dive docs current"
+                └────── docs/TEST.md       ← "Keep deep-dive docs current"
 
 BLACKBOOK.md ───┬────── CLAUDE.md / AGENTS.md  ← "Document decisions per rules"
                 ├────── features/*            ← "Cross-reference feature workspaces"

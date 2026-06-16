@@ -18,7 +18,6 @@ JAIDoc/
 ├── documentation/                   # Deep-dive docs
 │   ├── DOCLET.md                    # Doclet architecture, CLI options, output format
 │   ├── JACKSON.md                   # Jackson customizer pattern
-│   ├── JDK-SOURCES.md               # JDK source downloader
 │   ├── MCP.md                       # MCP server setup
 │   ├── SECURITY.md                  # Actuator restrictions, logging paths
 │   ├── STRUCTURE.md                 # This file

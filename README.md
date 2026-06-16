@@ -241,7 +241,6 @@ the privacy.
 - **Doclet internals** — [`documentation/DOCLET.md`](documentation/DOCLET.md)
 - **MCP setup** — [`documentation/MCP.md`](documentation/MCP.md)
 - **Project structure** — [`documentation/STRUCTURE.md`](documentation/STRUCTURE.md)
-- **JDK source ingestion** — [`documentation/JDK-SOURCES.md`](documentation/JDK-SOURCES.md)
 - **Jackson configuration** — [`documentation/JACKSON.md`](documentation/JACKSON.md)
 - **Development log** — [`BLACKBOOK.md`](BLACKBOOK.md)
 
