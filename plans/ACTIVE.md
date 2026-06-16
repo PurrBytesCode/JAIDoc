@@ -13,6 +13,8 @@ _N/A_
   `lib/src.zip`, bundle `jackson-annotations` in the doclet JAR, module-mode javadoc.
 - [jdk-distribution-download-arbitrary-versions](jdk-distribution-download-arbitrary-versions.md) — Document
   arbitrary JDK versions by downloading the Adoptium distribution and extracting its `lib/src.zip`.
+- [blackbook-structured-directories](blackbook-structured-directories.md) — Restructure BLACKBOOK into a directory
+  with rules file and dated HTML/Markdown note entries.
 
 ## Failed
 

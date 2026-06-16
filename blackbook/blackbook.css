@@ -1,0 +1,525 @@
+/* ============================================================================
+   blackbook.css — shared styles for Black Book dev-log entries
+   Concept: an open bound black book showing a cream page.
+     - the page background is the black cover (surround)
+     - each entry sits on a cream paper card, sewn into a binding on the left
+     - a red margin rule runs the full height, like a ruled notebook
+     - category labels are colored index tabs, derived from the emoji taxonomy
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+    /* cover / binding surround */
+    --cover: #0c0f14;
+    --binding: #06080c;
+    --thread: #5b6675;
+
+    /* the cream page */
+    --paper: #f4efe3;
+    --paper-edge: #e9e2d2;
+    --paper-tint: #fbf8ef;
+
+    /* ink */
+    --ink: #1f2328;
+    --ink-soft: #534c41;
+    --ink-faint: #8a8073;
+    --rule: #8c2f2a; /* red margin line / corrections */
+
+    /* category inks — one per emoji category in BLACKBOOK.md */
+    --c-change: #b5651d; /* 🔄 */
+    --c-arch: #2e6e8e; /* 🏗️ */
+    --c-plan: #5b4b9e; /* 📋 */
+    --c-bug: #8c2f2a; /* 🐛 */
+    --c-idea: #4e7a3f; /* 💡 */
+    --c-docs: #4a5568; /* 📝 */
+
+    --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, 'Liberation Mono', monospace;
+    --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, 'Times New Roman', serif;
+
+    --maxw: 940px;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: var(--serif);
+    line-height: 1.72;
+    color: var(--ink);
+    background: radial-gradient(125% 80% at 50% -12%, #161b24 0%, var(--cover) 55%, #07090d 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    padding: clamp(0px, 4vw, 56px) clamp(0px, 4vw, 40px);
+}
+
+/* ---- the open page --------------------------------------------------------- */
+
+.bb-page {
+    position: relative;
+    max-width: var(--maxw);
+    margin: 0 auto;
+    background: var(--paper);
+    border-radius: 2px 7px 7px 2px;
+    padding: clamp(34px, 6vw, 64px) clamp(22px, 6vw, 60px) clamp(40px, 7vw, 72px) clamp(52px, 11vw, 104px);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .04),
+    0 28px 60px -22px rgba(0, 0, 0, .72),
+    0 8px 18px -10px rgba(0, 0, 0, .5);
+    overflow: hidden;
+}
+
+/* binding gradient + a single dashed stitch line near the spine */
+.bb-page::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: clamp(22px, 5vw, 34px);
+    background: repeating-linear-gradient(180deg, var(--thread) 0 9px, transparent 9px 18px) left clamp(13px, 3vw, 20px) top / 1.5px 100% no-repeat,
+    linear-gradient(90deg, var(--binding) 0%, #0b0e13 58%, rgba(11, 14, 19, 0) 100%);
+    z-index: 2;
+}
+
+/* the red margin rule, full height */
+.bb-page::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: clamp(38px, 8.5vw, 82px);
+    width: 1.5px;
+    background: var(--rule);
+    opacity: .5;
+}
+
+/* ---- header --------------------------------------------------------------- */
+
+.bb-head {
+    border-bottom: 3px double var(--ink-soft);
+    padding-bottom: 1.1rem;
+    margin-bottom: 1.6rem;
+}
+
+.bb-eyebrow {
+    font-family: var(--mono);
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    color: var(--rule);
+    margin: 0;
+}
+
+.bb-date {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: clamp(2.05rem, 6vw, 3rem);
+    letter-spacing: -.015em;
+    line-height: 1.04;
+    margin: .35rem 0 .5rem;
+    color: var(--ink);
+}
+
+.bb-meta {
+    font-family: var(--mono);
+    font-size: .78rem;
+    letter-spacing: .04em;
+    color: var(--ink-faint);
+    margin: 0;
+}
+
+/* ---- contents / index ----------------------------------------------------- */
+
+.bb-contents {
+    margin: 0 0 2.2rem;
+}
+
+.bb-contents .toc-title {
+    font-family: var(--mono);
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 .7rem;
+}
+
+.bb-toc {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: var(--mono);
+    font-size: .82rem;
+}
+
+.bb-toc > li {
+    margin: .3rem 0;
+}
+
+.bb-toc a {
+    --dot: var(--ink-faint);
+    display: inline-flex;
+    align-items: baseline;
+    gap: .6ch;
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color .15s ease, transform .15s ease;
+}
+
+.bb-toc a::before {
+    content: "";
+    align-self: center;
+    width: .55em;
+    height: .55em;
+    border-radius: 2px;
+    background: var(--dot);
+    flex: none;
+}
+
+.bb-toc a:hover {
+    color: var(--ink);
+    transform: translateX(2px);
+}
+
+.bb-toc .toc-sub {
+    list-style: none;
+    margin: .25rem 0 .6rem;
+    padding-left: 1.7ch;
+    font-size: .78rem;
+}
+
+.bb-toc .toc-sub a {
+    color: var(--ink-faint);
+}
+
+.bb-toc .toc-sub a::before {
+    width: .4em;
+    height: .4em;
+    border-radius: 50%;
+}
+
+.cat-change a, .cat-change.toc-row a {
+    --dot: var(--c-change);
+}
+
+.cat-arch a {
+    --dot: var(--c-arch);
+}
+
+.cat-plan a {
+    --dot: var(--c-plan);
+}
+
+.cat-bug a {
+    --dot: var(--c-bug);
+}
+
+.cat-idea a {
+    --dot: var(--c-idea);
+}
+
+.cat-docs a {
+    --dot: var(--c-docs);
+}
+
+/* ---- entries -------------------------------------------------------------- */
+
+.entry {
+    margin: 2.6rem 0;
+    scroll-margin-top: 1.5rem;
+}
+
+.entry:first-of-type {
+    margin-top: 0;
+}
+
+.tab {
+    display: inline-flex;
+    align-items: center;
+    gap: .5ch;
+    font-family: var(--mono);
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--tab, var(--ink-soft));
+    padding: .3em .85em .3em .65em;
+    border-radius: 2px 999px 999px 2px;
+    margin: 0 0 .55rem;
+}
+
+.cat-change {
+    --tab: var(--c-change);
+}
+
+.cat-arch {
+    --tab: var(--c-arch);
+}
+
+.cat-plan {
+    --tab: var(--c-plan);
+}
+
+.cat-bug {
+    --tab: var(--c-bug);
+}
+
+.cat-idea {
+    --tab: var(--c-idea);
+}
+
+.cat-docs {
+    --tab: var(--c-docs);
+}
+
+.entry h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(1.5rem, 3.6vw, 1.95rem);
+    line-height: 1.18;
+    letter-spacing: -.01em;
+    margin: .1rem 0 .8rem;
+}
+
+/* subsections inside a long entry */
+.bb-page h3 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.24rem;
+    line-height: 1.3;
+    margin: 2rem 0 .55rem;
+    padding-left: .7rem;
+    border-left: 3px solid var(--c-arch);
+}
+
+.bb-page h4 {
+    font-family: var(--mono);
+    font-size: .8rem;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 1.3rem 0 .45rem;
+}
+
+/* ---- body copy ------------------------------------------------------------ */
+
+.bb-page p {
+    margin: .7rem 0;
+}
+
+.bb-page ul,
+.bb-page ol {
+    margin: .6rem 0 1rem;
+    padding-left: 1.4rem;
+}
+
+.bb-page li {
+    margin: .32rem 0;
+}
+
+.bb-page li::marker {
+    color: var(--rule);
+}
+
+.bb-page strong {
+    color: var(--ink);
+}
+
+.bb-page a {
+    color: var(--c-arch);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+/* ---- code, panels, diagrams ----------------------------------------------- */
+
+code {
+    font-family: var(--mono);
+    font-size: .85em;
+    background: var(--paper-edge);
+    border: 1px solid #ddd5c2;
+    border-radius: 3px;
+    padding: .06em .42em;
+    color: #3b3a36;
+}
+
+pre {
+    font-family: var(--mono);
+    font-size: .8rem;
+    line-height: 1.55;
+    background: #1a1f27;
+    color: #d7dbe0;
+    border: 1px solid #0d1117;
+    border-radius: 7px;
+    padding: 1.1rem 1.2rem;
+    margin: 1.15rem 0;
+    overflow-x: auto;
+}
+
+pre code {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: inherit;
+    font-size: .95em;
+}
+
+/* live-rendered Mermaid diagram; before processing the source is shown */
+.mermaid {
+    background: #10141b;
+    border: 1px solid #0c1117;
+    border-radius: 8px;
+    padding: 1.2rem;
+    margin: 1.2rem 0;
+    overflow-x: auto;
+    text-align: center;
+}
+
+.mermaid:not([data-processed="true"]) {
+    font-family: var(--mono);
+    font-size: .76rem;
+    line-height: 1.5;
+    color: #aeb6c2;
+    white-space: pre;
+    text-align: left;
+}
+
+/* ---- tables --------------------------------------------------------------- */
+
+.bb-table {
+    overflow-x: auto;
+    margin: 1.15rem 0;
+    border: 1px solid #ddd4c0;
+    border-radius: 6px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .89rem;
+}
+
+table th {
+    font-family: var(--mono);
+    font-size: .66rem;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    text-align: left;
+    background: var(--ink);
+    color: var(--paper);
+    padding: .58rem .75rem;
+}
+
+table td {
+    padding: .55rem .75rem;
+    border-top: 1px solid #ddd4c0;
+    vertical-align: top;
+}
+
+table tbody tr:nth-child(even),
+table tr:nth-child(even) {
+    background: rgba(31, 35, 40, .03);
+}
+
+/* ---- callout / margin note ------------------------------------------------ */
+
+blockquote {
+    font-family: var(--serif);
+    background: var(--paper-tint);
+    border: 1px solid #e6dcc4;
+    border-left: 4px solid var(--c-idea);
+    border-radius: 0 6px 6px 0;
+    padding: .85rem 1.1rem;
+    margin: 1.2rem 0;
+    color: var(--ink-soft);
+}
+
+blockquote p {
+    margin: .2rem 0;
+}
+
+/* ---- footer / colophon ---------------------------------------------------- */
+
+.bb-foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: .8rem;
+    margin-top: 2.8rem;
+    padding-top: 1.1rem;
+    border-top: 3px double var(--ink-soft);
+    font-family: var(--mono);
+    font-size: .76rem;
+    letter-spacing: .04em;
+    color: var(--ink-faint);
+}
+
+.bb-foot a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color .15s ease;
+}
+
+.bb-foot a:hover {
+    color: var(--rule);
+}
+
+.bb-foot nav {
+    display: flex;
+    gap: 1.4rem;
+}
+
+/* ---- focus / motion ------------------------------------------------------- */
+
+a:focus-visible {
+    outline: 2px solid var(--rule);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .bb-page {
+        animation: bb-rise .6s cubic-bezier(.2, .7, .2, 1) both;
+    }
+
+    @keyframes bb-rise {
+        from {
+            opacity: 0;
+            transform: translateY(14px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}
+
+/* ---- small screens -------------------------------------------------------- */
+
+@media (max-width: 640px) {
+    body {
+        padding: 0;
+    }
+
+    .bb-page {
+        border-radius: 0;
+    }
+
+    .bb-foot {
+        flex-direction: column;
+    }
+
+    .bb-foot nav {
+        justify-content: space-between;
+    }
+}

@@ -211,16 +211,6 @@ graph LR
     server -->|" Ingest (adoc) "| sbdocs
 ```
 
-## Tech Stack
-
-| Component | Technology                                                          |
-|-----------|---------------------------------------------------------------------|
-| Runtime   | Java 25, Spring Boot 4.1.0                                          |
-| Build     | Maven 3.9.15                                                        |
-| MCP       | Spring AI MCP Server (streamable protocol, stdio)                   |
-| JSON      | Jackson 3 (`tools.jackson.*`)                                       |
-| Local LLM | Llama.cpp Server (routing mode) (b9637 but use last version always) |
-
 ## Philosophy
 
 > *"The best documentation is the kind that an AI can consume in a structured, semantic way — without sacrificing
@@ -242,7 +232,7 @@ the privacy.
 - **MCP setup** — [`documentation/MCP.md`](documentation/MCP.md)
 - **Project structure** — [`documentation/STRUCTURE.md`](documentation/STRUCTURE.md)
 - **Jackson configuration** — [`documentation/JACKSON.md`](documentation/JACKSON.md)
-- **Development log** — [`BLACKBOOK.md`](BLACKBOOK.md)
+- **Development log** — [`blackbook/BLACKBOOK.md`](blackbook/BLACKBOOK.md)
 
 ## Contributing
 

@@ -110,7 +110,7 @@ These rules prevent infinite loops, redundant work, and exploration traps when r
 Deep-dive documentation lives in the `documentation/` directory. Consult these files before working in the areas they
 cover — they prevent context loss and keep AGENTS.md from growing out of control.
 
-- **[Project Structure](documentation/STRUCTURE.md)** — High-level layout, config hierarchy, build output
+- **[Project Structure](documentation/STRUCTURE.md)** — High-level layout, config hierarchy, build output, tech stack
 - **[Doclet](documentation/DOCLET.md)** — JSON doclet architecture, CLI options, output format, chunking
 - **[MCP Server](documentation/MCP.md)** — MCP server setup and JetBrains adapter
 - **[Jackson Config](documentation/JACKSON.md)** — Customizer pattern, YAML mapper convention
@@ -118,6 +118,7 @@ cover — they prevent context loss and keep AGENTS.md from growing out of contr
 - **[JDK Distribution](documentation/JDK-DISTRIBUTION.md)** — Adoptium distribution downloader, source selection,
   archive handling
 - **[Test Architecture](documentation/TEST.md)** — Test class hierarchy, tags, JsonMapper setup
+- **[Black Book](blackbook/BLACKBOOK.md)** — AI dev log: thoughts, decisions, gotchas
 
 ## Plan Files Rules
 
