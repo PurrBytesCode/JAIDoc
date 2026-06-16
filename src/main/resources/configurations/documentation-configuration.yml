@@ -8,10 +8,10 @@ doclet:
   work:
     directory: ${DOCLET_WORK_DIR:./jdk-doc-workspace}
   output:
-    directory: ${DOCLET_OUTPUT_DIR:data}
+    directory: ${DOCLET_OUTPUT_DIR:./data}
   jar:
-    # Directory containing JAIDoc-doclet.jar (passed to javadoc via -docletpath).
-    directory: ${DOCLET_JAR_DIR:doclet}
+    # Directory containing JAIDoc-doclet.jar (passed to Javadoc via -docletpath).
+    directory: ${DOCLET_JAR_DIR:./doclet}
   javadoc:
     # JDK home whose bin/javadoc runs the doclet. Empty = the running JDK (java.home).
     # Must be a JDK >= 17 (the doclet needs Jackson 3).
