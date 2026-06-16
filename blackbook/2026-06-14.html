@@ -4,105 +4,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2026-06-14 — Black Book</title>
+    <link rel="stylesheet" href="blackbook.css">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
-            color: #1a1a1a;
+        /* keep Mermaid edge labels legible on the dark diagram panel */
+        .mermaid[data-processed="true"] .edgeLabel,
+        .mermaid[data-processed="true"] .edgeLabel * {
+            color: #cfd6df !important;
+            fill: #cfd6df;
         }
-        h1 {
-            border-bottom: 2px solid #333;
-            padding-bottom: 0.5rem;
-        }
-        h2 {
-            margin-top: 2rem;
-        }
-        h3 {
-            margin-top: 1.5rem;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1rem 0;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 0.5rem;
-            text-align: left;
-        }
-        th {
-            background-color: #f5f5f5;
-        }
-        pre, code {
-            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-            font-size: 0.9em;
-        }
-        pre {
-            background-color: #f5f5f5;
-            padding: 1rem;
-            overflow-x: auto;
-        }
-        code {
-            background-color: #f5f5f5;
-            padding: 0.1em 0.3em;
-        }
-        blockquote {
-            border-left: 4px solid #ddd;
-            margin: 1rem 0;
-            padding-left: 1rem;
-            color: #666;
+
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
         }
     </style>
 </head>
 <body>
-    <h1>2026-06-14</h1>
+<article class="bb-page">
+    <header class="bb-head">
+        <p class="bb-eyebrow">Black Book · Dev Log</p>
+        <h1 class="bb-date">2026-06-14</h1>
+        <p class="bb-meta">JAIDoc — AI-assisted development</p>
+    </header>
 
-    <h2>📋 Created BLACKBOOK.md</h2>
+    <nav class="bb-contents" aria-label="In this entry">
+        <p class="toc-title">In this entry</p>
+        <ul class="bb-toc">
+            <li class="cat-plan"><a href="#entry-blackbook">Created BLACKBOOK.md</a></li>
+            <li class="cat-arch">
+                <a href="#entry-architecture">Architecture: AI-Assisted Development System</a>
+                <ul class="toc-sub cat-arch">
+                    <li><a href="#sys-overview">System Overview</a></li>
+                    <li><a href="#folder-arch">Folder Architecture</a></li>
+                    <li><a href="#rule-summary">Rule File Summary</a></li>
+                    <li><a href="#ref-summary">Reference Documentation Summary</a></li>
+                    <li><a href="#data-flow">Data Flow: Feature Development Lifecycle</a></li>
+                    <li><a href="#data-moves">How Data Moves During a Feature</a></li>
+                    <li><a href="#plan-structure">Plan File Structure</a></li>
+                    <li><a href="#plan-lifecycle">Plan Lifecycle</a></li>
+                    <li><a href="#feature-structure">Feature Workspace Structure</a></li>
+                    <li><a href="#feature-conventions">Feature Workspace Conventions</a></li>
+                    <li><a href="#cross-ref">Cross-Reference Map</a></li>
+                    <li><a href="#design-principles">Key Design Principles</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
 
-    <p>Initial setup of this file. Added the purpose section and a reference link in <code>README.md</code> so it's discoverable.</p>
+    <section class="entry cat-plan" id="entry-blackbook">
+        <p class="tab">📋 Planning</p>
+        <h2>Created BLACKBOOK.md</h2>
+        <p>Initial setup of this file. Added the purpose section and a reference link in <code>README.md</code> so
+            it's discoverable.</p>
+    </section>
 
-    <h2>🏗️ Architecture: AI-Assisted Development System</h2>
+    <section class="entry cat-arch" id="entry-architecture">
+        <p class="tab">🏗️ Architecture</p>
+        <h2>Architecture: AI-Assisted Development System</h2>
 
-    <p>The overall architecture for rules + references is established and validated. It includes both feature workspaces
-    (<code>features/</code>) for tracking actual feature development, and implementation plans (<code>plans/</code>) for planning implementation
-    using feature elements as inputs — each with lifecycle tracking (active/completed/deprecated).</p>
+        <p>The overall architecture for rules + references is established and validated. It includes both feature
+            workspaces (<code>features/</code>) for tracking actual feature development, and implementation plans
+            (<code>plans/</code>) for planning implementation using feature elements as inputs — each with lifecycle
+            tracking (active/completed/deprecated).</p>
 
-    <p>This section documents how the project's documentation and rules system is structured to support AI-assisted
-    development.
-    It maps the relationships between the rule files, reference docs, and feature workspaces — and explains how data flows
-    between them during feature development.</p>
+        <p>This section documents how the project's documentation and rules system is structured to support
+            AI-assisted development. It maps the relationships between the rule files, reference docs, and feature
+            workspaces — and explains how data flows between them during feature development.</p>
 
-    <h3>🔗 System Overview</h3>
+        <h3 id="sys-overview">🔗 System Overview</h3>
 
-    <pre><code>graph TB
+        <pre class="mermaid">graph TB
     subgraph RULES["📜 Rule Files"]
-        CLAUDE["📄 CLAUDE.md<br/>AI Agent Guidelines<br/>6 rule categories"]
-        AGENTS["📄 AGENTS.md<br/>Mirror of CLAUDE.md<br/>For Junie / AI Assistant"]
+        CLAUDE["📄 CLAUDE.md&lt;br/&gt;AI Agent Guidelines&lt;br/&gt;6 rule categories"]
+        AGENTS["📄 AGENTS.md&lt;br/&gt;Mirror of CLAUDE.md&lt;br/&gt;For Junie / AI Assistant"]
     end
 
     subgraph REFERENCE["📚 Reference Documentation"]
-        STRUCT["📖 STRUCTURE.md<br/>Project layout map"]
-        DOCLET["📖 DOCLET.md<br/>Doclet internals"]
-        MCP["📖 MCP.md<br/>MCP server setup"]
-        JACK["📖 JACKSON.md<br/>Jackson config"]
-        SEC["📖 SECURITY.md<br/>Security config"]
-        TEST["📖 TEST.md<br/>Test architecture"]
+        STRUCT["📖 STRUCTURE.md&lt;br/&gt;Project layout map"]
+        DOCLET["📖 DOCLET.md&lt;br/&gt;Doclet internals"]
+        MCP["📖 MCP.md&lt;br/&gt;MCP server setup"]
+        JACK["📖 JACKSON.md&lt;br/&gt;Jackson config"]
+        SEC["📖 SECURITY.md&lt;br/&gt;Security config"]
+        TEST["📖 TEST.md&lt;br/&gt;Test architecture"]
     end
 
     subgraph GENERAL["📋 General Info"]
-        README["📄 README.md<br/>Project overview<br/>Non-technical, informational"]
-        BLACKBOOK["📓 BLACKBOOK.md<br/>AI dev scratchpad<br/>Feature logs & decisions"]
+        README["📄 README.md&lt;br/&gt;Project overview&lt;br/&gt;Non-technical, informational"]
+        BLACKBOOK["📓 BLACKBOOK.md&lt;br/&gt;AI dev scratchpad&lt;br/&gt;Feature logs &amp; decisions"]
     end
 
-    subgraph FEATURES["🗺️ Feature Workspaces<br/>Actual feature tracking"]
-        FEAT1["features/example/<br/>plan.md, data-flow.md,<br/>mock-requests.json, scripts/"]
+    subgraph FEATURES["🗺️ Feature Workspaces&lt;br/&gt;Actual feature tracking"]
+        FEAT1["features/example/&lt;br/&gt;plan.md, data-flow.md,&lt;br/&gt;mock-requests.json, scripts/"]
     end
 
-    subgraph PLANS["🗺️ Implementation Plans<br/>Plan lifecycle tracking"]
-        PLAN1["plans/<br/>active.md"]
+    subgraph PLANS["🗺️ Implementation Plans&lt;br/&gt;Plan lifecycle tracking"]
+        PLAN1["plans/&lt;br/&gt;active.md"]
     end
 
     subgraph CODE["💻 Source Code"]
@@ -110,43 +106,42 @@
         TEST_SRC["src/test/"]
     end
 
-    CLAUDE -->|References| STRUCT
-    CLAUDE -->|References| DOCLET
-    CLAUDE -->|References| MCP
-    CLAUDE -->|References| JACK
-    CLAUDE -->|References| SEC
-    CLAUDE -->|References| JDK
-    CLAUDE -->|References| TEST
-    CLAUDE -->|Guides| FEAT1
-    CLAUDE -->|Guides| PLAN1
-    AGENTS -->|Same as| CLAUDE
-    BLACKBOOK -->|Logs decisions| CLAUDE
-    BLACKBOOK -->|Cross - references| FEAT1
-    BLACKBOOK -->|Cross - references| PLAN1
-    FEAT1 -->|Defines| MAIN
-    PLAN1 -->|Informs| MAIN
-    FEAT1 -->|Inputs| PLAN1
-    STRUCT -->|Describes| MAIN
-    STRUCT -->|Describes| TEST_SRC
-    DOCLET -->|Explains| MAIN
-    MCP -->|Explains| MAIN</code></pre>
+    CLAUDE --&gt;|References| STRUCT
+    CLAUDE --&gt;|References| DOCLET
+    CLAUDE --&gt;|References| MCP
+    CLAUDE --&gt;|References| JACK
+    CLAUDE --&gt;|References| SEC
+    CLAUDE --&gt;|References| TEST
+    CLAUDE --&gt;|Guides| FEAT1
+    CLAUDE --&gt;|Guides| PLAN1
+    AGENTS --&gt;|Same as| CLAUDE
+    BLACKBOOK --&gt;|Logs decisions| CLAUDE
+    BLACKBOOK --&gt;|Cross-references| FEAT1
+    BLACKBOOK --&gt;|Cross-references| PLAN1
+    FEAT1 --&gt;|Defines| MAIN
+    PLAN1 --&gt;|Informs| MAIN
+    FEAT1 --&gt;|Inputs| PLAN1
+    STRUCT --&gt;|Describes| MAIN
+    STRUCT --&gt;|Describes| TEST_SRC
+    DOCLET --&gt;|Explains| MAIN
+    MCP --&gt;|Explains| MAIN</pre>
 
-    <h3>📂 Folder Architecture</h3>
+        <h3 id="folder-arch">📂 Folder Architecture</h3>
 
-    <h4>Repository (JAIDoc/)</h4>
+        <h4>Repository (JAIDoc/)</h4>
 
-    <pre><code>JAIDoc/
+        <pre><code>JAIDoc/
 ├── 📄 CLAUDE.md                          ← 📜 Core rule file (AI agent guidelines)
 ├── 📄 AGENTS.md                          ← 📜 Mirror of CLAUDE.md (for Junie / AI Assistant CLI)
 ├── 📄 README.md                          ← 📋 General project overview (non-technical)
-├── 📓 BLACKBOOK.md                       ← 📝 AI-assisted dev scratchpad & feature logs
+├── 📓 BLACKBOOK.md                       ← 📝 AI-assisted dev scratchpad &amp; feature logs
 ├── 📚 documentation/                     ← 📚 Deep-dive reference docs (AI context)
 │   ├── 📖 STRUCTURE.md                   ← Project layout map
-│   ├── 📖 DOCLET.md                      ← Doclet architecture & CLI options
+│   ├── 📖 DOCLET.md                      ← Doclet architecture &amp; CLI options
 │   ├── 📖 MCP.md                         ← MCP server setup
 │   ├── 📖 JACKSON.md                     ← Jackson customizer pattern
 │   ├── 📖 SECURITY.md                    ← Security config details
-│   └── 📖 TEST.md                        ← Test class hierarchy & tags
+│   └── 📖 TEST.md                        ← Test class hierarchy &amp; tags
 ├── 🗺️ features/                         ← 🗺️ Feature workspaces (actual feature tracking)
 │   ├── 📄 FEATURE.md                     ← Feature index
 │   └── 📂 example/                       ← Template feature workspace
@@ -157,7 +152,7 @@
 │       └── 📄 notes.md
 ├── 🗺️ plans/                            ← 🗺️ Implementation plans with lifecycle tracking
 │   ├── 📄 ACTIVE.md                      ← Active/completed/deprecated plan index
-│   └── 📄 <name>.md                      ← Individual plan (YAML frontmatter + content)
+│   └── 📄 &lt;name&gt;.md                      ← Individual plan (YAML frontmatter + content)
 ├── 💻 src/
 │   ├── 📂 main/java/com/purrbyte/ai/     ← Application source
 │   │   ├── 📄 JAIDoc.java                ← Spring Boot entry point
@@ -173,51 +168,113 @@
 │           └── 📄 ...                    ← Other shared test utilities
 ├── ⚙️ pom.xml                            ← Maven build file</code></pre>
 
-    <blockquote>
-        <p>💡 <strong>Test resource config:</strong> <code>src/test/resources/</code> has hardcoded values for the test environment — local URLs, mocked
-        ports, dummy credentials. No issues when running tests. In the future, this is planned to be adjusted for greater
-        flexibility.</p>
-    </blockquote>
+        <blockquote>
+            <p>💡 <strong>Test resource config:</strong> <code>src/test/resources/</code> has hardcoded values for
+                the test environment — local URLs, mocked ports, dummy credentials. No issues when running tests. In the
+                future, this is planned to be adjusted for greater flexibility.</p>
+        </blockquote>
 
-    <h4>Workspace (features/ — feature tracking)</h4>
+        <h4>Workspace (features/ — feature tracking)</h4>
 
-    <pre><code>features/
+        <pre><code>features/
 ├── FEATURE.md                           ← Feature index
 └── example/                             ← Template feature workspace
     ├── plan.md                          ← Implementation plan with YAML frontmatter
     ├── data-flow.md                     ← Data flow description with sequence diagram
     ├── mock-requests.json               ← Mock API responses for testing
     ├── scripts/                         ← Helper scripts (validate.sh)
-    └── notes.md                         ← Observations & decisions</code></pre>
+    └── notes.md                         ← Observations &amp; decisions</code></pre>
 
-    <p>See <code>features/</code> for the directory layout and the example template.</p>
+        <p>See <code>features/</code> for the directory layout and the example template.</p>
 
-    <h3>📊 Rule File Summary</h3>
+        <h3 id="rule-summary">📊 Rule File Summary</h3>
 
-    <table>
-        <tr><th>File</th><th>Category</th><th>Purpose</th><th>AI Impact</th></tr>
-        <tr><td><code>CLAUDE.md</code></td><td>📜 Rules</td><td>Guidelines for AI agents working in the repo</td><td><strong>HIGH</strong> — Directly constrains AI behavior</td></tr>
-        <tr><td><code>AGENTS.md</code></td><td>📜 Mirror</td><td>Same rules, for other CLI tools (Junie, AI Assistant)</td><td><strong>HIGH</strong> — Same impact as CLAUDE.md</td></tr>
-        <tr><td><code>README.md</code></td><td>📋 Info</td><td>Project overview, setup, philosophy</td><td><strong>LOW</strong> — Informative only, no constraints</td></tr>
-        <tr><td><code>BLACKBOOK.md</code></td><td>📝 Scratchpad</td><td>AI dev log: thoughts, decisions, gotchas</td><td><strong>MEDIUM</strong> — Context for historical decisions</td></tr>
-        <tr><td><code>plans/</code></td><td>🗺️ Plans</td><td>Versioned implementation plans with lifecycle tracking</td><td><strong>HIGH</strong> — AI reads active plans only</td></tr>
-    </table>
+        <div class="bb-table">
+            <table>
+                <tr>
+                    <th>File</th>
+                    <th>Category</th>
+                    <th>Purpose</th>
+                    <th>AI Impact</th>
+                </tr>
+                <tr>
+                    <td><code>CLAUDE.md</code></td>
+                    <td>📜 Rules</td>
+                    <td>Guidelines for AI agents working in the repo</td>
+                    <td><strong>HIGH</strong> — Directly constrains AI behavior</td>
+                </tr>
+                <tr>
+                    <td><code>AGENTS.md</code></td>
+                    <td>📜 Mirror</td>
+                    <td>Same rules, for other CLI tools (Junie, AI Assistant)</td>
+                    <td><strong>HIGH</strong> — Same impact as CLAUDE.md</td>
+                </tr>
+                <tr>
+                    <td><code>README.md</code></td>
+                    <td>📋 Info</td>
+                    <td>Project overview, setup, philosophy</td>
+                    <td><strong>LOW</strong> — Informative only, no constraints</td>
+                </tr>
+                <tr>
+                    <td><code>BLACKBOOK.md</code></td>
+                    <td>📝 Scratchpad</td>
+                    <td>AI dev log: thoughts, decisions, gotchas</td>
+                    <td><strong>MEDIUM</strong> — Context for historical decisions</td>
+                </tr>
+                <tr>
+                    <td><code>plans/</code></td>
+                    <td>🗺️ Plans</td>
+                    <td>Versioned implementation plans with lifecycle tracking</td>
+                    <td><strong>HIGH</strong> — AI reads active plans only</td>
+                </tr>
+            </table>
+        </div>
 
-    <h3>📊 Reference Documentation Summary</h3>
+        <h3 id="ref-summary">📊 Reference Documentation Summary</h3>
 
-    <table>
-        <tr><th>Document</th><th>Topic</th><th>AI Impact</th></tr>
-        <tr><td><code>STRUCTURE.md</code></td><td>Project layout & config hierarchy</td><td><strong>MEDIUM</strong> — Navigational context</td></tr>
-        <tr><td><code>DOCLET.md</code></td><td>Doclet architecture, CLI options, output format</td><td><strong>HIGH</strong> — Deep implementation detail</td></tr>
-        <tr><td><code>MCP.md</code></td><td>MCP server setup & JetBrains adapter</td><td><strong>HIGH</strong> — Core protocol detail</td></tr>
-        <tr><td><code>JACKSON.md</code></td><td>Customizer pattern, YAML mapper convention</td><td><strong>HIGH</strong> — Config system detail</td></tr>
-        <tr><td><code>SECURITY.md</code></td><td>Actuator restrictions, logging paths</td><td><strong>MEDIUM</strong> — Security policy</td></tr>
-        <tr><td><code>TEST.md</code></td><td>Test class hierarchy, tags, JsonMapper setup</td><td><strong>MEDIUM</strong> — Test conventions</td></tr>
-    </table>
+        <div class="bb-table">
+            <table>
+                <tr>
+                    <th>Document</th>
+                    <th>Topic</th>
+                    <th>AI Impact</th>
+                </tr>
+                <tr>
+                    <td><code>STRUCTURE.md</code></td>
+                    <td>Project layout &amp; config hierarchy</td>
+                    <td><strong>MEDIUM</strong> — Navigational context</td>
+                </tr>
+                <tr>
+                    <td><code>DOCLET.md</code></td>
+                    <td>Doclet architecture, CLI options, output format</td>
+                    <td><strong>HIGH</strong> — Deep implementation detail</td>
+                </tr>
+                <tr>
+                    <td><code>MCP.md</code></td>
+                    <td>MCP server setup &amp; JetBrains adapter</td>
+                    <td><strong>HIGH</strong> — Core protocol detail</td>
+                </tr>
+                <tr>
+                    <td><code>JACKSON.md</code></td>
+                    <td>Customizer pattern, YAML mapper convention</td>
+                    <td><strong>HIGH</strong> — Config system detail</td>
+                </tr>
+                <tr>
+                    <td><code>SECURITY.md</code></td>
+                    <td>Actuator restrictions, logging paths</td>
+                    <td><strong>MEDIUM</strong> — Security policy</td>
+                </tr>
+                <tr>
+                    <td><code>TEST.md</code></td>
+                    <td>Test class hierarchy, tags, JsonMapper setup</td>
+                    <td><strong>MEDIUM</strong> — Test conventions</td>
+                </tr>
+            </table>
+        </div>
 
-    <h3>🔀 Data Flow: Feature Development Lifecycle</h3>
+        <h3 id="data-flow">🔀 Data Flow: Feature Development Lifecycle</h3>
 
-    <pre><code>                    ┌─────────────────────────────────────────────────────────────┐
+        <pre><code>                    ┌─────────────────────────────────────────────────────────────┐
                     │          FEATURE DEVELOPMENT LIFECYCLE                       │
                     └─────────────────────────────────────────────────────────────┘
 
@@ -230,7 +287,7 @@
        │                   │                  │                  │                  │
        │ Rules             │ Feature spec     │ Plan doc         │ Code changes     │ Verification
        │ constrain AI      │ Documents        │ Uses feature     │ Implements       │ Confirms
-       │ behavior          │ Intent & scope   │ elements as      │ the design       │ it works
+       │ behavior          │ Intent &amp; scope   │ elements as      │ the design       │ it works
        │                     │                  │ inputs           │                  │
     ┌──────────┐      ┌──────────┐        ┌──────────┐        ┌──────────┐        ┌──────────┐
     │ docs/    │◀──────│          │◀───────│          │◀───────▶│          │◀───────│          │
@@ -241,25 +298,72 @@
        │ context for       │ to docs          │ to docs          │ to docs          │ to CLAUDE/
        │ AI deep-dive      │ when needed      │ when needed      │ when needed      │ AGENTS</code></pre>
 
-    <h3>🔄 How Data Moves During a Feature</h3>
+        <h3 id="data-moves">🔄 How Data Moves During a Feature</h3>
 
-    <table>
-        <tr><th>Step</th><th>Action</th><th>Files Read</th><th>Files Written</th><th>AI Context Used</th></tr>
-        <tr><td><strong>1. Discovery</strong></td><td>Understand scope & constraints</td><td><code>CLAUDE.md</code> / <code>AGENTS.md</code>, <code>docs/*.md</code></td><td>—</td><td>Rule constraints + domain context</td></tr>
-        <tr><td><strong>2. Feature Design</strong></td><td>Define feature workspace</td><td><code>CLAUDE.md</code> / <code>AGENTS.md</code>, <code>docs/*.md</code></td><td><code>features/&lt;name&gt;/*</code></td><td>Rule constraints + deep-dive docs</td></tr>
-        <tr><td><strong>3. Planning</strong></td><td>Write implementation plan</td><td><code>CLAUDE.md</code> / <code>AGENTS.md</code>, <code>docs/*.md</code>, <code>features/*</code></td><td><code>plans/&lt;name&gt;.md</code></td><td>Rule constraints + feature inputs</td></tr>
-        <tr><td><strong>4. Implementation</strong></td><td>Code the feature</td><td><code>CLAUDE.md</code> / <code>AGENTS.md</code>, <code>docs/*.md</code>, <code>src/main/*</code></td><td><code>src/main/*</code></td><td>Rules + reference docs + existing code</td></tr>
-        <tr><td><strong>5. Verification</strong></td><td>Run tests & validate</td><td><code>CLAUDE.md</code> / <code>AGENTS.md</code>, <code>docs/TEST.md</code>, <code>src/test/*</code></td><td>—</td><td>Test conventions + rule constraints</td></tr>
-        <tr><td><strong>6. Logging</strong></td><td>Record decisions & observations</td><td><code>CLAUDE.md</code> / <code>AGENTS.md</code>, <code>BLACKBOOK.md</code></td><td><code>BLACKBOOK.md</code></td><td>Rules for documentation format</td></tr>
-    </table>
+        <div class="bb-table">
+            <table>
+                <tr>
+                    <th>Step</th>
+                    <th>Action</th>
+                    <th>Files Read</th>
+                    <th>Files Written</th>
+                    <th>AI Context Used</th>
+                </tr>
+                <tr>
+                    <td><strong>1. Discovery</strong></td>
+                    <td>Understand scope &amp; constraints</td>
+                    <td><code>CLAUDE.md</code> / <code>AGENTS.md</code>, <code>docs/*.md</code></td>
+                    <td>—</td>
+                    <td>Rule constraints + domain context</td>
+                </tr>
+                <tr>
+                    <td><strong>2. Feature Design</strong></td>
+                    <td>Define feature workspace</td>
+                    <td><code>CLAUDE.md</code> / <code>AGENTS.md</code>, <code>docs/*.md</code></td>
+                    <td><code>features/&lt;name&gt;/*</code></td>
+                    <td>Rule constraints + deep-dive docs</td>
+                </tr>
+                <tr>
+                    <td><strong>3. Planning</strong></td>
+                    <td>Write implementation plan</td>
+                    <td><code>CLAUDE.md</code> / <code>AGENTS.md</code>, <code>docs/*.md</code>, <code>features/*</code>
+                    </td>
+                    <td><code>plans/&lt;name&gt;.md</code></td>
+                    <td>Rule constraints + feature inputs</td>
+                </tr>
+                <tr>
+                    <td><strong>4. Implementation</strong></td>
+                    <td>Code the feature</td>
+                    <td><code>CLAUDE.md</code> / <code>AGENTS.md</code>, <code>docs/*.md</code>, <code>src/main/*</code>
+                    </td>
+                    <td><code>src/main/*</code></td>
+                    <td>Rules + reference docs + existing code</td>
+                </tr>
+                <tr>
+                    <td><strong>5. Verification</strong></td>
+                    <td>Run tests &amp; validate</td>
+                    <td><code>CLAUDE.md</code> / <code>AGENTS.md</code>, <code>docs/TEST.md</code>,
+                        <code>src/test/*</code></td>
+                    <td>—</td>
+                    <td>Test conventions + rule constraints</td>
+                </tr>
+                <tr>
+                    <td><strong>6. Logging</strong></td>
+                    <td>Record decisions &amp; observations</td>
+                    <td><code>CLAUDE.md</code> / <code>AGENTS.md</code>, <code>BLACKBOOK.md</code></td>
+                    <td><code>BLACKBOOK.md</code></td>
+                    <td>Rules for documentation format</td>
+                </tr>
+            </table>
+        </div>
 
-    <h3>🗺️ Plan File Structure</h3>
+        <h3 id="plan-structure">🗺️ Plan File Structure</h3>
 
-    <p>Each plan lives in the <code>plans/</code> directory with a YAML frontmatter for lifecycle tracking. Plans use feature workspaces
-    (<code>features/*</code>) as inputs — they reference feature elements (data-flow diagrams, mock requests, scripts) to inform
-    the implementation approach.</p>
+        <p>Each plan lives in the <code>plans/</code> directory with a YAML frontmatter for lifecycle tracking. Plans
+            use feature workspaces (<code>features/*</code>) as inputs — they reference feature elements (data-flow
+            diagrams, mock requests, scripts) to inform the implementation approach.</p>
 
-    <pre><code>plans/
+        <pre><code>plans/
 ├── ACTIVE.md                                  ← Active/completed/deprecated index
 ├── documentation-service-approach-a-fat-jar   ← Completed plan
 │   └── .md
@@ -268,83 +372,157 @@
 └── deprecated-plan                            ← Deprecated plan
     └── .md</code></pre>
 
-    <p><strong>YAML frontmatter:</strong></p>
+        <p><strong>YAML frontmatter:</strong></p>
 
-    <pre><code>---
+        <pre><code>---
 name: &lt;descriptive-name&gt;
 status: active | completed | deprecated
 date: YYYY-MM-DD
 ---</code></pre>
 
-    <p><strong>Plan content structure:</strong></p>
+        <p><strong>Plan content structure:</strong></p>
 
-    <table>
-        <tr><th>Section</th><th>Purpose</th><th>Example</th></tr>
-        <tr><td><code># Title</code></td><td>Feature name</td><td><code># JDK Docs Ingestion</code></td></tr>
-        <tr><td><code>## Context</code></td><td>Why this feature exists</td><td><code>JDK docs are locked in HTML, not queryable</code></td></tr>
-        <tr><td><code>## Feature Inputs</code></td><td>Feature workspace references</td><td><code>features/example/data-flow.md</code></td></tr>
-        <tr><td><code>## Scope</code></td><td>What's in/out of scope</td><td><code>In: JDK source → JSON, Out: Spring Boot</code></td></tr>
-        <tr><td><code>## Implementation</code></td><td>Step-by-step approach</td><td><code>1. Download JDK source ...</code></td></tr>
-        <tr><td><code>## Data Flow</code></td><td>How data moves through the feature</td><td><code>Request → Doclet → JSON output</code></td></tr>
-        <tr><td><code>## Tests</code></td><td>Expected test coverage</td><td><code>Unit: JsonDoclet, Integration: DocletService</code></td></tr>
-        <tr><td><code>## Notes</code></td><td>Edge cases & gotchas</td><td><code>Zip-slip protection during extraction</code></td></tr>
-    </table>
+        <div class="bb-table">
+            <table>
+                <tr>
+                    <th>Section</th>
+                    <th>Purpose</th>
+                    <th>Example</th>
+                </tr>
+                <tr>
+                    <td><code># Title</code></td>
+                    <td>Feature name</td>
+                    <td><code># JDK Docs Ingestion</code></td>
+                </tr>
+                <tr>
+                    <td><code>## Context</code></td>
+                    <td>Why this feature exists</td>
+                    <td><code>JDK docs are locked in HTML, not queryable</code></td>
+                </tr>
+                <tr>
+                    <td><code>## Feature Inputs</code></td>
+                    <td>Feature workspace references</td>
+                    <td><code>features/example/data-flow.md</code></td>
+                </tr>
+                <tr>
+                    <td><code>## Scope</code></td>
+                    <td>What's in/out of scope</td>
+                    <td><code>In: JDK source → JSON, Out: Spring Boot</code></td>
+                </tr>
+                <tr>
+                    <td><code>## Implementation</code></td>
+                    <td>Step-by-step approach</td>
+                    <td><code>1. Download JDK source ...</code></td>
+                </tr>
+                <tr>
+                    <td><code>## Data Flow</code></td>
+                    <td>How data moves through the feature</td>
+                    <td><code>Request → Doclet → JSON output</code></td>
+                </tr>
+                <tr>
+                    <td><code>## Tests</code></td>
+                    <td>Expected test coverage</td>
+                    <td><code>Unit: JsonDoclet, Integration: DocletService</code></td>
+                </tr>
+                <tr>
+                    <td><code>## Notes</code></td>
+                    <td>Edge cases &amp; gotchas</td>
+                    <td><code>Zip-slip protection during extraction</code></td>
+                </tr>
+            </table>
+        </div>
 
-    <p><strong>Key:</strong> The <code>## Feature Inputs</code> section explicitly references feature workspace elements that inform the plan.
-    A plan should never duplicate feature workspace content — it should reference it.</p>
+        <p><strong>Key:</strong> The <code>## Feature Inputs</code> section explicitly references feature workspace
+            elements that inform the plan. A plan should never duplicate feature workspace content — it should reference
+            it.</p>
 
-    <h3>📝 Plan Lifecycle</h3>
+        <h3 id="plan-lifecycle">📝 Plan Lifecycle</h3>
 
-    <p>Plans move through three states tracked in their YAML frontmatter:</p>
+        <p>Plans move through three states tracked in their YAML frontmatter:</p>
 
-    <ol>
-        <li><strong>Active</strong> — Plan is being implemented. The AI should read and follow it.</li>
-        <li><strong>Completed</strong> — Implementation finished. The AI should skip it.</li>
-        <li><strong>Deprecated</strong> — Plan is abandoned or superseded. The AI should never follow it.</li>
-    </ol>
+        <ol>
+            <li><strong>Active</strong> — Plan is being implemented. The AI should read and follow it.</li>
+            <li><strong>Completed</strong> — Implementation finished. The AI should skip it.</li>
+            <li><strong>Deprecated</strong> — Plan is abandoned or superseded. The AI should never follow it.</li>
+        </ol>
 
-    <p>The <code>plans/ACTIVE.md</code> index is the authoritative source for which plans are currently active.</p>
+        <p>The <code>plans/ACTIVE.md</code> index is the authoritative source for which plans are currently
+            active.</p>
 
-    <h3>🗺️ Feature Workspace Structure</h3>
+        <h3 id="feature-structure">🗺️ Feature Workspace Structure</h3>
 
-    <p>Feature workspaces live in the <code>features/</code> directory and track actual feature development — not just implementation
-    plans, but the full context including diagrams, mock requests, and helper scripts. Each feature workspace is a
-    complete artifact that stands on its own.</p>
+        <p>Feature workspaces live in the <code>features/</code> directory and track actual feature development — not
+            just implementation plans, but the full context including diagrams, mock requests, and helper scripts. Each
+            feature workspace is a complete artifact that stands on its own.</p>
 
-    <pre><code>features/
+        <pre><code>features/
 ├── FEATURE.md                           ← Feature index
 └── example/                             ← Template feature workspace
     ├── plan.md                          ← Implementation plan with YAML frontmatter
     ├── data-flow.md                     ← Data flow description with sequence diagram
     ├── mock-requests.json               ← Mock API responses for testing
     ├── scripts/                         ← Helper scripts (validate.sh)
-    └── notes.md                         ← Observations & decisions</code></pre>
+    └── notes.md                         ← Observations &amp; decisions</code></pre>
 
-    <p><strong>Naming rules:</strong></p>
+        <p><strong>Naming rules:</strong></p>
 
-    <ul>
-        <li>Prefix with <code>feature-</code> for new features, <code>fix-</code> for bug fixes</li>
-        <li>Use kebab-case for multi-word names</li>
-        <li>Keep names descriptive but concise</li>
-        <li>Reflects the actual feature or fix being implemented</li>
-    </ul>
+        <ul>
+            <li>Prefix with <code>feature-</code> for new features, <code>fix-</code> for bug fixes</li>
+            <li>Use kebab-case for multi-word names</li>
+            <li>Keep names descriptive but concise</li>
+            <li>Reflects the actual feature or fix being implemented</li>
+        </ul>
 
-    <h3>📝 Feature Workspace Conventions</h3>
+        <h3 id="feature-conventions">📝 Feature Workspace Conventions</h3>
 
-    <table>
-        <tr><th>Field</th><th>Purpose</th><th>Example</th></tr>
-        <tr><td><code># Title</code></td><td>Feature name</td><td><code># JDK Docs Ingestion</code></td></tr>
-        <tr><td><code>## Context</code></td><td>Why this feature exists</td><td><code>JDK docs are locked in HTML, not queryable</code></td></tr>
-        <tr><td><code>## Scope</code></td><td>What's in/out of scope</td><td><code>In: JDK source → JSON, Out: Spring Boot</code></td></tr>
-        <tr><td><code>## Implementation</code></td><td>Step-by-step approach</td><td><code>1. Download JDK source ...</code></td></tr>
-        <tr><td><code>## Data Flow</code></td><td>How data moves through the feature</td><td><code>Request → Doclet → JSON output</code></td></tr>
-        <tr><td><code>## Tests</code></td><td>Expected test coverage</td><td><code>Unit: JsonDoclet, Integration: DocletService</code></td></tr>
-        <tr><td><code>## Notes</code></td><td>Edge cases & gotchas</td><td><code>Zip-slip protection during extraction</code></td></tr>
-    </table>
+        <div class="bb-table">
+            <table>
+                <tr>
+                    <th>Field</th>
+                    <th>Purpose</th>
+                    <th>Example</th>
+                </tr>
+                <tr>
+                    <td><code># Title</code></td>
+                    <td>Feature name</td>
+                    <td><code># JDK Docs Ingestion</code></td>
+                </tr>
+                <tr>
+                    <td><code>## Context</code></td>
+                    <td>Why this feature exists</td>
+                    <td><code>JDK docs are locked in HTML, not queryable</code></td>
+                </tr>
+                <tr>
+                    <td><code>## Scope</code></td>
+                    <td>What's in/out of scope</td>
+                    <td><code>In: JDK source → JSON, Out: Spring Boot</code></td>
+                </tr>
+                <tr>
+                    <td><code>## Implementation</code></td>
+                    <td>Step-by-step approach</td>
+                    <td><code>1. Download JDK source ...</code></td>
+                </tr>
+                <tr>
+                    <td><code>## Data Flow</code></td>
+                    <td>How data moves through the feature</td>
+                    <td><code>Request → Doclet → JSON output</code></td>
+                </tr>
+                <tr>
+                    <td><code>## Tests</code></td>
+                    <td>Expected test coverage</td>
+                    <td><code>Unit: JsonDoclet, Integration: DocletService</code></td>
+                </tr>
+                <tr>
+                    <td><code>## Notes</code></td>
+                    <td>Edge cases &amp; gotchas</td>
+                    <td><code>Zip-slip protection during extraction</code></td>
+                </tr>
+            </table>
+        </div>
 
-    <h3>🔗 Cross-Reference Map</h3>
+        <h3 id="cross-ref">🔗 Cross-Reference Map</h3>
 
-    <pre><code>CLAUDE.md ──────┬────── AGENTS.md        ← Same content, different CLI tools
+        <pre><code>CLAUDE.md ──────┬────── AGENTS.md        ← Same content, different CLI tools
                 │
                 ├────── docs/STRUCTURE.md ← "Keep STRUCTURE.md in sync"
                 ├────── docs/DOCLET.md    ← "Keep deep-dive docs current"
@@ -369,17 +547,83 @@ plans/* ────────┬────── CLAUDE.md / AGENTS.md  ←
                 ├────── docs/*.md             ← "Reference deep-dive context"
                 └────── src/*                 ← "Describe implementation"</code></pre>
 
-    <h3>🎯 Key Design Principles</h3>
+        <h3 id="design-principles">🎯 Key Design Principles</h3>
 
-    <table>
-        <tr><th>Principle</th><th>Description</th></tr>
-        <tr><td><strong>📐 Separation of Concerns</strong></td><td>Rules (CLAUDE.md), references (docs/), and scratchpad (BLACKBOOK.md) serve different purposes</td></tr>
-        <tr><td><strong>🔄 Single Source of Truth</strong></td><td>CLAUDE.md is the canonical rule file; AGENTS.md mirrors it for other tools</td></tr>
-        <tr><td><strong>🔍 AI-First Context</strong></td><td>Reference docs exist so AI doesn't need to read source code to understand implementation details</td></tr>
-        <tr><td><strong>📝 Traceable Decisions</strong></td><td>BLACKBOOK.md captures the "why" behind decisions, not just the "what"</td></tr>
-        <tr><td><strong>🗺️ Feature-Driven Development</strong></td><td>Every feature has a workspace folder that documents intent before implementation — <strong>implemented</strong></td></tr>
-        <tr><td><strong>📋 Plan-Driven Implementation</strong></td><td>Plans use feature workspace elements as inputs and drive the actual coding phase — <strong>implemented</strong></td></tr>
-        <tr><td><strong>📚 Living Documentation</strong></td><td>Documentation must be updated in the same session as code changes — stale docs are worse than no docs</td></tr>
-    </table>
+        <div class="bb-table">
+            <table>
+                <tr>
+                    <th>Principle</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><strong>📐 Separation of Concerns</strong></td>
+                    <td>Rules (CLAUDE.md), references (docs/), and scratchpad (BLACKBOOK.md) serve different purposes
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>🔄 Single Source of Truth</strong></td>
+                    <td>CLAUDE.md is the canonical rule file; AGENTS.md mirrors it for other tools</td>
+                </tr>
+                <tr>
+                    <td><strong>🔍 AI-First Context</strong></td>
+                    <td>Reference docs exist so AI doesn't need to read source code to understand implementation
+                        details
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>📝 Traceable Decisions</strong></td>
+                    <td>BLACKBOOK.md captures the "why" behind decisions, not just the "what"</td>
+                </tr>
+                <tr>
+                    <td><strong>🗺️ Feature-Driven Development</strong></td>
+                    <td>Every feature has a workspace folder that documents intent before implementation — <strong>implemented</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>📋 Plan-Driven Implementation</strong></td>
+                    <td>Plans use feature workspace elements as inputs and drive the actual coding phase — <strong>implemented</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>📚 Living Documentation</strong></td>
+                    <td>Documentation must be updated in the same session as code changes — stale docs are worse than no
+                        docs
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+    <footer class="bb-foot">
+        <span>Black Book · JAIDoc</span>
+        <nav>
+            <a href="BLACKBOOK.md">Index</a>
+            <a href="2026-06-15.html">2026-06-15 →</a>
+        </nav>
+    </footer>
+</article>
+
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: 'base',
+        themeVariables: {
+            fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+            fontSize: '13px',
+            background: '#10141b',
+            primaryColor: '#1b212b',
+            primaryBorderColor: '#3a4452',
+            primaryTextColor: '#dfe4ea',
+            lineColor: '#6e7d8f',
+            tertiaryColor: '#161b22',
+            clusterBkg: '#141922',
+            clusterBorder: '#2b3543',
+            titleColor: '#dfe4ea',
+            edgeLabelBackground: '#10141b'
+        }
+    });
+</script>
 </body>
 </html>

@@ -4,49 +4,132 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2026-06-15 — Black Book</title>
+    <link rel="stylesheet" href="blackbook.css">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
-            color: #1a1a1a;
+        /* keep Mermaid edge labels legible on the dark diagram panel */
+        .mermaid[data-processed="true"] .edgeLabel,
+        .mermaid[data-processed="true"] .edgeLabel * {
+            color: #cfd6df !important;
+            fill: #cfd6df;
         }
-        h1 {
-            border-bottom: 2px solid #333;
-            padding-bottom: 0.5rem;
-        }
-        h2 {
-            margin-top: 2rem;
-        }
-        ul {
-            padding-left: 1.5rem;
+
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
         }
     </style>
 </head>
 <body>
-    <h1>2026-06-15</h1>
+<article class="bb-page">
+    <header class="bb-head">
+        <p class="bb-eyebrow">Black Book · Dev Log</p>
+        <h1 class="bb-date">2026-06-15</h1>
+        <p class="bb-meta">JAIDoc — AI-assisted development</p>
+    </header>
 
-    <h2>🔄 JDK Source Approach Abandoned</h2>
+    <nav class="bb-contents" aria-label="In this entry">
+        <p class="toc-title">In this entry</p>
+        <ul class="bb-toc">
+            <li class="cat-change"><a href="#jdk-source">JDK Source Approach Abandoned</a></li>
+            <li class="cat-arch"><a href="#status">Current Status</a></li>
+            <li class="cat-plan"><a href="#next-steps">Next Steps</a></li>
+            <li class="cat-arch">
+                <a href="#blackbook-note-command">Black Book Note Command &amp; Rendering Spec</a>
+                <ul class="toc-sub cat-arch">
+                    <li><a href="#command-flow">Command Flow</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
 
-    <p>Found that using JDK source was not the right approach. Needed to use pre-compiled versions instead to be able to generate JSON javadoc and have a working flow. The source-only approach didn't work for the intended goal.</p>
+    <section class="entry cat-change" id="jdk-source">
+        <p class="tab">🔄 Change</p>
+        <h2>JDK Source Approach Abandoned</h2>
+        <p>Found that using JDK source was not the right approach. Needed to use pre-compiled versions instead to be
+            able to generate JSON javadoc and have a working flow. The source-only approach didn't work for the intended
+            goal.</p>
+    </section>
 
-    <h2>🏗️ Current Status</h2>
+    <section class="entry cat-arch" id="status">
+        <p class="tab">🏗️ Architecture</p>
+        <h2>Current Status</h2>
+        <ul>
+            <li>Pre-compiled JDK versions are now being used</li>
+            <li>JSON javadoc generation is working</li>
+            <li>The DB is pre-configured — only the DB connection itself remains</li>
+            <li>The MCP server implementation is the remaining work</li>
+        </ul>
+    </section>
 
-    <ul>
-        <li>Pre-compiled JDK versions are now being used</li>
-        <li>JSON javadoc generation is working</li>
-        <li>The DB is pre-configured — only the DB connection itself remains</li>
-        <li>The MCP server implementation is the remaining work</li>
-    </ul>
+    <section class="entry cat-plan" id="next-steps">
+        <p class="tab">📋 Planning</p>
+        <h2>Next Steps</h2>
+        <ul>
+            <li>Leave a basic example in a dedicated folder as a reference/template</li>
+            <li>Start populating the DB with information</li>
+            <li>Build out the MCP server logic on top of the existing data layer</li>
+        </ul>
+    </section>
 
-    <h2>📋 Next Steps</h2>
+    <section class="entry cat-arch" id="blackbook-note-command">
+        <p class="tab">🏗️ Architecture</p>
+        <h2>Black Book Note Command &amp; Rendering Spec</h2>
+        <p>Added a <code>/jaidoc:blackbook-note</code> command that authors a dated Black Book note in both Markdown
+            and HTML, and extended <code>BLACKBOOK.md</code> with the HTML/Mermaid rendering spec the command relies
+            on.</p>
+        <ul>
+            <li>New command at <code>.claude/commands/jaidoc/blackbook-note.md</code> — appends to today's files if
+                they exist, or creates a new day and wires up footer navigation and the Index.
+            </li>
+            <li><code>BLACKBOOK.md</code> now documents the category → CSS-class mapping, the HTML page skeleton, the
+                Markdown → HTML element mapping, and the Mermaid rendering rules.
+            </li>
+            <li>Mermaid: a <code>mermaid</code> fenced block becomes <code>&lt;pre class="mermaid"&gt;</code> with
+                escaped source, and the head <code>&lt;style&gt;</code> and body <code>&lt;script&gt;</code> blocks are
+                injected the first time a page gains a diagram.
+            </li>
+        </ul>
 
-    <ul>
-        <li>Leave a basic example in a dedicated folder as a reference/template</li>
-        <li>Start populating the DB with information</li>
-        <li>Build out the MCP server logic on top of the existing data layer</li>
-    </ul>
+        <h3 id="command-flow">🔗 Command Flow</h3>
+
+        <pre class="mermaid">graph LR
+    ARGS["Parse $ARGUMENTS&lt;br/&gt;category + note"] --&gt; SPEC["Read BLACKBOOK.md&lt;br/&gt;rules + rendering"]
+    SPEC --&gt; COMPOSE["Compose entry&lt;br/&gt;title + body"]
+    COMPOSE --&gt; CHECK{"YYYY-MM-DD files&lt;br/&gt;exist?"}
+    CHECK --&gt;|Yes| APPEND["Append to MD + HTML&lt;br/&gt;update TOC"]
+    CHECK --&gt;|No| CREATE["Create MD + HTML&lt;br/&gt;nav + Index"]</pre>
+    </section>
+
+    <footer class="bb-foot">
+        <span>Black Book · JAIDoc</span>
+        <nav>
+            <a href="2026-06-14.html">← 2026-06-14</a>
+            <a href="BLACKBOOK.md">Index</a>
+        </nav>
+    </footer>
+</article>
+
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: 'base',
+        themeVariables: {
+            fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+            fontSize: '13px',
+            background: '#10141b',
+            primaryColor: '#1b212b',
+            primaryBorderColor: '#3a4452',
+            primaryTextColor: '#dfe4ea',
+            lineColor: '#6e7d8f',
+            tertiaryColor: '#161b22',
+            clusterBkg: '#141922',
+            clusterBorder: '#2b3543',
+            titleColor: '#dfe4ea',
+            edgeLabelBackground: '#10141b'
+        }
+    });
+</script>
 </body>
 </html>
