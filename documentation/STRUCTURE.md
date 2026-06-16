@@ -86,6 +86,81 @@ doclet/
 
 The doclet jar is used by `javadoc -docletpath` to generate JSON documentation via the `JsonDoclet`.
 
-## Maintenance
+## Tech Stack
+
+### Runtime
+
+| Component             | Technology        |
+|-----------------------|-------------------|
+| JVM                   | Java 25           |
+| Application Framework | Spring Boot 4.1.0 |
+
+### Build
+
+| Component       | Technology                                            |
+|-----------------|-------------------------------------------------------|
+| Build Tool      | Maven 3.9.15                                          |
+| Compiler Plugin | Maven Compiler Plugin (Lombok annotation processor)   |
+| Boot Plugin     | Spring Boot Maven Plugin (AOT processing, build-info) |
+| Assembly Plugin | Maven Assembly Plugin (doclet JAR packaging)          |
+| Wrapper         | Maven Wrapper (`mvnw` / `mvnw.cmd`)                   |
+
+### Web & API
+
+| Component       | Technology                                 |
+|-----------------|--------------------------------------------|
+| Web Runtime     | Spring WebFlux (reactive)                  |
+| Validation      | Spring Boot Starter Validation             |
+| HTTP Client     | Spring Boot Starter RestClient             |
+| OpenAPI/Swagger | springdoc-openapi-starter-webflux-ui 3.0.3 |
+
+### Data & Persistence
+
+| Component | Technology                                                  |
+|-----------|-------------------------------------------------------------|
+| Database  | SQLite JDBC                                                 |
+| ORM       | Spring Boot Starter Data JPA + Hibernate community dialects |
+| Search    | Hibernate Search 8.4.0.Final (mapper-orm + Lucene backend)  |
+
+### AI & MCP
+
+| Component            | Technology                                                  |
+|----------------------|-------------------------------------------------------------|
+| MCP Server           | Spring AI MCP Server 2.0.0-RC2 (streamable protocol, stdio) |
+| Spring AI BOM        | 2.0.0-RC2                                                   |
+| Spring Cloud         | 2025.1.2                                                    |
+| Hibernate Search BOM | 8.4.0.Final                                                 |
+
+### JSON & Serialization
+
+| Component        | Technology                    |
+|------------------|-------------------------------|
+| JSON Processor   | Jackson 3 (`tools.jackson.*`) |
+| XML Support      | jackson-dataformat-xml        |
+| Blackbird Module | jackson-module-blackbird      |
+
+### Utilities
+
+| Component       | Technology                     |
+|-----------------|--------------------------------|
+| Compression     | Apache Commons Compress 1.28.0 |
+| Code Generation | Lombok                         |
+
+### Observability & Infrastructure
+
+| Component | Technology                                                       |
+|-----------|------------------------------------------------------------------|
+| Metrics   | Spring Boot Starter Micrometer Metrics                           |
+| Actuator  | Spring Boot Starter Actuator (health, env, configprops, loggers) |
+| Logging   | Logback (via spring-boot-starter-logging)                        |
+| AOP       | Spring Boot Starter AspectJ                                      |
+
+### Local LLM
+
+| Component | Technology                                               |
+|-----------|----------------------------------------------------------|
+| Server    | Llama.cpp Server (routing mode) — use the latest version |
+
+### Maintenance
 
 Keep this file compact — group related items under one line, only expand when something is truly independent.

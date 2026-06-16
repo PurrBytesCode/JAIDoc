@@ -110,7 +110,7 @@ These rules prevent infinite loops, redundant work, and exploration traps when r
 Deep-dive documentation lives in the `documentation/` directory. Consult these files before working in the areas they
 cover — they prevent context loss and keep AGENTS.md from growing out of control.
 
-- **[Project Structure](documentation/STRUCTURE.md)** — High-level layout, config hierarchy, build output
+- **[Project Structure](documentation/STRUCTURE.md)** — High-level layout, config hierarchy, build output, tech stack
 - **[Doclet](documentation/DOCLET.md)** — JSON doclet architecture, CLI options, output format, chunking
 - **[MCP Server](documentation/MCP.md)** — MCP server setup and JetBrains adapter
 - **[Jackson Config](documentation/JACKSON.md)** — Customizer pattern, YAML mapper convention
