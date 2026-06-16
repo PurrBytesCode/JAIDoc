@@ -61,27 +61,24 @@ final class TypeJsonBuilder {
     }
 
     /**
-     * Serializes a type (class, interface, enum, record or annotation) and its members.
+     * Serializes a type (class, interface, enum, record, or annotation) and its members.
      */
     ObjectNode buildType(TypeElement t) {
         ObjectNode n = mapper.createObjectNode();
         n.put("kind", t.getKind().name()); // CLASS | INTERFACE | ENUM | RECORD | ANNOTATION_TYPE
         n.put("name", t.getSimpleName().toString());
         n.put("qualifiedName", t.getQualifiedName().toString());
-
         PackageElement pkg = elements.getPackageOf(t);
         n.put("package", pkg.getQualifiedName().toString());
         ModuleElement mod = elements.getModuleOf(t);
         if (mod != null && !mod.isUnnamed()) {
             n.put("module", mod.getQualifiedName().toString());
         }
-
         putModifiers(n, t);
         putAnnotations(n, t);
         putTypeParameters(n, t.getTypeParameters());
-
         TypeMirror sup = t.getSuperclass();
-        if (sup != null && sup.getKind() != TypeKind.NONE) {
+        if (sup.getKind() != TypeKind.NONE) {
             n.put("superclass", sup.toString());
         }
         if (!t.getInterfaces().isEmpty()) {
@@ -94,12 +91,10 @@ final class TypeJsonBuilder {
             ArrayNode arr = n.putArray("permittedSubclasses");
             for (TypeMirror p : permits) arr.add(p.toString());
         }
-
         putDeprecation(n, t);
         putSource(n, t);
         ObjectNode doc = docs.comment(trees, t);
         if (doc != null) n.set("doc", doc);
-
         // Record components: the description comes from @param of the class comment
         if (t.getKind() == ElementKind.RECORD && !t.getRecordComponents().isEmpty()) {
             Map<String, String> paramDocs = docs.paramDescriptions(trees, t, false);
@@ -113,13 +108,11 @@ final class TypeJsonBuilder {
                 if (d != null && !d.isEmpty()) c.put("description", d);
             }
         }
-
         ArrayNode enumConstants = null;
         ArrayNode fields = null;
         ArrayNode constructors = null;
         ArrayNode methods = null;
         ArrayNode nested = null;
-
         for (Element e : t.getEnclosedElements()) {
             switch (e.getKind()) {
                 case ENUM_CONSTANT -> {
@@ -142,10 +135,9 @@ final class TypeJsonBuilder {
                     if (nested == null) nested = n.putArray("nestedTypes");
                     nested.add(buildType((TypeElement) e)); // recursivo
                 }
-                default -> { /* RECORD_COMPONENT, etc. ya cubiertos */ }
+                default -> { /* RECORD_COMPONENT, etc. covered s */ }
             }
         }
-
         emitChunk(t, typeHeader(t), n);
         return n;
     }
@@ -158,12 +150,15 @@ final class TypeJsonBuilder {
         putModifiers(n, f);
         putAnnotations(n, f);
         Object constant = f.getConstantValue();
-        if (constant != null) n.put("constantValue", String.valueOf(constant));
+        if (constant != null) {
+            n.put("constantValue", String.valueOf(constant));
+        }
         putDeprecation(n, f);
         putSource(n, f);
         ObjectNode doc = docs.comment(trees, f);
-        if (doc != null) n.set("doc", doc);
-
+        if (doc != null) {
+            n.set("doc", doc);
+        }
         String header = (f.getKind() == ElementKind.ENUM_CONSTANT ? "enum constant " : "field ")
                 + owner.getQualifiedName() + "." + f.getSimpleName()
                 + " : " + f.asType();
@@ -179,15 +174,12 @@ final class TypeJsonBuilder {
         putModifiers(n, m);
         putAnnotations(n, m);
         putTypeParameters(n, m.getTypeParameters());
-
         if (!ctor) {
             n.put("returnType", m.getReturnType().toString());
         }
-
         Map<String, String> paramDocs = docs.paramDescriptions(trees, m, false);
         Map<String, String> typeParamDocs = docs.paramDescriptions(trees, m, true);
         Map<String, String> throwsDocs = docs.throwsDescriptions(trees, m);
-
         // type parameter descriptions (@param <T> ...)
         if (!typeParamDocs.isEmpty() && n.has("typeParameters")) {
             ArrayNode tps = (ArrayNode) n.get("typeParameters");
@@ -197,7 +189,6 @@ final class TypeJsonBuilder {
                 if (d != null && !d.isEmpty()) tp.put("description", d);
             }
         }
-
         StringJoiner sig = new StringJoiner(", ", "(", ")");
         List<? extends VariableElement> params = m.getParameters();
         if (!params.isEmpty()) {
@@ -216,7 +207,6 @@ final class TypeJsonBuilder {
         }
         String signature = n.get("name").asString() + sig;
         n.put("signature", signature);
-
         if (!m.getThrownTypes().isEmpty()) {
             ArrayNode arr = n.putArray("throws");
             for (TypeMirror ex : m.getThrownTypes()) {
@@ -226,15 +216,16 @@ final class TypeJsonBuilder {
                 if (d != null && !d.isEmpty()) en.put("description", d);
             }
         }
-
         AnnotationValue def = m.getDefaultValue(); // miembros de @interface
-        if (def != null) n.put("defaultValue", def.toString());
-
+        if (def != null) {
+            n.put("defaultValue", def.toString());
+        }
         putDeprecation(n, m);
         putSource(n, m);
         ObjectNode doc = docs.comment(trees, m);
-        if (doc != null) n.set("doc", doc);
-
+        if (doc != null) {
+            n.set("doc", doc);
+        }
         String header = (ctor ? "constructor " : "method ")
                 + owner.getQualifiedName() + "#" + signature
                 + (ctor ? "" : " -> " + m.getReturnType());
@@ -294,8 +285,7 @@ final class TypeJsonBuilder {
             ObjectNode t = arr.addObject();
             t.put("name", tp.getSimpleName().toString());
             List<? extends TypeMirror> bounds = tp.getBounds();
-            boolean onlyObject = bounds.size() == 1
-                    && "java.lang.Object".equals(bounds.get(0).toString());
+            boolean onlyObject = bounds.size() == 1 && "java.lang.Object".equals(bounds.getFirst().toString());
             if (!bounds.isEmpty() && !onlyObject) {
                 ArrayNode b = t.putArray("bounds");
                 for (TypeMirror bound : bounds) b.add(bound.toString());
@@ -331,7 +321,9 @@ final class TypeJsonBuilder {
     private void putSource(ObjectNode n, Element e) {
         try {
             TreePath path = trees.getPath(e);
-            if (path == null) return;
+            if (path == null) {
+                return;
+            }
             CompilationUnitTree cu = path.getCompilationUnit();
             ObjectNode s = n.putObject("source");
             s.put("file", cu.getSourceFile().getName());
@@ -350,8 +342,7 @@ final class TypeJsonBuilder {
         sb.append(t.getKind().name().toLowerCase().replace("_", " "))
                 .append(' ').append(t.getQualifiedName());
         TypeMirror sup = t.getSuperclass();
-        if (sup != null && sup.getKind() != TypeKind.NONE
-                && !"java.lang.Object".equals(sup.toString())) {
+        if (sup.getKind() != TypeKind.NONE && !"java.lang.Object".equals(sup.toString())) {
             sb.append(" extends ").append(sup);
         }
         if (!t.getInterfaces().isEmpty()) {
@@ -363,40 +354,50 @@ final class TypeJsonBuilder {
     }
 
     /**
-     * Emits a chunk for ChromaDB: text = header (signature) + full comment
-     * in plain text; metadata = only primitive values (ChromaDB requirement).
+     * Emits a chunk: text = header (signature) + full comment in plain text;
+     * metadata = only primitive values.
      */
     private void emitChunk(Element e, String header, ObjectNode json) {
-        if (chunks == null) return;
-
+        if (chunks == null) {
+            return;
+        }
         String docText = docs.fullText(trees, e); // "" if no comment
         boolean documented = !docText.isEmpty();
-
         String id = chunkId(e);
         String text = documented ? header + "\n\n" + docText : header;
-
         ObjectNode meta = mapper.createObjectNode();
         meta.put("kind", e.getKind().name());
         meta.put("documented", documented);
         TypeElement owner = enclosingType(e);
-        if (owner != null) meta.put("type", owner.getQualifiedName().toString());
+        if (owner != null) {
+            meta.put("type", owner.getQualifiedName().toString());
+        }
         PackageElement pkg = elements.getPackageOf(e);
-        if (pkg != null) meta.put("package", pkg.getQualifiedName().toString());
+        if (pkg != null) {
+            meta.put("package", pkg.getQualifiedName().toString());
+        }
         ModuleElement mod = elements.getModuleOf(e);
-        if (mod != null && !mod.isUnnamed()) meta.put("module", mod.getQualifiedName().toString());
+        if (mod != null && !mod.isUnnamed()) {
+            meta.put("module", mod.getQualifiedName().toString());
+        }
         if (e instanceof ExecutableElement || e.getKind().isField()) {
             meta.put("member", e.getSimpleName().toString());
         }
-        if (json.has("signature")) meta.put("signature", json.get("signature").asString());
-        if (json.has("deprecated")) meta.put("deprecated", true);
+        if (json.has("signature")) {
+            meta.put("signature", json.get("signature").asString());
+        }
+        if (json.has("deprecated")) {
+            meta.put("deprecated", true);
+        }
         String since = docs.sinceTag(trees, e);
-        if (since != null) meta.put("since", since);
+        if (since != null) {
+            meta.put("since", since);
+        }
         if (json.has("source")) {
             ObjectNode src = (ObjectNode) json.get("source");
             if (src.has("file")) meta.put("file", src.get("file").asString());
             if (src.has("line")) meta.put("line", src.get("line").asLong());
         }
-
         chunks.write(id, text, meta, documented);
     }
 

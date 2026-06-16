@@ -3,6 +3,7 @@ package com.purrbyte.ai.doclet;
 import jdk.javadoc.doclet.Doclet;
 import jdk.javadoc.doclet.DocletEnvironment;
 import jdk.javadoc.doclet.Reporter;
+import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.ObjectWriter;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -40,14 +41,16 @@ import java.util.*;
  *   <li>{@code module-<name>.json} — documentation for each module.</li>
  *   <li>{@code index.json} — manifest with all types/packages/modules.</li>
  *   <li>{@code chunks.jsonl} — one "chunk" per documented element (JSON line with
- *       flat id, text and metadata), ready to embed and insert into ChromaDB.</li>
+ *       flat id, text and metadata), ready to embed.</li>
  * </ul>
  */
+@Slf4j
 public class JsonDoclet implements Doclet {
 
     private Reporter reporter;
 
     private Path outputDir = Path.of("json-doclet-out");
+    private String docVersion = null;        // optional documented JDK/artifact version
     private boolean pretty = false;
     private boolean noChunks = false;
     private boolean onlyDocumented = false;
@@ -73,69 +76,67 @@ public class JsonDoclet implements Doclet {
 
     @Override
     public Set<? extends Option> getSupportedOptions() {
-        Set<Option> opts = new TreeSet<>(Comparator.comparing(o -> o.getNames().get(0)));
+        Set<Option> opts = new TreeSet<>(Comparator.comparing(o -> o.getNames().getFirst()));
 
-        opts.add(new SimpleOption(List.of("-d", "--output-directory"), 1,
-                "Output directory (default: json-doclet-out)") {
+        opts.add(new SimpleOption(List.of("-d", "--output-directory"), 1, "Output directory (default: json-doclet-out)") {
             @Override
             public boolean process(String opt, List<String> args) {
-                outputDir = Path.of(args.get(0));
+                outputDir = Path.of(args.getFirst());
                 return true;
             }
         });
-        opts.add(new SimpleOption(List.of("--pretty"), 0,
-                "Format JSON with indentation") {
+        opts.add(new SimpleOption(List.of("--doc-version"), 1, "Version recorded in index.json (e.g. the documented JDK version)") {
+            @Override
+            public boolean process(String opt, List<String> args) {
+                docVersion = args.getFirst();
+                return true;
+            }
+        });
+        opts.add(new SimpleOption(List.of("--pretty"), 0, "Format JSON with indentation") {
             @Override
             public boolean process(String opt, List<String> args) {
                 pretty = true;
                 return true;
             }
         });
-        opts.add(new SimpleOption(List.of("--no-chunks"), 0,
-                "Do not generate chunks.jsonl") {
+        opts.add(new SimpleOption(List.of("--no-chunks"), 0, "Do not generate chunks.jsonl") {
             @Override
             public boolean process(String opt, List<String> args) {
                 noChunks = true;
                 return true;
             }
         });
-        opts.add(new SimpleOption(List.of("--chunks-file"), 1,
-                "Path of the JSONL chunks file (default: <out>/chunks.jsonl)") {
+        opts.add(new SimpleOption(List.of("--chunks-file"), 1, "Path of the JSONL chunks file (default: <out>/chunks.jsonl)") {
             @Override
             public boolean process(String opt, List<String> args) {
-                chunksFile = Path.of(args.get(0));
+                chunksFile = Path.of(args.getFirst());
                 return true;
             }
         });
-        opts.add(new SimpleOption(List.of("--max-chunk-chars"), 1,
-                "Maximum size of a chunk in characters before splitting it (default 4000)") {
+        opts.add(new SimpleOption(List.of("--max-chunk-chars"), 1, "Maximum size of a chunk in characters before splitting it (default 4000)") {
             @Override
             public boolean process(String opt, List<String> args) {
-                maxChunkChars = Integer.parseInt(args.get(0));
+                maxChunkChars = Integer.parseInt(args.getFirst());
                 return true;
             }
         });
-        opts.add(new SimpleOption(List.of("--chunk-overlap"), 1,
-                "Overlap between fragments when a chunk is split (default 200)") {
+        opts.add(new SimpleOption(List.of("--chunk-overlap"), 1, "Overlap between fragments when a chunk is split (default 200)") {
             @Override
             public boolean process(String opt, List<String> args) {
-                chunkOverlap = Integer.parseInt(args.get(0));
+                chunkOverlap = Integer.parseInt(args.getFirst());
                 return true;
             }
         });
-        opts.add(new SimpleOption(List.of("--only-documented"), 0,
-                "Emit chunks only for elements with a Javadoc comment") {
+        opts.add(new SimpleOption(List.of("--only-documented"), 0, "Emit chunks only for elements with a Javadoc comment") {
             @Override
             public boolean process(String opt, List<String> args) {
                 onlyDocumented = true;
                 return true;
             }
         });
-
         // Standard doclet options that tools like maven-javadoc-plugin
         // usually pass; accepted and ignored to avoid breaking execution.
-        for (String ignored1arg : new String[]{"-doctitle", "-windowtitle", "-charset",
-                "-docencoding", "-bottom", "-link", "-header", "-footer"}) {
+        for (String ignored1arg : new String[]{"-doctitle", "-windowtitle", "-charset", "-docencoding", "-bottom", "-link", "-header", "-footer"}) {
             opts.add(new SimpleOption(List.of(ignored1arg), 1, "(ignored)") {
                 @Override
                 public boolean process(String opt, List<String> args) {
@@ -156,28 +157,22 @@ public class JsonDoclet implements Doclet {
     public boolean run(DocletEnvironment env) {
         try {
             Files.createDirectories(outputDir);
-
             JsonMapper mapper = JsonMapper.builder().build();
-            ObjectWriter writer = pretty ? mapper.writerWithDefaultPrettyPrinter()
-                    : mapper.writer();
-
+            ObjectWriter writer = pretty ? mapper.writerWithDefaultPrettyPrinter() : mapper.writer();
             Path chunksPath = chunksFile != null ? chunksFile : outputDir.resolve("chunks.jsonl");
-            try (ChunkWriter chunks = noChunks
-                    ? null
-                    : new ChunkWriter(chunksPath, mapper, maxChunkChars, chunkOverlap, onlyDocumented)) {
-
+            try (ChunkWriter chunks = noChunks ? null : new ChunkWriter(chunksPath, mapper, maxChunkChars, chunkOverlap, onlyDocumented)) {
                 TypeJsonBuilder builder = new TypeJsonBuilder(env, mapper, chunks);
-
                 ObjectNode index = mapper.createObjectNode();
                 index.put("generator", "json-doclet 1.0.0");
+                if (docVersion != null) {
+                    index.put("version", docVersion);
+                }
                 index.put("generatedAt", OffsetDateTime.now(ZoneOffset.UTC).toString());
                 index.put("javaRuntime", Runtime.version().toString());
                 ArrayNode idxModules = index.putArray("modules");
                 ArrayNode idxPackages = index.putArray("packages");
                 ArrayNode idxTypes = index.putArray("types");
-
                 Set<? extends Element> included = env.getIncludedElements();
-
                 // ---- Modules ----
                 for (ModuleElement mod : ElementFilter.modulesIn(included)) {
                     if (mod.isUnnamed()) continue;
@@ -188,8 +183,7 @@ public class JsonDoclet implements Doclet {
                     e.put("name", mod.getQualifiedName().toString());
                     e.put("file", fileName);
                 }
-
-                // ---- Paquetes ----
+                // ---- Packages ----
                 for (PackageElement pkg : ElementFilter.packagesIn(included)) {
                     ObjectNode p = builder.buildPackage(pkg);
                     Path dir = packageDir(pkg);
@@ -200,17 +194,14 @@ public class JsonDoclet implements Doclet {
                     e.put("name", pkg.getQualifiedName().toString());
                     e.put("file", outputDir.relativize(file).toString().replace(File.separatorChar, '/'));
                 }
-
                 // ---- Tipos de nivel superior (los anidados se serializan dentro) ----
                 List<TypeElement> topLevel = new ArrayList<>();
                 for (TypeElement t : ElementFilter.typesIn(included)) {
-                    if (t.getEnclosingElement() == null
-                            || t.getEnclosingElement().getKind() == ElementKind.PACKAGE) {
+                    if (t.getEnclosingElement() == null || t.getEnclosingElement().getKind() == ElementKind.PACKAGE) {
                         topLevel.add(t);
                     }
                 }
                 topLevel.sort(Comparator.comparing(t -> t.getQualifiedName().toString()));
-
                 int typeCount = 0;
                 for (TypeElement t : topLevel) {
                     ObjectNode json = builder.buildType(t);
@@ -227,26 +218,19 @@ public class JsonDoclet implements Doclet {
                     e.put("package", pkg.getQualifiedName().toString());
                     e.put("file", outputDir.relativize(file).toString().replace(File.separatorChar, '/'));
                 }
-
                 index.put("typeCount", typeCount);
                 if (chunks != null) {
-                    index.put("chunksFile", outputDir.toAbsolutePath().normalize()
-                            .relativize(chunksPath.toAbsolutePath().normalize()).toString()
-                            .replace(File.separatorChar, '/'));
+                    index.put("chunksFile", outputDir.toAbsolutePath().normalize().relativize(chunksPath.toAbsolutePath().normalize()).toString().replace(File.separatorChar, '/'));
                     index.put("chunkCount", chunks.count());
                 }
-                writeJson(mapper.writerWithDefaultPrettyPrinter(),
-                        outputDir.resolve("index.json"), index);
+                writeJson(mapper.writerWithDefaultPrettyPrinter(), outputDir.resolve("index.json"), index);
 
-                reporter.print(Diagnostic.Kind.NOTE, "JsonDoclet: " + typeCount
-                        + " types written to " + outputDir.toAbsolutePath()
-                        + (chunks != null ? " (" + chunks.count() + " chunks in " + chunksPath + ")" : ""));
+                reporter.print(Diagnostic.Kind.NOTE, "JsonDoclet: " + typeCount + " types written to " + outputDir.toAbsolutePath() + (chunks != null ? " (" + chunks.count() + " chunks in " + chunksPath + ")" : ""));
             }
             return true;
         } catch (Exception ex) {
-            reporter.print(Diagnostic.Kind.ERROR,
-                    "JsonDoclet failed: " + ex.getClass().getName() + ": " + ex.getMessage());
-            ex.printStackTrace();
+            reporter.print(Diagnostic.Kind.ERROR, "JsonDoclet failed: " + ex.getClass().getName() + ": " + ex.getMessage());
+            log.error("JsonDoclet failed", ex);
             return false;
         }
     }
@@ -270,6 +254,7 @@ public class JsonDoclet implements Doclet {
      * Base implementation of {@link Option}.
      */
     private abstract static class SimpleOption implements Option {
+
         private final List<String> names;
         private final int argCount;
         private final String description;

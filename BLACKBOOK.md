@@ -25,9 +25,9 @@ Initial setup of this file. Added the purpose section and a reference link in `R
 
 ### 🏗️ Architecture: AI-Assisted Development System
 
-> ⚠️ **Provisional design** — The overall architecture for rules + references is established. The `features/` workspace
-> concept is a **proposal**, not yet implemented. We need to validate if it's actually
-> functional before adopting it as a standard.
+The overall architecture for rules + references is established and validated. It includes both feature workspaces
+(`features/`) for tracking actual feature development, and implementation plans (`plans/`) for planning implementation
+using feature elements as inputs — each with lifecycle tracking (active/completed/deprecated).
 
 This section documents how the project's documentation and rules system is structured to support AI-assisted
 development.
@@ -49,7 +49,6 @@ graph TB
         MCP["📖 MCP.md<br/>MCP server setup"]
         JACK["📖 JACKSON.md<br/>Jackson config"]
         SEC["📖 SECURITY.md<br/>Security config"]
-        JDK["📖 JDK-SOURCES.md<br/>JDK source ingestion"]
         TEST["📖 TEST.md<br/>Test architecture"]
     end
 
@@ -58,10 +57,12 @@ graph TB
         BLACKBOOK["📓 BLACKBOOK.md<br/>AI dev scratchpad<br/>Feature logs & decisions"]
     end
 
-    subgraph FEATURES["🗺️ Feature Workspaces<br/>(Proposed, future integration)"]
-        FEAT1["features/auth-token-refresh/<br/>plan.md, data-flow.png, scripts/"]
-        FEAT2["features/spring-docs-ingestion/<br/>plan.md, diagrams/, helpers/"]
-        FEAT3["features-archived-docs/<br/>plan.md, mock-requests.json"]
+    subgraph FEATURES["🗺️ Feature Workspaces<br/>Actual feature tracking"]
+        FEAT1["features/example/<br/>plan.md, data-flow.md,<br/>mock-requests.json, scripts/"]
+    end
+
+    subgraph PLANS["🗺️ Implementation Plans<br/>Plan lifecycle tracking"]
+        PLAN1["plans/<br/>active.md"]
     end
 
     subgraph CODE["💻 Source Code"]
@@ -77,16 +78,14 @@ graph TB
     CLAUDE -->|References| JDK
     CLAUDE -->|References| TEST
     CLAUDE -->|Guides| FEAT1
-    CLAUDE -->|Guides| FEAT2
-    CLAUDE -->|Guides| FEAT3
+    CLAUDE -->|Guides| PLAN1
     AGENTS -->|Same as| CLAUDE
     BLACKBOOK -->|Logs decisions| CLAUDE
     BLACKBOOK -->|Cross - references| FEAT1
-    BLACKBOOK -->|Cross - references| FEAT2
-    BLACKBOOK -->|Cross - references| FEAT3
+    BLACKBOOK -->|Cross - references| PLAN1
     FEAT1 -->|Defines| MAIN
-    FEAT2 -->|Defines| MAIN
-    FEAT3 -->|Defines| MAIN
+    PLAN1 -->|Informs| MAIN
+    FEAT1 -->|Inputs| PLAN1
     STRUCT -->|Describes| MAIN
     STRUCT -->|Describes| TEST_SRC
     DOCLET -->|Explains| MAIN
@@ -109,8 +108,18 @@ JAIDoc/
 │   ├── 📖 MCP.md                         ← MCP server setup
 │   ├── 📖 JACKSON.md                     ← Jackson customizer pattern
 │   ├── 📖 SECURITY.md                    ← Security config details
-│   ├── 📖 JDK-SOURCES.md                 ← JDK source ingestion pipeline
 │   └── 📖 TEST.md                        ← Test class hierarchy & tags
+├── 🗺️ features/                         ← 🗺️ Feature workspaces (actual feature tracking)
+│   ├── 📄 FEATURE.md                     ← Feature index
+│   └── 📂 example/                       ← Template feature workspace
+│       ├── 📄 plan.md
+│       ├── 📄 data-flow.md
+│       ├── 📄 mock-requests.json
+│       ├── 📂 scripts/
+│       └── 📄 notes.md
+├── 🗺️ plans/                            ← 🗺️ Implementation plans with lifecycle tracking
+│   ├── 📄 ACTIVE.md                      ← Active/completed/deprecated plan index
+│   └── 📄 <name>.md                      ← Individual plan (YAML frontmatter + content)
 ├── 💻 src/
 │   ├── 📂 main/java/com/purrbyte/ai/     ← Application source
 │   │   ├── 📄 JAIDoc.java                ← Spring Boot entry point
@@ -131,38 +140,30 @@ JAIDoc/
 > ports, dummy credentials. No issues when running tests. In the future, this is planned to be adjusted for greater
 > flexibility.
 
-**Workspace (features/ — proposed addition to the repo)**
-
-> ⚠️ **Proposal only** — This structure is a design idea, not yet implemented. Needs validation to determine if it's
-> functional.
+**Workspace (features/ — feature tracking)**
 
 ```
 features/
-├── 📂 auth-token-refresh/               ← Feature: JWT token refresh flow
-│   ├── 📄 plan.md                       ← Implementation plan
-│   ├── 📄 data-flow.png                 ← Architecture diagram
-│   ├── 📄 mock-requests.json            ← Mock API responses
-│   ├── 📂 scripts/                      ← Helper scripts for testing
-│   └── 📄 notes.md                      ← Observations & decisions
-├── 📂 spring-docs-ingestion/            ← Feature: Spring Boot docs ingestion
-│   ├── 📄 plan.md
-│   ├── 📄 diagrams/
-│   ├── 📂 helpers/
-│   └── 📄 notes.md
-└── 📂 archived-docs/                    ← Feature: Versioned/archived doc support
-    ├── 📄 plan.md
-    ├── 📄 mock-requests.json
-    └── 📄 notes.md
+├── FEATURE.md                           ← Feature index
+└── example/                             ← Template feature workspace
+    ├── plan.md                          ← Implementation plan with YAML frontmatter
+    ├── data-flow.md                     ← Data flow description with sequence diagram
+    ├── mock-requests.json               ← Mock API responses for testing
+    ├── scripts/                         ← Helper scripts (validate.sh)
+    └── notes.md                         ← Observations & decisions
 ```
+
+See `features/` for the directory layout and the example template.
 
 #### 📊 Rule File Summary
 
-| File           | Category      | Purpose                                               | AI Impact                                     |
-|----------------|---------------|-------------------------------------------------------|-----------------------------------------------|
-| `CLAUDE.md`    | 📜 Rules      | Guidelines for AI agents working in the repo          | **HIGH** — Directly constrains AI behavior    |
-| `AGENTS.md`    | 📜 Mirror     | Same rules, for other CLI tools (Junie, AI Assistant) | **HIGH** — Same impact as CLAUDE.md           |
-| `README.md`    | 📋 Info       | Project overview, setup, philosophy                   | **LOW** — Informative only, no constraints    |
-| `BLACKBOOK.md` | 📝 Scratchpad | AI dev log: thoughts, decisions, gotchas              | **MEDIUM** — Context for historical decisions |
+| File           | Category      | Purpose                                                | AI Impact                                     |
+|----------------|---------------|--------------------------------------------------------|-----------------------------------------------|
+| `CLAUDE.md`    | 📜 Rules      | Guidelines for AI agents working in the repo           | **HIGH** — Directly constrains AI behavior    |
+| `AGENTS.md`    | 📜 Mirror     | Same rules, for other CLI tools (Junie, AI Assistant)  | **HIGH** — Same impact as CLAUDE.md           |
+| `README.md`    | 📋 Info       | Project overview, setup, philosophy                    | **LOW** — Informative only, no constraints    |
+| `BLACKBOOK.md` | 📝 Scratchpad | AI dev log: thoughts, decisions, gotchas               | **MEDIUM** — Context for historical decisions |
+| `plans/`       | 🗺️ Plans     | Versioned implementation plans with lifecycle tracking | **HIGH** — AI reads active plans only         |
 
 #### 📊 Reference Documentation Summary
 
@@ -173,12 +174,9 @@ features/
 | `MCP.md`         | MCP server setup & JetBrains adapter            | **HIGH** — Core protocol detail       |
 | `JACKSON.md`     | Customizer pattern, YAML mapper convention      | **HIGH** — Config system detail       |
 | `SECURITY.md`    | Actuator restrictions, logging paths            | **MEDIUM** — Security policy          |
-| `JDK-SOURCES.md` | JDK source downloader, async execution          | **HIGH** — Ingestion pipeline detail  |
 | `TEST.md`        | Test class hierarchy, tags, JsonMapper setup    | **MEDIUM** — Test conventions         |
 
 #### 🔀 Data Flow: Feature Development Lifecycle
-
-> ⚠️ **Proposal only** — The data flow through `features/` is a design concept, not yet implemented.
 
 ```
                     ┌─────────────────────────────────────────────────────────────┐
@@ -188,14 +186,14 @@ features/
     1. DISCOVER          2. PLAN              3. IMPLEMENT         4. VERIFY          5. LOG
 
     ┌──────────┐      ┌──────────┐        ┌──────────┐        ┌──────────┐        ┌──────────┐
-    │ CLAUDE/  │─────▶│ features/  │───────▶│ src/     │───────▶│ Tests    │───────▶│ BLACKBOOK│
-    │ AGENTS   │      │ *.md     │        │ main/    │        │ / test/  │        │ *.md     │
+    │ CLAUDE/  │─────▶│ features/    │───────▶│ plans/     │───────▶│ src/     │───────▶│ Tests    │
+    │ AGENTS   │      │ *.md     │        │ *.md     │        │ main/    │        │ / test/  │
     └──────────┘      └──────────┘        └──────────┘        └──────────┘        └──────────┘
        │                   │                  │                  │                  │
-       │ Rules             │ Plan doc         │ Code changes     │ Verification     │ Feature log
-       │ constrain AI      │ Documents        │ Implements       │ Confirms         │ Records decisions
-       │ behavior          │ Intent & scope   │ the design       │ it works         │ & gotchas
-       │                     │                  │                  │                  │
+       │ Rules             │ Feature spec     │ Plan doc         │ Code changes     │ Verification
+       │ constrain AI      │ Documents        │ Uses feature     │ Implements       │ Confirms
+       │ behavior          │ Intent & scope   │ elements as      │ the design       │ it works
+       │                     │                  │ inputs           │                  │
     ┌──────────┐      ┌──────────┐        ┌──────────┐        ┌──────────┐        ┌──────────┐
     │ docs/    │◀──────│          │◀───────│          │◀───────▶│          │◀───────│          │
     │ *.md     │       │          │         │          │        │          │        │          │
@@ -208,24 +206,83 @@ features/
 
 #### 🔄 How Data Moves During a Feature
 
-> ⚠️ **Proposal only** — Steps involving `features/` are design concepts, not yet implemented.
+| Step                  | Action                          | Files Read                                              | Files Written       | AI Context Used                        |
+|-----------------------|---------------------------------|---------------------------------------------------------|---------------------|----------------------------------------|
+| **1. Discovery**      | Understand scope & constraints  | `CLAUDE.md` / `AGENTS.md`, `docs/*.md`                  | —                   | Rule constraints + domain context      |
+| **2. Feature Design** | Define feature workspace        | `CLAUDE.md` / `AGENTS.md`, `docs/*.md`                  | `features/<name>/*` | Rule constraints + deep-dive docs      |
+| **3. Planning**       | Write implementation plan       | `CLAUDE.md` / `AGENTS.md`, `docs/*.md`, `features/*`    | `plans/<name>.md`   | Rule constraints + feature inputs      |
+| **4. Implementation** | Code the feature                | `CLAUDE.md` / `AGENTS.md`, `docs/*.md`, `src/main/*`    | `src/main/*`        | Rules + reference docs + existing code |
+| **5. Verification**   | Run tests & validate            | `CLAUDE.md` / `AGENTS.md`, `docs/TEST.md`, `src/test/*` | —                   | Test conventions + rule constraints    |
+| **6. Logging**        | Record decisions & observations | `CLAUDE.md` / `AGENTS.md`, `BLACKBOOK.md`               | `BLACKBOOK.md`      | Rules for documentation format         |
 
-| Step                  | Action                          | Files Read                                              | Files Written                | AI Context Used                        |
-|-----------------------|---------------------------------|---------------------------------------------------------|------------------------------|----------------------------------------|
-| **1. Discovery**      | Understand scope & constraints  | `CLAUDE.md` / `AGENTS.md`, `docs/*.md`                  | —                            | Rule constraints + domain context      |
-| **2. Planning**       | Write implementation plan       | `CLAUDE.md` / `AGENTS.md`, `docs/*.md`                  | `features/feature-*/plan.md` | Rule constraints + deep-dive docs      |
-| **3. Implementation** | Code the feature                | `CLAUDE.md` / `AGENTS.md`, `docs/*.md`, `src/main/*`    | `src/main/*`                 | Rules + reference docs + existing code |
-| **4. Verification**   | Run tests & validate            | `CLAUDE.md` / `AGENTS.md`, `docs/TEST.md`, `src/test/*` | —                            | Test conventions + rule constraints    |
-| **5. Logging**        | Record decisions & observations | `CLAUDE.md` / `AGENTS.md`, `BLACKBOOK.md`               | `BLACKBOOK.md`               | Rules for documentation format         |
+#### 🗺️ Plan File Structure
 
-#### 🏠 Feature Folder Structure
-
-> ⚠️ **Proposal only** — This structure is a design idea, not yet implemented.
-
-Each feature will get its own workspace folder in the `features/` directory. The naming convention is:
+Each plan lives in the `plans/` directory with a YAML frontmatter for lifecycle tracking. Plans use feature workspaces
+(`features/*`) as inputs — they reference feature elements (data-flow diagrams, mock requests, scripts) to inform
+the implementation approach.
 
 ```
-features/<feature-name>/
+plans/
+├── ACTIVE.md                                  ← Active/completed/deprecated index
+├── documentation-service-approach-a-fat-jar   ← Completed plan
+│   └── .md
+├── new-feature-name                           ← Active plan
+│   └── .md
+└── deprecated-plan                            ← Deprecated plan
+    └── .md
+```
+
+**YAML frontmatter:**
+
+```yaml
+---
+name: <descriptive-name>
+status: active | completed | deprecated
+date: YYYY-MM-DD
+---
+```
+
+**Plan content structure:**
+
+| Section             | Purpose                            | Example                                        |
+|---------------------|------------------------------------|------------------------------------------------|
+| `# Title`           | Feature name                       | `# JDK Docs Ingestion`                         |
+| `## Context`        | Why this feature exists            | `JDK docs are locked in HTML, not queryable`   |
+| `## Feature Inputs` | Feature workspace references       | `features/example/data-flow.md`                |
+| `## Scope`          | What's in/out of scope             | `In: JDK source → JSON, Out: Spring Boot`      |
+| `## Implementation` | Step-by-step approach              | `1. Download JDK source ...`                   |
+| `## Data Flow`      | How data moves through the feature | `Request → Doclet → JSON output`               |
+| `## Tests`          | Expected test coverage             | `Unit: JsonDoclet, Integration: DocletService` |
+| `## Notes`          | Edge cases & gotchas               | `Zip-slip protection during extraction`        |
+
+**Key:** The `## Feature Inputs` section explicitly references feature workspace elements that inform the plan.
+A plan should never duplicate feature workspace content — it should reference it.
+
+#### 📝 Plan Lifecycle
+
+Plans move through three states tracked in their YAML frontmatter:
+
+1. **Active** — Plan is being implemented. The AI should read and follow it.
+2. **Completed** — Implementation finished. The AI should skip it.
+3. **Deprecated** — Plan is abandoned or superseded. The AI should never follow it.
+
+The `plans/ACTIVE.md` index is the authoritative source for which plans are currently active.
+
+#### 🗺️ Feature Workspace Structure
+
+Feature workspaces live in the `features/` directory and track actual feature development — not just implementation
+plans, but the full context including diagrams, mock requests, and helper scripts. Each feature workspace is a
+complete artifact that stands on its own.
+
+```
+features/
+├── FEATURE.md                           ← Feature index
+└── example/                             ← Template feature workspace
+    ├── plan.md                          ← Implementation plan with YAML frontmatter
+    ├── data-flow.md                     ← Data flow description with sequence diagram
+    ├── mock-requests.json               ← Mock API responses for testing
+    ├── scripts/                         ← Helper scripts (validate.sh)
+    └── notes.md                         ← Observations & decisions
 ```
 
 **Naming rules:**
@@ -235,42 +292,19 @@ features/<feature-name>/
 - Keep names descriptive but concise
 - Reflects the actual feature or fix being implemented
 
-**Example feature workspace:**
-
-```
-features/
-├── auth-token-refresh/                    ← JWT token refresh flow
-│   ├── 📄 plan.md
-│   ├── 📄 data-flow.png
-│   ├── 📂 scripts/
-│   └── 📄 notes.md
-├── spring-docs-ingestion/                 ← Spring Boot docs ingestion
-│   ├── 📄 plan.md
-│   ├── 📂 diagrams/
-│   └── 📄 notes.md
-└── archived-docs/                         ← Versioned/archived doc support
-    ├── 📄 plan.md
-    ├── 📄 mock-requests.json
-    └── 📄 notes.md
-```
-
 #### 📝 Feature Workspace Conventions
 
-> ⚠️ **Proposal only** — Convention details are design ideas, not yet implemented.
-
-| Field               | Purpose                            | Example                                          |
-|---------------------|------------------------------------|--------------------------------------------------|
-| `# Title`           | Feature name                       | `# Auth Token Refresh`                           |
-| `## Context`        | Why this feature exists            | `JWT tokens expire every 15min`                  |
-| `## Scope`          | What's in/out of scope             | `In: refresh flow, Out: token rotation`          |
-| `## Implementation` | Step-by-step approach              | `1. Add RefreshTokenService ...`                 |
-| `## Data Flow`      | How data moves through the feature | `Request → TokenService → HTTP call`             |
-| `## Tests`          | Expected test coverage             | `Unit: TokenService, Integration: /auth/refresh` |
-| `## Notes`          | Edge cases & gotchas               | `Rate limiting on refresh endpoint`              |
+| Field               | Purpose                            | Example                                        |
+|---------------------|------------------------------------|------------------------------------------------|
+| `# Title`           | Feature name                       | `# JDK Docs Ingestion`                         |
+| `## Context`        | Why this feature exists            | `JDK docs are locked in HTML, not queryable`   |
+| `## Scope`          | What's in/out of scope             | `In: JDK source → JSON, Out: Spring Boot`      |
+| `## Implementation` | Step-by-step approach              | `1. Download JDK source ...`                   |
+| `## Data Flow`      | How data moves through the feature | `Request → Doclet → JSON output`               |
+| `## Tests`          | Expected test coverage             | `Unit: JsonDoclet, Integration: DocletService` |
+| `## Notes`          | Edge cases & gotchas               | `Zip-slip protection during extraction`        |
 
 #### 🔗 Cross-Reference Map
-
-> ⚠️ **Proposal only** — References to `features/*` are design ideas, not yet implemented.
 
 ```
 CLAUDE.md ──────┬────── AGENTS.md        ← Same content, different CLI tools
@@ -279,26 +313,34 @@ CLAUDE.md ──────┬────── AGENTS.md        ← Same cont
                 ├────── docs/DOCLET.md    ← "Keep deep-dive docs current"
                 ├────── docs/MCP.md       ← "Keep deep-dive docs current"
                 ├────── docs/JACKSON.md   ← "Keep deep-dive docs current"
-                ├────── docs/SECURITY.md  ← "Keep deep-dive docs current"
-                ├────── docs/JDK-SOURCES.md ← "Keep deep-dive docs current"
-                └────── docs/TEST.md      ← "Keep deep-dive docs current"
+                ├────── docs/SECURITY.md   ← "Keep deep-dive docs current"
+                └────── docs/TEST.md       ← "Keep deep-dive docs current"
 
 BLACKBOOK.md ───┬────── CLAUDE.md / AGENTS.md  ← "Document decisions per rules"
                 ├────── features/*            ← "Cross-reference feature workspaces"
+                ├────── plans/*              ← "Cross-reference plan lifecycle"
                 └────── src/*                 ← "Log implementation decisions"
 
 features/* ─────┬────── CLAUDE.md / AGENTS.md  ← "Follow rules for implementation"
+                ├────── FEATURE.md           ← "Feature index — read first"
+                ├────── docs/*.md             ← "Reference deep-dive context"
+                ├────── plans/*              ← "Cross-reference plan lifecycle"
+                └────── src/*                 ← "Describe implementation"
+
+plans/* ────────┬────── CLAUDE.md / AGENTS.md  ← "Follow rules for implementation"
+                ├────── features/*            ← "Use feature elements as inputs"
                 ├────── docs/*.md             ← "Reference deep-dive context"
                 └────── src/*                 ← "Describe implementation"
 ```
 
 #### 🎯 Key Design Principles
 
-| Principle                          | Description                                                                                                          |
-|------------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| **📐 Separation of Concerns**      | Rules (CLAUDE.md), references (docs/), and scratchpad (BLACKBOOK.md) serve different purposes                        |
-| **🔄 Single Source of Truth**      | CLAUDE.md is the canonical rule file; AGENTS.md mirrors it for other tools                                           |
-| **🔍 AI-First Context**            | Reference docs exist so AI doesn't need to read source code to understand implementation details                     |
-| **📝 Traceable Decisions**         | BLACKBOOK.md captures the "why" behind decisions, not just the "what"                                                |
-| **🗺️ Feature-Driven Development** | Every feature has a workspace folder that documents intent before implementation — **proposed, not yet implemented** |
-| **📚 Living Documentation**        | Documentation must be updated in the same session as code changes — stale docs are worse than no docs                |
+| Principle                          | Description                                                                                           |
+|------------------------------------|-------------------------------------------------------------------------------------------------------|
+| **📐 Separation of Concerns**      | Rules (CLAUDE.md), references (docs/), and scratchpad (BLACKBOOK.md) serve different purposes         |
+| **🔄 Single Source of Truth**      | CLAUDE.md is the canonical rule file; AGENTS.md mirrors it for other tools                            |
+| **🔍 AI-First Context**            | Reference docs exist so AI doesn't need to read source code to understand implementation details      |
+| **📝 Traceable Decisions**         | BLACKBOOK.md captures the "why" behind decisions, not just the "what"                                 |
+| **🗺️ Feature-Driven Development** | Every feature has a workspace folder that documents intent before implementation — **implemented**    |
+| **📋 Plan-Driven Implementation**  | Plans use feature workspace elements as inputs and drive the actual coding phase — **implemented**    |
+| **📚 Living Documentation**        | Documentation must be updated in the same session as code changes — stale docs are worse than no docs |

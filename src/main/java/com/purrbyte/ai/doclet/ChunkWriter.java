@@ -15,9 +15,7 @@ import java.util.List;
 
 /**
  * Writes {@code chunks.jsonl}: one JSON line per documented element with the
- * shape {@code {"id": ..., "text": ..., "metadata": {...}}}, designed to be
- * ingested directly into ChromaDB (ids → ids, text → documents,
- * metadata → metadatas; metadata values are always primitives).
+ * shape {@code {"id": ..., "text": ..., "metadata": {...}}}.
  *
  * <p>If an element's text exceeds {@code maxChars}, it is split into several
  * overlapping fragments, preferring to cut at paragraph boundaries
@@ -34,8 +32,7 @@ final class ChunkWriter implements Closeable {
     private final boolean onlyDocumented;
     private long count = 0;
 
-    ChunkWriter(Path file, JsonMapper mapper, int maxChars, int overlap,
-                boolean onlyDocumented) throws IOException {
+    ChunkWriter(Path file, JsonMapper mapper, int maxChars, int overlap, boolean onlyDocumented) throws IOException {
         if (file.getParent() != null) Files.createDirectories(file.getParent());
         this.out = Files.newBufferedWriter(file, StandardCharsets.UTF_8);
         this.mapper = mapper;
