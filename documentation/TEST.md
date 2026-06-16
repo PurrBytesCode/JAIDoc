@@ -129,8 +129,6 @@ src/test/java/com/purrbyte/ai/
 │   ├── DocumentationServiceIntegrationTest.java  # E2E JavaDoc generation (local JDK + downloaded JDK)
 │   └── DocumentationServiceTest.java
 ├── util/
-│   ├── JdkSourceDownloaderTest.java
-│   ├── JdkSourceDownloaderIntegrationTest.java
 │   └── JdkDistributionDownloaderTest.java        # Adoptium OS/arch/version mapping (no network)
 ├── doclet/
 │   ├── DocTreeJsonTest.java
@@ -177,14 +175,14 @@ void outputDirectoryExists() { ...}
 Related test methods are grouped into `@Nested` inner classes for readability:
 
 ```java
-class JdkSourceDownloaderTest extends UnitTest {
+class SomeTest extends UnitTest {
     @Nested
-    class GetTagNameForVersionTest {
+    class GroupedMethodsTest {
         @Test
-        void jdk17_returnsJdk17uGaTag() { ...}
+        void case1_returnsExpectedValue() { ...}
 
         @Test
-        void jdk21_returnsJdk21uGaTag() { ...}
+        void case2_returnsExpectedValue() { ...}
     }
 }
 ```
@@ -223,8 +221,8 @@ sequence. The `@Order` values are typically sequential integers (1, 2, 3...).
 
 ### Actual network calls
 
-Some integration tests make real network calls (e.g., `JdkSourceDownloaderIntegrationTest` downloads JDK source ZIPs
-from GitHub). These tests require network access and may be slow. They are disabled by default via `@Disabled`.
+Some integration tests make real network calls (e.g., `ServiceIntegrationTest` downloads external resources).
+These tests require network access and may be slow. They are disabled by default via `@Disabled`.
 
 ### E2E JavaDoc generation pipeline
 

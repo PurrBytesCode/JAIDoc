@@ -115,7 +115,6 @@ cover — they prevent context loss and keep AGENTS.md from growing out of contr
 - **[MCP Server](documentation/MCP.md)** — MCP server setup and JetBrains adapter
 - **[Jackson Config](documentation/JACKSON.md)** — Customizer pattern, YAML mapper convention
 - **[Security Config](documentation/SECURITY.md)** — Actuator restrictions, logging paths
-- **[JDK Sources](documentation/JDK-SOURCES.md)** — JDK source downloader, async execution, version parsing
 - **[JDK Distribution](documentation/JDK-DISTRIBUTION.md)** — Adoptium distribution downloader, source selection,
   archive handling
 - **[Test Architecture](documentation/TEST.md)** — Test class hierarchy, tags, JsonMapper setup

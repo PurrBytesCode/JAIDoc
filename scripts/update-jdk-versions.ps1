@@ -1,4 +1,4 @@
-# Generates the "Current Versions" section for documentation/JDK-SOURCES.md
+# Generates the "Current Versions" section for documentation/JDK-DISTRIBUTION.md
 # by fetching the latest JDK update versions from Oracle's release notes.
 #
 # Usage:
