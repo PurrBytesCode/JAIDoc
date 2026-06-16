@@ -1,7 +1,4 @@
 jdk:
-  source:
-    download:
-      directory: ${JDK_SOURCE_DOWNLOAD_ZIP:./jdk-sources}
   distribution:
     download:
       # Directory where downloaded JDK distributions (for documenting non-running versions) are cached.
