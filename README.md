@@ -49,6 +49,14 @@ complexity:
 | GPU 1 (local) | NVIDIA RTX 5070 Ti 12GB Mobile         |
 | GPU 2 (eGPU)  | NVIDIA RTX 3090 24GB via Thunderbolt 4 |
 
+### AI Server
+
+JAIDoc uses **llama.cpp Server** in routing mode to dynamically select the best model for each query based on complexity.
+
+| Component | Technology          | Version | Date       |
+|-----------|---------------------|---------|------------|
+| Server    | llama.cpp Server    | b9660   | 2026-06-16 |
+
 ### Models
 
 #### Model Info

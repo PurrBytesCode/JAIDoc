@@ -155,12 +155,6 @@ The doclet jar is used by `javadoc -docletpath` to generate JSON documentation v
 | Logging   | Logback (via spring-boot-starter-logging)                        |
 | AOP       | Spring Boot Starter AspectJ                                      |
 
-### Local LLM
-
-| Component | Technology                                               |
-|-----------|----------------------------------------------------------|
-| Server    | Llama.cpp Server (routing mode) — use the latest version |
-
 ### Maintenance
 
 Keep this file compact — group related items under one line, only expand when something is truly independent.
