@@ -8,6 +8,7 @@ target/
 data.json
 data.xml
 logs/
+.env
 
 ### AI ###
 .agents/
