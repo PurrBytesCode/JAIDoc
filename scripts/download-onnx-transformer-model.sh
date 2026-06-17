@@ -8,7 +8,7 @@
 # and variant to download.
 #
 # Usage:
-#   ./scripts/download-onnx-transformer-model.sh [model] [variant]
+#   ./scripts/download-onnx-transformer-model.sh [model] [variant] [output_dir]
 #
 # Available models:
 #   multilingual-e5-small                 (~113 MB, INT8, AVX-512+VNNI — best quality/speed, 50+ langs)
@@ -25,6 +25,7 @@
 # Example:
 #   ./scripts/download-onnx-transformer-model.sh
 #   ./scripts/download-onnx-transformer-model.sh multilingual-e5-small model_qint8_avx512_vnni
+#   ./scripts/download-onnx-transformer-model.sh multilingual-e5-small model_qint8_avx512_vnni ./data/models/onnx
 
 set -euo pipefail
 
@@ -32,9 +33,18 @@ HUGGINGFACE_BASE="https://huggingface.co"
 TOKENIZER_FILENAME="tokenizer.json"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ONNX_DIR="${SCRIPT_DIR}/../onnx"
+if [ -z "${3:-}" ]; then
+    ONNX_DIR="${SCRIPT_DIR}/../onnx"
+else
+    # Resolve relative paths against the project root
+    if [ -z "${3%/}" ]; then
+        ONNX_DIR="$(cd "${SCRIPT_DIR}/.." && realpath "$3")"
+    else
+        ONNX_DIR="$(cd "${SCRIPT_DIR}/.." && realpath "${3}/")"
+    fi
+fi
 
-# Create onnx directory if it doesn't exist
+# Create output directory if it doesn't exist
 if [ ! -d "${ONNX_DIR}" ]; then
     echo "Creating directory: ${ONNX_DIR}"
     mkdir -p "${ONNX_DIR}"
@@ -100,6 +110,9 @@ echo "Downloading ONNX transformer model for JAIDoc..."
 echo "  Model   : ${MODEL}"
 echo "  Variant : ${VARIANT}"
 echo "  Output  : ${ONNX_DIR}"
+if [ -z "${3:-}" ]; then
+    echo "  (default: project onnx/ directory)"
+fi
 echo
 
 # Download model file
@@ -132,6 +145,6 @@ echo "  ${MODEL_FILENAME}  - $(printf '%.1f MB' $(echo "scale=1; ${MODEL_SIZE} /
 echo "  ${TOKENIZER_FILENAME}  - $(printf '%.1f MB' $(echo "scale=1; ${TOKENIZER_SIZE} / 1048576" | bc))"
 echo
 echo "To use a different model or variant, set the AI_TRANSFORMER_ONNX environment variable:"
-echo "  e.g. export AI_TRANSFORMER_ONNX=./onnx/model.onnx"
+echo "  e.g. export AI_TRANSFORMER_ONNX=file:///C:/Users/.../onnx/model.onnx"
 echo
 echo "You can now start the application."

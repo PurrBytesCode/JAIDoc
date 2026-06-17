@@ -18,13 +18,19 @@
     The ONNX variant to download (e.g. model_qint8_avx512_vnni).
     Available: model_qint8_avx512_vnni, model_O4, model
 
+.PARAMETER OutputDir
+    The output directory for the downloaded files. Defaults to onnx/ relative to the project root.
+    Use a file: URI for absolute paths (e.g., file:///C:/Users/.../onnx).
+
 .EXAMPLE
     .\scripts\download-onnx-transformer-model.ps1
     .\scripts\download-onnx-transformer-model.ps1 -Model multilingual-e5-small -Variant model_qint8_avx512_vnni
+    .\scripts\download-onnx-transformer-model.ps1 -Model multilingual-e5-small -Variant model_qint8_avx512_vnni -OutputDir .\data\models\onnx
 #>
 param(
     [string]$Model,
-    [string]$Variant
+    [string]$Variant,
+    [string]$OutputDir
 )
 
 $HuggingFaceBase = "https://huggingface.co"
@@ -44,9 +50,17 @@ $Variants = @(
 )
 
 $ScriptDir = $PSScriptRoot
-$OnnxDir = Join-Path $ScriptDir "..\onnx"
+if ([string]::IsNullOrEmpty($OutputDir)) {
+    $OnnxDir = Join-Path $ScriptDir "..\onnx"
+} else {
+    $OnnxDir = $OutputDir
+    # Resolve relative paths against the project root
+    if (-not (Test-Path $OnnxDir -PathType Container) -and (Resolve-Path $OnnxDir -ErrorAction SilentlyContinue)) {
+        $OnnxDir = (Resolve-Path $OnnxDir).Path
+    }
+}
 
-# Create onnx directory if it doesn't exist
+# Create output directory if it doesn't exist
 if (-not (Test-Path $OnnxDir)) {
     Write-Host "Creating directory: $OnnxDir" -ForegroundColor Cyan
     New-Item -ItemType Directory -Path $OnnxDir | Out-Null
@@ -101,6 +115,9 @@ Write-Host "Downloading ONNX transformer model for JAIDoc..." -ForegroundColor C
 Write-Host "  Model   : $Model" -ForegroundColor Yellow
 Write-Host "  Variant : $Variant" -ForegroundColor Yellow
 Write-Host "  Output  : $OnnxDir" -ForegroundColor Yellow
+if ([string]::IsNullOrEmpty($OutputDir)) {
+    Write-Host "  (default: project onnx/ directory)" -ForegroundColor DarkGray
+}
 Write-Host ""
 
 # Download model file
@@ -134,6 +151,6 @@ Write-Host "  $ModelFilename  - $(('{0:N1} MB' -f ($ModelSize / 1MB)))" -Foregro
 Write-Host "  $TokenizerFilename  - $(('{0:N1} MB' -f ($TokenizerSize / 1MB)))" -ForegroundColor Green
 Write-Host ""
 Write-Host "To use a different model or variant, set the AI_TRANSFORMER_ONNX environment variable:" -ForegroundColor Cyan
-Write-Host "  e.g. export AI_TRANSFORMER_ONNX=./onnx/model.onnx" -ForegroundColor Yellow
+Write-Host "  e.g. AI_TRANSFORMER_ONNX=file:///C:/Users/.../onnx/model.onnx" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "You can now start the application." -ForegroundColor Cyan

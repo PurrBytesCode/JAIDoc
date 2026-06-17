@@ -129,13 +129,21 @@ Run the appropriate script for your platform — it will ask which variant you w
 ### PowerShell (Windows)
 
 ```powershell
-./scripts/download-onnx-transformer-model.ps1
+# Download with defaults (project onnx/ directory)
+.\scripts\download-onnx-transformer-model.ps1
+
+# Download to a custom directory
+.\scripts\download-onnx-transformer-model.ps1 -Model multilingual-e5-small -Variant model_qint8_avx512_vnni -OutputDir .\data\models\onnx
 ```
 
 ### Bash (Linux / macOS)
 
 ```bash
+# Download with defaults (project onnx/ directory)
 ./scripts/download-onnx-transformer-model.sh
+
+# Download to a custom directory
+./scripts/download-onnx-transformer-model.sh multilingual-e5-small model_qint8_avx512_vnni ./data/models/onnx
 ```
 
 ## Model Source
