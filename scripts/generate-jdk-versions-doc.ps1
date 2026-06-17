@@ -2,7 +2,7 @@
 # by fetching the latest JDK update versions from Oracle's release notes.
 #
 # Usage:
-#   powershell -File scripts\update-jdk-versions.ps1
+#   powershell -File scripts\generate-jdk-versions-doc.ps1
 #
 # The script outputs the markdown content and instructions for the AI to
 # automatically update the documentation file.
