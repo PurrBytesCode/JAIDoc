@@ -246,6 +246,7 @@ the privacy.
 ## Getting Help
 
 - **Doclet internals** — [`documentation/DOCLET.md`](documentation/DOCLET.md)
+- **JDK documentation data** — [`documentation/JDK-DATA.md`](documentation/JDK-DATA.md)
 - **MCP setup** — [`documentation/MCP.md`](documentation/MCP.md)
 - **Project structure** — [`documentation/STRUCTURE.md`](documentation/STRUCTURE.md)
 - **Jackson configuration** — [`documentation/JACKSON.md`](documentation/JACKSON.md)
