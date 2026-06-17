@@ -1,4 +1,4 @@
-# AGENTS.md
+# Project Memory
 
 Guidelines for AI agents working in this repository. This file is for **rules and conventions** — what the code should
 do, how it should be structured, and what to avoid. How something works (architecture decisions, design choices,
