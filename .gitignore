@@ -15,6 +15,10 @@ logs/
 .junie/memory
 .junie/plans
 
+### AI Transformer ###
+onnx/*.onnx
+onnx/*.json
+
 ### DB ###
 *.mv.db
 *.trace.db

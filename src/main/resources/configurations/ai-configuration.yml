@@ -1,0 +1,8 @@
+spring:
+  ai:
+    embedding:
+      transformer:
+        onnx:
+          model-uri: ${AI_TRANSFORMER_ONNX:./onnx/model_qint8_avx512_vnni.onnx}
+        tokenizer:
+          uri: ${AI_TRANSFORMER_TOKENIZER:./onnx/tokenizer.json}

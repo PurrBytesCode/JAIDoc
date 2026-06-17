@@ -51,11 +51,12 @@ complexity:
 
 ### AI Server
 
-JAIDoc uses **llama.cpp Server** in routing mode to dynamically select the best model for each query based on complexity.
+JAIDoc uses **llama.cpp Server** in routing mode to dynamically select the best model for each query based on
+complexity.
 
-| Component | Technology          | Version | Date       |
-|-----------|---------------------|---------|------------|
-| Server    | llama.cpp Server    | b9660   | 2026-06-16 |
+| Component | Technology       | Version | Date       |
+|-----------|------------------|---------|------------|
+| Server    | llama.cpp Server | b9672   | 2026-06-16 |
 
 ### Models
 
@@ -130,6 +131,14 @@ mvn clean package
 ```bash
 java -jar target/jaidoc-0.1.0.jar
 ```
+
+### Embedding Model
+
+The app uses a local ONNX transformer model for semantic search (vector embeddings). The model is not tracked in Git —
+download it first:
+
+The script will ask which model and variant to download. See [onnx/TRANSFORMER.md](onnx/TRANSFORMER.md) for available
+models, variants, and configuration options.
 
 ## Example Queries
 
@@ -240,6 +249,7 @@ the privacy.
 - **MCP setup** — [`documentation/MCP.md`](documentation/MCP.md)
 - **Project structure** — [`documentation/STRUCTURE.md`](documentation/STRUCTURE.md)
 - **Jackson configuration** — [`documentation/JACKSON.md`](documentation/JACKSON.md)
+- **ONNX embedding model** — [`onnx/TRANSFORMER.md`](onnx/TRANSFORMER.md)
 - **Development log** — [`blackbook/BLACKBOOK.md`](blackbook/BLACKBOOK.md)
 
 ## Contributing

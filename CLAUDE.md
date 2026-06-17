@@ -36,6 +36,9 @@ step-by-step procedures) belongs in the `documentation/` directory, not here.
 - **Use constructor injection.** Use constructor-based dependency injection for production code. `@Autowired` on fields
   is acceptable in test classes where a Spring context is not available.
 - **Use Lombok `@Slf4j` for logging.** Do not use `System.out.println`, `java.util.logging`, or manual `Logger` fields.
+- **Spring AI Transformer model URIs require a `file:` scheme.** Bare Windows paths like `C:\...\onnx\tokenizer.json`
+  will not work — Spring AI tries to parse them as HTTP URLs. See [onnx/TRANSFORMER.md](onnx/TRANSFORMER.md) for
+  details.
 
 ## Security Rules
 
@@ -118,35 +121,5 @@ cover — they prevent context loss and keep AGENTS.md from growing out of contr
 - **[JDK Distribution](documentation/JDK-DISTRIBUTION.md)** — Adoptium distribution downloader, source selection,
   archive handling
 - **[Test Architecture](documentation/TEST.md)** — Test class hierarchy, tags, JsonMapper setup
+- **[Transformer Model](onnx/TRANSFORMER.md)** — ONNX embedding model, URI scheme requirements, model selection
 - **[Black Book](blackbook/BLACKBOOK.md)** — AI dev log: thoughts, decisions, gotchas
-
-## Plan Files Rules
-
-- **Only follow `pending` plans.** A plan is followed only when its YAML frontmatter is `status: pending`.
-  Skip plans with `status: completed`, `status: failed`, or `status: deprecated` — they are historical records.
-  Always check `plans/ACTIVE.md` first to see which plans are pending and which are completed/failed/deprecated.
-  This is the authoritative list — never infer plan status from a plan file alone.
-- **Save plans in the project `plans/` directory.** Any implementation plan, task breakdown, or design document must be
-  stored under `<project-root>/plans/` (e.g., `plans/documentation-service-approach-a-fat-jar.md`). This is a real
-  directory inside the project — NOT a hidden directory like `~/.claude/plans/`. Do NOT save plans in hidden
-  directories; always use `plans/` at the project root. **Always verify the plan file exists at `plans/<name>.md` before
-  moving on.**
-- **Name plan files descriptively.** Use a clear, concise name that reflects the feature or fix being planned (e.g.,
-  `auth-token-refresh.md`).
-- **Keep plans up to date.** If implementation deviates from the plan, update it to reflect reality. Do not leave
-  outdated plans as guides.
-- **Keep plan status current.** New plans start as `pending`. When the work is fully implemented, change the status to
-  `completed`; if the plan was attempted but did not succeed, set it to `failed`; if it is obsolete or superseded, set
-  it to `deprecated`. Whenever a status changes, also move the plan to the matching section in `plans/ACTIVE.md`.
-- **Use YAML frontmatter.** Every plan file must start with a YAML frontmatter block:
-
-  ```yaml
-  ---
-  name: <descriptive-name>
-  status: pending | completed | failed | deprecated
-  date: YYYY-MM-DD
-  ---
-  ```
-
-  `name` — a kebab-case identifier for the plan. `status` — one of `pending`, `completed`, `failed`, or `deprecated`.
-  `date` — the date the plan was created.
