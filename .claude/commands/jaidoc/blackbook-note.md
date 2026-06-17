@@ -1,6 +1,6 @@
 ---
 allowed-tools: Read, Write, Edit, Glob, Bash(date:*)
-argument-hint: [category: 🔄|🏗️|📋|🐛|💡|📝 or change|arch|plan|bug|idea|docs] <note text> — category optional
+argument-hint: [ category: 🔄|🏗️|📋|🐛|💡|📝 or change|arch|plan|bug|idea|docs ] <note text> — category optional
 description: Append or create a dated Black Book note in both Markdown and HTML, following blackbook/BLACKBOOK.md
 ---
 
@@ -41,10 +41,10 @@ cross-entry navigation/index rules. **Do not duplicate or guess these — follow
 
 1. Determine today's date as `YYYY-MM-DD` (from the "Today's date" context line, or your environment date).
 2. Using `Glob`/`Read`, check whether `blackbook/YYYY-MM-DD.md` and `blackbook/YYYY-MM-DD.html` already exist.
-   - **Both exist** → this is a **same-day append** (Step 3).
-   - **Neither exists** → this is a **new day** (Step 4).
-   - If only one of the two exists, treat it as a sync repair: create the missing file and append to the present one
-     so both end up consistent.
+    - **Both exist** → this is a **same-day append** (Step 3).
+    - **Neither exists** → this is a **new day** (Step 4).
+    - If only one of the two exists, treat it as a sync repair: create the missing file and append to the present one
+      so both end up consistent.
 
 ### Step 2 — Compose the entry
 
@@ -52,8 +52,10 @@ cross-entry navigation/index rules. **Do not duplicate or guess these — follow
 - Produce a concise, scannable entry per `BLACKBOOK.md` "Entry Content": a short title, bullet points for status
   updates, links to related files/decisions when relevant.
 - Pick the structure that fits the content: plain paragraphs for a quick thought; bullets for status; tables, fenced
-  code blocks, blockquotes (callouts), or a Mermaid diagram for richer entries. Only add a Mermaid diagram when it
-  genuinely helps — most notes will not need one.
+  code blocks, blockquotes (callouts), or a Mermaid diagram for richer entries. Include a Mermaid diagram or visual
+  elements (tables, ASCII art, structured layouts) when they genuinely help — when the note has concepts, processes,
+  progress, or relationships that benefit from a visual representation. Don't force one into a note where plain text
+  is clearer; only add a diagram when it actually improves understanding.
 - Keep the title free of the emoji (the emoji lives in the category tab/heading prefix, not the `<h2>`).
 
 ### Step 3 — Same-day append (files already exist)
@@ -104,4 +106,4 @@ After writing, briefly report (in the user's language):
 
 1. Whether you **appended** to an existing day or **created** a new day.
 2. The exact files are written or edited (paths).
-3. The entry's category and title, and whether a Mermaid diagram was included.
+3. The entry's category and title, and whether a Mermaid diagram or other visual element was included.
