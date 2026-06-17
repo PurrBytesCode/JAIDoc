@@ -4,7 +4,7 @@
 
 ```
 JAIDoc/
-├── AGENTS.md                        # AI agent guidelines (this repo's rules)
+├── AGENTS.md / CLAUDE.md            # AI agent guidelines (identical mirrors)
 ├── README.md                        # Project overview
 ├── pom.xml                          # Maven build (Spring Boot 4.1.0, Java 25)
 ├── mvnw / mvnw.cmd                  # Maven wrapper
@@ -28,10 +28,9 @@ JAIDoc/
 ├── blackbook/                       # Black Book — dev log (rules + dated notes)
 │   ├── BLACKBOOK.md                 # Rules for creating entries
 │   └── YYYY-MM-DD.html / .md       # Dated note entries
-├── features/                        # Feature workspaces (see AGENTS.md)
-│   ├── FEATURE.md                   # Feature index
+├── features/                        # Feature workspaces — planning context (see features/FEATURES.md)
+│   ├── FEATURES.md                  # Feature index, status legend, conventions
 │   └── example/                     # Template feature workspace
-├── plans/                           # Implementation plans (see AGENTS.md)
 └── src/
     ├── main/
     │   ├── java/com/purrbyte/ai/

@@ -110,16 +110,19 @@ These rules prevent infinite loops, redundant work, and exploration traps when r
 
 ## Project References
 
-Deep-dive documentation lives in the `documentation/` directory. Consult these files before working in the areas they
-cover — they prevent context loss and keep AGENTS.md from growing out of control.
+Deep-dive documentation lives in the `documentation/` directory; feature workspaces live in `features/`. Consult these
+before working in the areas they cover — they prevent context loss and keep AGENTS.md from growing out of control.
 
 - **[Project Structure](documentation/STRUCTURE.md)** — High-level layout, config hierarchy, build output, tech stack
+- **[Feature Workspaces](features/FEATURES.md)** — Per-feature context bundles that inform implementation planning
 - **[Doclet](documentation/DOCLET.md)** — JSON doclet architecture, CLI options, output format, chunking
 - **[MCP Server](documentation/MCP.md)** — MCP server setup and JetBrains adapter
 - **[Jackson Config](documentation/JACKSON.md)** — Customizer pattern, YAML mapper convention
 - **[Security Config](documentation/SECURITY.md)** — Actuator restrictions, logging paths
 - **[JDK Distribution](documentation/JDK-DISTRIBUTION.md)** — Adoptium distribution downloader, source selection,
   archive handling
+- **[JDK Data](documentation/JDK-DATA.md)** — JDK source ZIP and JSON Javadoc data pipeline
 - **[Test Architecture](documentation/TEST.md)** — Test class hierarchy, tags, JsonMapper setup
 - **[Transformer Model](onnx/TRANSFORMER.md)** — ONNX embedding model, URI scheme requirements, model selection
+- **[AI Models](documentation/AI-MODELS.md)** — Local AI models, quantization, and performance benchmarks
 - **[Black Book](blackbook/BLACKBOOK.md)** — AI dev log: thoughts, decisions, gotchas

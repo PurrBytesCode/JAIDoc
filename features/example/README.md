@@ -6,6 +6,10 @@ date: 2026-06-14
 
 # <Feature Title>
 
+> **This is the feature workspace's entry point — its specification, not a plan.**
+> It gathers all the context (purpose, scope, data flow, mock data, notes) an AI needs to produce an
+> implementation plan. The plan itself is produced separately and is not tracked in this workspace.
+
 ## Context
 
 Why this feature exists. What problem does it solve? What gap in the system does it fill?
