@@ -134,6 +134,9 @@ Run the appropriate script for your platform — it will ask which variant you w
 
 # Download to a custom directory
 .\scripts\download-onnx-transformer-model.ps1 -Model multilingual-e5-small -Variant model_qint8_avx512_vnni -OutputDir .\data\models\onnx
+
+# Override the output path for the current run (e.g., when the working dir is target/)
+.\scripts\download-onnx-transformer-model.ps1 -Model multilingual-e5-small -Variant model_qint8_avx512_vnni -OutputDir ..\onnx
 ```
 
 ### Bash (Linux / macOS)
@@ -144,6 +147,9 @@ Run the appropriate script for your platform — it will ask which variant you w
 
 # Download to a custom directory
 ./scripts/download-onnx-transformer-model.sh multilingual-e5-small model_qint8_avx512_vnni ./data/models/onnx
+
+# Override the output path for the current run (e.g., when the working dir is target/)
+./scripts/download-onnx-transformer-model.sh multilingual-e5-small model_qint8_avx512_vnni ../onnx
 ```
 
 ## Model Source

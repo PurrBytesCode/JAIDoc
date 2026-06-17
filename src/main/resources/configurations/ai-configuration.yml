@@ -3,6 +3,6 @@ spring:
     embedding:
       transformer:
         onnx:
-          model-uri: ${AI_TRANSFORMER_ONNX:./onnx/model_qint8_avx512_vnni.onnx}
+          model-uri: ${AI_TRANSFORMER_ONNX:file:./onnx/model_qint8_avx512_vnni.onnx}
         tokenizer:
-          uri: ${AI_TRANSFORMER_TOKENIZER:./onnx/tokenizer.json}
+          uri: ${AI_TRANSFORMER_TOKENIZER:file:./onnx/tokenizer.json}
