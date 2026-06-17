@@ -20,6 +20,7 @@ JAIDoc/
 │   ├── DOCLET.md                    # Doclet architecture, CLI options, output format
 │   ├── JACKSON.md                   # Jackson customizer pattern
 │   ├── JDK-DATA.md                  # JDK source ZIP and JSON Javadoc data pipeline
+│   ├── AI-MODELS.md                 # Local AI models, quantization, and performance benchmarks
 │   ├── MCP.md                       # MCP server setup
 │   ├── SECURITY.md                  # Actuator restrictions, logging paths
 │   ├── STRUCTURE.md                 # This file

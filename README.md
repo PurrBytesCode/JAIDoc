@@ -34,90 +34,6 @@ This project demonstrates the full stack: doclet → JSON → vector DB → MCP 
 used as a reference for building your own documentation MCP servers — starting with the JDK SDK and growing into Spring
 Boot's more complex documentation ecosystem.
 
-## Local AI Infrastructure
-
-JAIDoc is designed to work entirely with **local AI models** — no cloud APIs required. The project is developed and
-tested against the Llama.cpp Server in routing mode, which dynamically selects the best model for each query based on
-complexity:
-
-### Hardware
-
-| Component     | Specification                          |
-|---------------|----------------------------------------|
-| CPU           | Intel Core Ultra 9 275HX               |
-| RAM           | 32 GB DDR5-6400                        |
-| GPU 1 (local) | NVIDIA RTX 5070 Ti 12GB Mobile         |
-| GPU 2 (eGPU)  | NVIDIA RTX 3090 24GB via Thunderbolt 4 |
-
-### AI Server
-
-JAIDoc uses **llama.cpp Server** in routing mode to dynamically select the best model for each query based on
-complexity.
-
-| Component | Technology       | Version | Date       |
-|-----------|------------------|---------|------------|
-| Server    | llama.cpp Server | b9672   | 2026-06-16 |
-
-### Models
-
-#### Model Info
-
-| Model                                         | Quantization | Context Size | URL                                                                               |
-|-----------------------------------------------|:------------:|:------------:|-----------------------------------------------------------------------------------|
-| LFM2.5-8B-A1B                                 |  UD-IQ4_NL   |  256K (MAX)  | https://huggingface.co/unsloth/LFM2.5-8B-A1B-GGUF                                 |
-| Mellum2-12B-A2.5B                             |    Q4_K_M    |  128K (MAX)  | https://huggingface.co/JetBrains/Mellum2-12B-A2.5B-Thinking-GGUF-Q4_K_M           |
-| Nex-N2-mini                                   |    IQ4_NL    |  256K (MAX)  | https://huggingface.co/bartowski/nex-agi_Nex-N2-mini-GGUFF                        |
-| NVIDIA-Nemotron-3-Nano-Omni-30B-A3B-Reasoning |  IQ4_NL_XL   |  256K (MAX)  | https://huggingface.co/unsloth/NVIDIA-Nemotron-3-Nano-Omni-30B-A3B-Reasoning-GGUF |
-| NVIDIA-Nemotron-Cascade-2-30B-A3B             |    IQ4_NL    |   1M (MAX)   | https://huggingface.co/bartowski/nvidia_Nemotron-Cascade-2-30B-A3B-GGUF           |
-| Qwen3.6-27B                                   |    IQ4_NL    |  256K (MAX)  | https://huggingface.co/unsloth/Qwen3.6-27B-GGUF                                   |
-| Qwen3.6-27B-MTP                               |    IQ4_NL    |  256K (MAX)  | https://huggingface.co/unsloth/Qwen3.6-27B-MTP-GGUF                               |
-| Qwen3.6-35B-A3B                               | UD-IQ4_NL_XL |  256K (MAX)  | https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF                               |
-| Qwopus3.5-9B                                  |    Q4_K_M    |  256K (MAX)  | https://huggingface.co/Jackrong/Qwopus3.5-9B-v3-GGUF                              |
-| Qwopus3.5-9B-Coder                            |    IQ4_XS    |  256K (MAX)  | https://huggingface.co/Jackrong/Qwopus3.5-9B-Coder-GGUF                           |
-| Qwopus3.6-27B-Coder                           |    IQ4_XS    |  256K (MAX)  | https://huggingface.co/Jackrong/Qwopus3.6-27B-Coder-GGUF                          |
-| Qwopus3.6-27B-Coder-MTP                       |    IQ4_XS    |  256K (MAX)  | https://huggingface.co/Jackrong/Qwopus3.6-27B-Coder-MTP-GGUF                      |
-| Qwopus3.6-27B-v2                              |    IQ4_XS    |  256K (MAX)  | https://huggingface.co/Jackrong/Qwopus3.6-27B-v2-GGUF                             |
-| Qwopus3.6-27B-v2-MTP                          |    IQ4_XS    |  256K (MAX)  | https://huggingface.co/Jackrong/Qwopus3.6-27B-v2-MTP-GGUF                         |
-| Qwopus3.6-35B-A3B-v1                          |    IQ4_XS    |  256K (MAX)  | https://huggingface.co/Jackrong/Qwopus3.6-35B-A3B-v1-GGUF                         |
-| Qwopus3.6-35B-A3B-v1-agents                   |    IQ4_XS    |  256K (MAX)  | https://huggingface.co/Jackrong/Qwopus3.6-35B-A3B-v1-GGUF                         |
-| gemma-4-12B-it                                |    IQ4_NL    |  128K (MAX)  | https://huggingface.co/unsloth/gemma-4-12b-it-GGUF                                |
-| gemma-4-26B-A4B-it                            |  UD-IQ4_NL   |  256K (MAX)  | https://huggingface.co/unsloth/gemma-4-26B-A4B-it-GGUF                            |
-| gemma-4-31B-it                                |    IQ4_NL    |     128K     | https://huggingface.co/unsloth/gemma-4-31B-it-GGUF                                |
-
-#### Model Performance
-
-| Model                                         | Parallel-Slots | Preferred agent    | Max (T/S) | Task             |
-|-----------------------------------------------|:--------------:|:-------------------|----------:|:-----------------|
-| LFM2.5-8B-A1B                                 |       1        | Junie              |           | Simple Code      |
-| Mellum2-12B-A2.5B                             |       1        | AI Assistant       |           | Single task code |
-| Nex-N2-mini                                   |       1        | Junie, Claude Code |       105 | Very Hard Code   |
-| NVIDIA-Nemotron-3-Nano-Omni-30B-A3B-Reasoning |       1        | Junie              |       130 | General          |
-| NVIDIA-Nemotron-Cascade-2-30B-A3B             |       1        | Junie              |       160 | Single task code |
-| Qwen3.6-27B                                   |       1        | Junie              |        50 | Very Hard Code   |
-| Qwen3.6-27B-MTP                               |       1        | Junie              |        50 | Very Hard Code   |
-| Qwen3.6-35B-A3B                               |       1        | Junie              |       100 | Hard Code        |
-| Qwopus3.5-9B                                  |       1        | Claude Code        |           | Code             |
-| Qwopus3.5-9B-Coder                            |       1        | Claude Code        |           | Hard Code        |
-| Qwopus3.6-27B-Coder                           |       1        | Claude Code        |        40 | Very Hard Code   |
-| Qwopus3.6-27B-Coder-MTP                       |       1        | Claude Code        |        40 | Very Hard Code   |
-| Qwopus3.6-27B-v2                              |       1        | Claude Code        |        50 | Very Hard Code   |
-| Qwopus3.6-27B-v2-MTP                          |       1        | Claude Code        |        50 | Very Hard Code   |
-| Qwopus3.6-35B-A3B-v1                          |       1        | Claude Code        |       117 | Hard Code        |
-| Qwopus3.6-35B-A3B-v1-agents                   |       2        | Claude Code        |        60 | Hard Code        |
-| gemma-4-12B-it                                |       1        | Junie,Claude Code  |           | Code             |
-| gemma-4-26B-A4B-it                            |       1        | Junie,Claude Code  |           | Hard Code        |
-| gemma-4-31B-it                                |       1        | Junie,Claude Code  |           | Very Hard Code   |
-
-### AI Agents
-
-The project is developed using multiple AI coding agents, each with different strengths:
-
-| Agent                 | IDE / Platform | Purpose                                                                       |
-|-----------------------|----------------|-------------------------------------------------------------------------------|
-| Claude Code           | Terminal       | Primary agent — deep research, complex refactors, and architectural decisions |
-| IntelliJ AI Assistant | IntelliJ IDEA  | Inline code completion, quick suggestions, and minor fixes within the editor  |
-| Junie                 | Terminal       | Alternative agent for comparison — experimental use and secondary opinions    |
-
 ## Quick Start
 
 ### Build
@@ -186,30 +102,6 @@ e.g., "what changed in Spring Boot 3.4 migration", "how to configure a custom be
 This pipeline will also serve as an example for the community on how to organize, track, and expose complex
 documentation formats through MCP — a foundation that can be extrapolated to other ecosystems beyond Spring Boot.
 
-## Roadmap
-
-- **Phase 1** — JDK documentation ingestion and MCP tools for querying (current)
-- **Phase 2** — Spring Boot ingestion: adoc parsing, migration guides, how-to guides, and structured MCP tools
-- **Phase 3** — Spring Framework API docs: annotations, generics, cross-references
-- **Phase 4** — Support for additional ecosystems (Quarkus, Micronaut, etc.)
-- **Phase 5** — Multi-model support with prompt templates per ecosystem
-
-### Phase 2: Spring Boot Integration
-
-Spring Boot documentation is structured around AsciiDoc (`.adoc`) files — migration guides, how-to guides, and
-reference documentation. Unlike JDK Javadoc (which a custom doclet can serialize to JSON), adoc requires a different
-ingestion pipeline:
-
-1. **adoc Parsing** — Extract sections, subsections, cross-references, and code examples from Spring Boot's adoc source
-2. **Section Organization** — Structure the parsed content hierarchically so MCP tools can query by section, not just by
-   keyword
-3. **Migration Guide Tracking** — Preserve version-to-version migration paths so queries like "what changed in 3.4"
-   return the relevant migration section
-4. **How-To Expose** — Register MCP tools that let AI models query "how to do X" by matching natural language to adoc
-   section titles and content
-5. **Community Example** — Document the ingestion approach so others can replicate it for their own documentation
-   ecosystems
-
 Currently this work starts with the Java SDK as a foundation, then extrapolates to Spring Boot — which is where the real
 complexity lives (huge MCP schema, complex cross-references, versioned migration guides).
 
@@ -247,6 +139,7 @@ the privacy.
 
 - **Doclet internals** — [`documentation/DOCLET.md`](documentation/DOCLET.md)
 - **JDK documentation data** — [`documentation/JDK-DATA.md`](documentation/JDK-DATA.md)
+- **AI models** — [`documentation/AI-MODELS.md`](documentation/AI-MODELS.md)
 - **MCP setup** — [`documentation/MCP.md`](documentation/MCP.md)
 - **Project structure** — [`documentation/STRUCTURE.md`](documentation/STRUCTURE.md)
 - **Jackson configuration** — [`documentation/JACKSON.md`](documentation/JACKSON.md)
