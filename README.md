@@ -70,11 +70,6 @@ Once connected, the MCP server exposes tools for querying documentation. Here's 
 You can ask the AI model: *"How do I create a WebClient in Spring Boot?"* and the model will query the MCP server for
 Spring Boot documentation, returning the precise API reference with parameters and usage examples.
 
-### Example: Find migration changes (future)
-
-When Spring Boot documentation is ingested, you'll be able to ask: *"What changed in the migration from 3.3 to 3.4?"*
-and the model will return the relevant migration guide section with version-specific changes.
-
 ## How It Works
 
 ### The Doclet Pipeline
@@ -92,15 +87,29 @@ The JDK doesn't ship its Javadoc as JSON, so we need to generate it from the sou
 This pipeline is modular and version-aware: each JDK version gets its own ingestion run, and the vector DB stores them
 separately so users can query documentation for any supported version.
 
-### The Spring Boot Pipeline (planned)
+## Roadmap
 
-Spring Boot documentation goes beyond API reference — it includes migration guides, how-to guides, and AsciiDoc
-(`.adoc`) formats with richer structure than Javadoc. Ingestion will require a different approach: parsing adoc files,
-extracting sections, preserving cross-references, and organizing the data so MCP tools can expose structured queries (
-e.g., "what changed in Spring Boot 3.4 migration", "how to configure a custom bean").
+- **Phase 1** — JDK documentation ingestion and MCP tools for querying (current)
+- **Phase 2** — Spring Boot ingestion: adoc parsing, migration guides, how-to guides, and structured MCP tools
+- **Phase 3** — Spring Framework API docs: annotations, generics, cross-references
+- **Phase 4** — Support for additional ecosystems (Quarkus, Micronaut, etc.)
+- **Phase 5** — Multi-model support with prompt templates per ecosystem
 
-This pipeline will also serve as an example for the community on how to organize, track, and expose complex
-documentation formats through MCP — a foundation that can be extrapolated to other ecosystems beyond Spring Boot.
+### Phase 2: Spring Boot Integration
+
+Spring Boot documentation is structured around AsciiDoc (`.adoc`) files — migration guides, how-to guides, and
+reference documentation. Unlike JDK Javadoc (which a custom doclet can serialize to JSON), adoc requires a different
+ingestion pipeline:
+
+1. **adoc Parsing** — Extract sections, subsections, cross-references, and code examples from Spring Boot's adoc source
+2. **Section Organization** — Structure the parsed content hierarchically so MCP tools can query by section, not just by
+   keyword
+3. **Migration Guide Tracking** — Preserve version-to-version migration paths so queries like "what changed in 3.4"
+   return the relevant migration section
+4. **How-To Expose** — Register MCP tools that let AI models query "how to do X" by matching natural language to adoc
+   section titles and content
+5. **Community Example** — Document the ingestion approach so others can replicate it for their own documentation
+   ecosystems
 
 Currently this work starts with the Java SDK as a foundation, then extrapolates to Spring Boot — which is where the real
 complexity lives (huge MCP schema, complex cross-references, versioned migration guides).
