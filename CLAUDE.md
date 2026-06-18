@@ -77,6 +77,15 @@ These rules prevent infinite loops, redundant work, and exploration traps when r
 
 - **Read each file once.** Do not re-open, re-query, or re-search a file whose content you already got, unless it was
   modified after you read it. Cache and reuse what you already have in context.
+- **Re-read selectively after editing.** After an Edit or Write succeeds, the tool confirms the change was applied,
+  but does not guarantee the result is correct. Re-read when:
+    - The edit used `replaceAll: true` (could have modified more than intended).
+    - The edit was a `Write` replacing the entire file (the new content might differ from what you expected).
+    - You need to confirm the edit applied correctly and the file is in the expected state.
+- **Do not re-read for paranoia.** If the edit was a simple, targeted replacement, trust the tool and move on.
+  Re-reading just to "double-check" is a waste — the tool already confirmed it worked.
+- **Loop signal: Read returns "Wasted call" or "file unchanged".** If a Read tool returns this message, stop reading
+  and use the content you already have. This is not an error or a retry signal — it means you already have the data.
 - **Prefer targeted reads.** Use structure queries, symbol search, or line-range reads to locate the relevant section
   instead of repeatedly scanning entire files.
 - **Avoid circular navigation.** When following references between files (imports, includes, links), track visited paths
