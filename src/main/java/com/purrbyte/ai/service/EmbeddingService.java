@@ -1,5 +1,6 @@
 package com.purrbyte.ai.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.stereotype.Service;
 
@@ -9,17 +10,15 @@ import org.springframework.stereotype.Service;
  * silently degrades ranking quality.
  */
 @Service
+@RequiredArgsConstructor
 public class EmbeddingService {
 
-    static final int DIMENSION = 384;                 // multilingual-e5-small
+    // multilingual-e5-small
+    static final int DIMENSION = 384;
     private static final String PASSAGE_PREFIX = "passage: ";
     private static final String QUERY_PREFIX = "query: ";
 
     private final EmbeddingModel embeddingModel;
-
-    public EmbeddingService(EmbeddingModel embeddingModel) {
-        this.embeddingModel = embeddingModel;
-    }
 
     public float[] embedPassage(String text) {
         return embeddingModel.embed(PASSAGE_PREFIX + text);
