@@ -1,6 +1,6 @@
 package com.purrbyte.ai.service;
 
-import com.purrbyte.ai.model.Progress;
+import com.purrbyte.ai.model.dto.Progress;
 import com.purrbyte.ai.util.JdkDistributionDownloader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;

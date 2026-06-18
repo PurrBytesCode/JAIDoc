@@ -14,7 +14,17 @@ spring:
         protocol: streamable
 ```
 
-The `JavaDocMCP` component is a stub — no custom tools are yet implemented.
+The `JavaDocMCP` component exposes three tools for JDK Javadoc persistence and search:
+
+#### JDK Javadoc Tools
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `ingestVersion` | Ingest the generated Javadoc JSON of a JDK version into the searchable database | `version` (string) — JDK version, e.g. `25.0.3` |
+| `listVersions` | List JDK versions whose documentation has been generated | *none* |
+| `searchJavadoc` | Semantic search of the JDK Javadoc within a single version | `version` (string) — JDK version, `query` (string) — natural language query, `topK` (number) — max results |
+
+The `McpToolsConfiguration` bean registers these tools via `MethodToolCallbackProvider`.
 
 ## JetBrains MCP Server
 

@@ -35,18 +35,28 @@ JAIDoc/
     ├── main/
     │   ├── java/com/purrbyte/ai/
     │   │   ├── JAIDoc.java          # Spring Boot entry point
-    │   │   ├── configuration/       # JSON serialization config
+    │   │   ├── configuration/       # JSON serialization config, MCP tool registration
     │   │   ├── doclet/              # JSON Javadoc serialization
+    │   │   ├── entity/              # JPA entities (JdkVersion, DocElement, DocChunk, ElementKind)
+    │   │   ├── mcp/                 # MCP tool objects (JavaDocMCP)
+    │   │   ├── model/               # DTOs (Progress, SearchResult)
+    │   │   ├── persistence/         # JPA converters (FloatArrayConverter)
+    │   │   ├── repository/          # Spring Data JPA repositories
     │   │   ├── service/             # Application services
-    │   │   │   └── DocumentationService.java  # JDK source → JSON pipeline (download, extract, javadoc, versioned output)
-    │   │   └── util/                # Shared utilities
+    │   │   │   ├── DocumentationService.java  # JDK source → JSON pipeline (download, extract, javadoc, versioned output)
+    │   │   │   ├── EmbeddingService.java      # Transformer embedding wrapper (e5 prefixes)
+    │   │   │   ├── IngestionService.java      # Explicit ingestion of Javadoc JSON into DB
+    │   │   │   └── JavadocSearchService.java  # Vector kNN search filtered by version
+    │   │   ├── util/                # Shared utilities
+    │   │   └── web/                 # REST controllers (IngestionController)
     │   └── resources/
     │       ├── application.yaml     # Main config
     │       └── configurations/      # Profile YAMLs
     └── test/
         ├── java/com/purrbyte/ai/
         │   ├── doclet/                 # JSON doclet utility tests (chunking, normalization, entity decoding)
-        │   ├── service/                # Service layer tests (JavaDoc generation E2E)
+        │   ├── persistence/            # JPA converter tests (FloatArrayConverter)
+        │   ├── service/                # Service layer tests (JavaDoc generation E2E, ingestion + search)
         │   ├── test/
         │   │   ├── BaseTest.java       # Abstract base — shared annotations, tags
         │   │   ├── IntegrationTest.java # Spring context integration tests
@@ -61,13 +71,16 @@ JAIDoc/
 
 ## Configuration hierarchy
 
-`application.yaml` is the entry point; it imports 5 profile YAMLs:
+`application.yaml` is the entry point; it imports 8 profile YAMLs:
 
 1. **actuator-configuration.yml** — Actuator endpoints, health, loggers, env, configprops
-2. **documentation-configuration.yml** — JDK source download directory, doclet work/output directories
-3. **logging-configuration.yml** — Logback rolling policy, log file path
-4. **mcp-configuration.yml** — Spring AI MCP server (name, streamable protocol, stdio)
-5. **springdoc-configuration.yml** — OpenAPI/Swagger UI toggles
+2. **ai-configuration.yml** — ONNX transformer model and tokenizer URIs for embeddings
+3. **db-configuration.yml** — SQLite datasource, Hibernate dialect, ddl-auto
+4. **documentation-configuration.yml** — JDK source download directory, doclet work/output directories
+5. **logging-configuration.yml** — Logback rolling policy, log file path
+6. **mcp-configuration.yml** — Spring AI MCP server (name, streamable protocol, stdio)
+7. **search-configuration.yml** — Hibernate Search Lucene backend (directory type, root, sync)
+8. **springdoc-configuration.yml** — OpenAPI/Swagger UI toggles
 
 All values use environment variable placeholders for flexibility.
 
@@ -123,12 +136,14 @@ The doclet jar is used by `javadoc -docletpath` to generate JSON documentation v
 | Database  | SQLite JDBC                                                 |
 | ORM       | Spring Boot Starter Data JPA + Hibernate community dialects |
 | Search    | Hibernate Search 8.4.0.Final (mapper-orm + Lucene backend)  |
+| Vector    | Hibernate Search kNN (`@VectorField(384, COSINE)`)          |
 
 ### AI & MCP
 
 | Component            | Technology                                                  |
 |----------------------|-------------------------------------------------------------|
 | MCP Server           | Spring AI MCP Server 2.0.0-RC2 (streamable protocol, stdio) |
+| MCP Tool Callbacks   | MethodToolCallbackProvider (auto-discovered @Tool objects)  |
 | Spring AI BOM        | 2.0.0-RC2                                                   |
 | Spring Cloud         | 2025.1.2                                                    |
 | Hibernate Search BOM | 8.4.0.Final                                                 |
