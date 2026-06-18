@@ -3,7 +3,11 @@
 ## Overview
 
 The JDK documentation data pipeline has two stages: the raw JDK source (used as input) and the generated JSON Javadoc
-output (used by the MCP server as a queryable database).
+output (used by the MCP server as a queryable database). The JSON output is then ingested into a SQLite database with
+Hibernate Search kNN indexing for semantic search.
+
+**Note**: The MCP server tools for querying are planned but not yet implemented. The database layer is ready; the
+MCP tools (`JavaDocMCP`) are currently a placeholder.
 
 ## Input: JDK Source
 
@@ -28,20 +32,26 @@ The doclet pipeline transforms the JDK source into structured JSON:
 | `target/test-javadoc-output/<version>/module-<name>.json` | Per-module JSON (e.g., `module-java.base.json`) |
 | `target/test-javadoc-output/<version>/api/`               | Per-type JSON files                             |
 
-This JSON output is the MCP server's "database" — the structured, queryable representation that AI models interact with
-through MCP tools.
+This JSON output is the raw material for the database ingestion pipeline. After ingestion, it becomes the MCP server's
+queryable database.
 
 ## Pipeline Flow
 
 ```
-JDK source ZIP → JsonDoclet → JSON Javadoc → MCP tools (queryable)
+JDK source ZIP → JsonDoclet → JSON Javadoc → DB ingestion → Hibernate Search kNN index → MCP tools (queryable)
 ```
 
 1. **Ingest** — Extract the JDK source from the ZIP (or download it automatically).
 2. **Serialize** — Run `JsonDoclet` on the JDK source to produce structured JSON, extracting class signatures, method
    descriptions, parameters, return types, and annotations.
-3. **Query** — The MCP server exposes tools for querying the JSON output by class name, method signature, keyword
-   search, or semantic similarity.
+3. **Chunk** — Split the serialized JSON into semantic chunks via `ChunkWriter`.
+4. **Embed** — Generate vector embeddings for each chunk using the ONNX transformer model (
+   see [AI-MODELS.md](AI-MODELS.md)).
+5. **Persist** — Store chunks and elements in SQLite via JPA entities (`JdkDocChunk`, `JdkDocElement`), with vector
+   embeddings indexed by Hibernate Search kNN.
+
+**Note**: Steps 4–5 require the service layer to be wired up. Currently the doclet pipeline (steps 1–3) is the only
+fully implemented part. The MCP tools and REST endpoints for querying are planned but not yet implemented.
 
 ## Versioned Data
 
@@ -59,3 +69,16 @@ target/test-javadoc-output/
 ```
 
 This keeps versions isolated and allows querying documentation for any supported JDK version.
+
+## Database Layer
+
+After JSON generation, the data is persisted in SQLite with Hibernate Search:
+
+- **`JdkVersion`** entity tracks which JDK versions have been processed (version, tag, distribution).
+- **`JdkDocChunk`** entity stores chunked Javadoc text with a `float[]` embedding vector for semantic search.
+- **`JdkDocElement`** entity stores structured Javadoc elements (methods, classes, fields) with metadata.
+
+The `@VectorField(384, COSINE)` annotation on `JdkDocChunk.embedding` enables Hibernate Search kNN search. The
+`FloatArrayConverter` in `model/converter/` maps `float[]` to SQLite BLOB storage.
+
+See [DATABASE.md](DATABASE.md) for the full database schema, entity definitions, and query flows.

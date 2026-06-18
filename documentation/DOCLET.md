@@ -1,7 +1,7 @@
 # JAIDoc — Java Doclet to JSON
 
-JAIDoc serializes the complete Javadoc of a Java project into structured JSON with every element (types, fields, methods,
-constructors, annotations, block tags, etc.).
+JAIDoc serializes the complete Javadoc of a Java project into structured JSON with every element (types, fields,
+methods, constructors, annotations, block tags, etc.).
 
 ## Overview
 

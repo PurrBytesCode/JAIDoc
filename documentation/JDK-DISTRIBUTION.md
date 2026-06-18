@@ -65,7 +65,8 @@ doclet:
 
 ## Current Versions
 
-The following update versions are currently available on [Oracle's JDK Release Notes](https://www.oracle.com/java/technologies/javase/jdk-relnotes-index.html):
+The following update versions are currently available
+on [Oracle's JDK Release Notes](https://www.oracle.com/java/technologies/javase/jdk-relnotes-index.html):
 
 <!-- BEGIN: JDK Current Versions -->
 

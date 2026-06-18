@@ -122,6 +122,7 @@ before working in the areas they cover — they prevent context loss and keep AG
 - **[JDK Distribution](documentation/JDK-DISTRIBUTION.md)** — Adoptium distribution downloader, source selection,
   archive handling
 - **[JDK Data](documentation/JDK-DATA.md)** — JDK source ZIP and JSON Javadoc data pipeline
+- **[Database](documentation/DATABASE.md)** — JPA entities, Hibernate Search, kNN mapping, ingestion/search flows
 - **[Test Architecture](documentation/TEST.md)** — Test class hierarchy, tags, JsonMapper setup
 - **[Transformer Model](onnx/TRANSFORMER.md)** — ONNX embedding model, URI scheme requirements, model selection
 - **[AI Models](documentation/AI-MODELS.md)** — Local AI models, quantization, and performance benchmarks
