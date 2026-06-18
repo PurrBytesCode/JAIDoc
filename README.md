@@ -27,10 +27,13 @@ questions directly, without relying on cloud APIs or sending code context to thi
 It does this by:
 
 1. **Converting** official documentation into structured JSON via a Java Doclet
-2. **Indexing** it for semantic search (vector embeddings)
+2. **Indexing** it for semantic search (vector embeddings, Hibernate Search/Lucene)
 3. **Exposing** it through the MCP protocol so AI models can query it directly
 
-This project demonstrates the full stack: doclet → JSON → vector DB → MCP tools. It's meant to be studied, adapted, and
+- **MCP tools**: `ingestVersion()`, `listVersions()`, `searchJavadoc()` — register with the MCP server via `MethodToolCallbackProvider`
+- **REST API**: `POST /api/ingest`, `GET /api/search` — programmatic ingestion and search
+
+This project demonstrates the full stack: doclet → JSON → SQLite + Hibernate Search → MCP tools. It's meant to be studied, adapted, and
 used as a reference for building your own documentation MCP servers — starting with the JDK SDK and growing into Spring
 Boot's more complex documentation ecosystem.
 
@@ -63,12 +66,21 @@ Once connected, the MCP server exposes tools for querying documentation. Here's 
 - **Search by class name** — Find a specific class and its members
 - **Search by method signature** — Look up a method's parameters, return type, and description
 - **Keyword search** — Search across all documentation for a term
-- **Semantic search** — Find documentation relevant to a natural language question
+- **Semantic search** — Find documentation relevant to a natural language question (vector embeddings)
 
 ### Example: Find how to create an HTTP client
 
 You can ask the AI model: *"How do I create a WebClient in Spring Boot?"* and the model will query the MCP server for
 Spring Boot documentation, returning the precise API reference with parameters and usage examples.
+
+### Ingesting documentation
+
+Before searching, documentation must be ingested into the database:
+
+- **MCP tool**: `ingestVersion("25.0.3")` — parses `data/25.0.3/`, calculates embeddings, and indexes chunks
+- **REST API**: `POST /api/ingest?version=25.0.3` — same operation via HTTP
+
+The ingest is idempotent — re-ingesting a version replaces any prior ingestion.
 
 ## How It Works
 
@@ -80,11 +92,11 @@ The JDK doesn't ship its Javadoc as JSON, so we need to generate it from the sou
 2. **Javadoc Serialization** — Run a custom doclet (`JsonDoclet`) on the JDK source to produce structured JSON directly,
    extracting class signatures, method descriptions, parameters, return types, and annotations in a format optimized for
    LLM comprehension.
-3. **Vector Indexing** — Embed and index the JSON data into a vector database for semantic search.
+3. **Vector Indexing** — Embed and index the JSON data into SQLite + Hibernate Search/Lucene for semantic search.
 4. **MCP Tools Exposure** — Register MCP tools that allow AI models to query by class name, method signature, keyword
    search, or semantic similarity.
 
-This pipeline is modular and version-aware: each JDK version gets its own ingestion run, and the vector DB stores them
+This pipeline is modular and version-aware: each JDK version gets its own ingestion run, and the database stores them
 separately so users can query documentation for any supported version.
 
 ## Roadmap
@@ -120,11 +132,11 @@ complexity lives (huge MCP schema, complex cross-references, versioned migration
 graph LR
     ai["🤖 AI / LLM"]
     server["🖥️ JAIDoc Server<br/>MCP Protocol / stdio"]
-    vdb["📊 Vector DB<br/>JDK · Spring · …"]
+    db["📊 SQLite + Lucene<br/>JDK · Spring · …"]
     jdkdocs["📄 JDK Docs<br/>Javadoc JSON"]
     sbdocs["📄 Spring Boot Docs<br/>adoc · Migration · How-To"]
     ai <-->|" MCP "| server
-    server -->|" Search "| vdb
+    server -->|" Search "| db
     server -->|" Ingest (Doclet) "| jdkdocs
     server -->|" Ingest (adoc) "| sbdocs
 ```
@@ -148,6 +160,7 @@ the privacy.
 
 - **Doclet internals** — [`documentation/DOCLET.md`](documentation/DOCLET.md)
 - **JDK documentation data** — [`documentation/JDK-DATA.md`](documentation/JDK-DATA.md)
+- **Database** — [`documentation/DATABASE.md`](documentation/DATABASE.md) — schema, ingestion, vector search
 - **AI models** — [`documentation/AI-MODELS.md`](documentation/AI-MODELS.md)
 - **MCP setup** — [`documentation/MCP.md`](documentation/MCP.md)
 - **Project structure** — [`documentation/STRUCTURE.md`](documentation/STRUCTURE.md)

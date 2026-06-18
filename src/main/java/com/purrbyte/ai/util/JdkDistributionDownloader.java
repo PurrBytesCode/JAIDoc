@@ -2,7 +2,7 @@ package com.purrbyte.ai.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.purrbyte.ai.model.Progress;
+import com.purrbyte.ai.model.dto.Progress;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
@@ -150,7 +150,7 @@ public class JdkDistributionDownloader {
      * Parses a version string into {@code [major, minor, security]}, where minor/security are {@code -1}
      * when not specified. Strips a leading {@code jdk-} prefix and any build suffix ({@code +nn}).
      */
-    static int[] parseVersion(String version) {
+    public static int[] parseVersion(String version) {
         String clean = version.startsWith("jdk-") ? version.substring(4) : version;
         clean = clean.split("\\+")[0];
         String[] parts = clean.split("\\.");
@@ -194,7 +194,6 @@ public class JdkDistributionDownloader {
     /**
      * Extracts the major version number from a version string.
      */
-    @SuppressWarnings("JavaExistingMethodCanBeUsed")
     public static int extractMajorVersion(String version) {
         String cleanVersion = version.startsWith("jdk-") ? version.substring(4) : version;
         String[] parts = cleanVersion.split("\\.");

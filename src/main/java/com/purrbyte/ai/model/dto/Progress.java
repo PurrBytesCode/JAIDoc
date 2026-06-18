@@ -1,4 +1,4 @@
-package com.purrbyte.ai.model;
+package com.purrbyte.ai.model.dto;
 
 import lombok.Getter;
 import lombok.Setter;
