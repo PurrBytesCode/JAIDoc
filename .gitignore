@@ -8,12 +8,17 @@ target/
 data.json
 data.xml
 logs/
+.env
 
 ### AI ###
 .agents/
 .cline/
 .junie/memory
 .junie/plans
+
+### AI Transformer ###
+onnx/*.onnx
+onnx/*.json
 
 ### DB ###
 *.mv.db

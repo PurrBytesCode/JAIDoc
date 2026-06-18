@@ -275,5 +275,6 @@ makes the SVG responsive:
 
 Most recent first. Each line links the HTML and Markdown files for a day.
 
+- **2026-06-17** — [HTML](2026-06-17.html) · [Markdown](2026-06-17.md)
 - **2026-06-15** — [HTML](2026-06-15.html) · [Markdown](2026-06-15.md)
 - **2026-06-14** — [HTML](2026-06-14.html) · [Markdown](2026-06-14.md)

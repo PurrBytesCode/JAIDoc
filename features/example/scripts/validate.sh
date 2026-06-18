@@ -12,7 +12,7 @@ if [ ! -d "$FEATURE_DIR" ]; then
 fi
 
 # Check required files
-REQUIRED_FILES=("plan.md" "data-flow.md" "mock-requests.json")
+REQUIRED_FILES=("README.md" "data-flow.md" "mock-requests.json")
 for file in "${REQUIRED_FILES[@]}"; do
     if [ ! -f "$FEATURE_DIR/$file" ]; then
         echo "Error: missing required file '$file'"
@@ -20,9 +20,9 @@ for file in "${REQUIRED_FILES[@]}"; do
     fi
 done
 
-# Check plan.md has YAML frontmatter
-if ! head -3 "$FEATURE_DIR/plan.md" | grep -q "^---$"; then
-    echo "Error: plan.md must have YAML frontmatter"
+# Check README.md has YAML frontmatter
+if ! head -3 "$FEATURE_DIR/README.md" | grep -q "^---$"; then
+    echo "Error: README.md must have YAML frontmatter"
     exit 1
 fi
 

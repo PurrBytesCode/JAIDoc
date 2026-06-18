@@ -1,6 +1,6 @@
 package com.purrbyte.ai.service;
 
-import com.purrbyte.ai.model.Progress;
+import com.purrbyte.ai.model.dto.Progress;
 import com.purrbyte.ai.test.BaseTest;
 import com.purrbyte.ai.test.IntegrationTest;
 import com.purrbyte.ai.util.JdkDistributionDownloader;

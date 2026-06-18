@@ -12,12 +12,16 @@
     <groupId>com.purrbyte.ai</groupId>
     <artifactId>JAIDoc</artifactId>
     <version>0.2.0</version>
-    <description>MCP server that makes JDK and Spring Boot documentation searchable and consumable by AI models</description>
+    <description>MCP server that makes JDK and Spring Boot documentation searchable and consumable by AI models
+    </description>
     <properties>
+        <!-- https://central.sonatype.com/artifact/org.springdoc/springdoc-openapi-starter-webflux-ui/versions-->
         <openapi.version>3.0.3</openapi.version>
+        <!-- https://central.sonatype.com/artifact/org.apache.commons/commons-compress/versions-->
         <commons-compress.version>1.28.0</commons-compress.version>
+        <!-- https://central.sonatype.com/artifact/org.hibernate.search/hibernate-search-bom/versions-->
         <hibernate-search.version>8.4.0.Final</hibernate-search.version>
-        <spring-ai.version>2.0.0-RC2</spring-ai.version>
+        <spring-ai.version>2.0.0</spring-ai.version>
         <spring-cloud.version>2025.1.2</spring-cloud.version>
         <java.version>25</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -25,7 +29,6 @@
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-<!--            <artifactId>spring-boot-starter-webmvc</artifactId>-->
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
         <dependency>
@@ -54,7 +57,6 @@
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
-<!--            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>-->
             <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
             <version>${openapi.version}</version>
         </dependency>
@@ -88,6 +90,10 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-transformers</artifactId>
         </dependency>
         <!-- Extra -->
         <dependency>

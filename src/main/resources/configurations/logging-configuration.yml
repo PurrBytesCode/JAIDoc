@@ -3,6 +3,7 @@ logging:
     rollingpolicy:
       max-file-size: ${LOGGING_MAX_FILE_SIZE:10MB}
       max-history: ${LOGGING_MAX_HISTORY_DAYS:7}
+      max-backup-index: ${LOGGING_MAX_BACKUP_FILES:5}
   file:
     name: ${logging.file.path}/${spring.application.name}/output.log
     path: ${LOGGING_PATH_DIRECTORY:./logs}

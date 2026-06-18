@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026-06-17 — Black Book</title>
+    <link rel="stylesheet" href="blackbook.css">
+    <style>
+        /* keep Mermaid edge labels legible on the dark diagram panel */
+        .mermaid[data-processed="true"] .edgeLabel,
+        .mermaid[data-processed="true"] .edgeLabel * {
+            color: #cfd6df !important;
+            fill: #cfd6df;
+        }
+
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+<article class="bb-page">
+    <header class="bb-head">
+        <p class="bb-eyebrow">Black Book · Dev Log</p>
+        <h1 class="bb-date">2026-06-17</h1>
+        <p class="bb-meta">JAIDoc — AI-assisted development</p>
+    </header>
+
+    <nav class="bb-contents" aria-label="In this entry">
+        <p class="toc-title">In this entry</p>
+        <ul class="bb-toc">
+            <li class="cat-idea"><a href="#plan-rules-removed">Plan Rules Removed — Incremental Workover</a></li>
+            <li class="cat-idea"><a href="#task-progress-log">Task Progress Log</a></li>
+            <li class="cat-idea"><a href="#task-decomposition-flow">Task Decomposition Flow</a></li>
+            <li class="cat-docs"><a href="#ai-tool-observations">AI Tool Observations — Consistency, Prompting, and MCP Usage</a></li>
+        </ul>
+    </nav>
+
+    <section class="entry cat-idea" id="plan-rules-removed">
+        <p class="tab">💡 Idea</p>
+        <h2>Plan Rules Removed — Incremental Workover</h2>
+        <p>Removed the plan rules from CLAUDE.md — they were a constraint and got in the way of actual work. Kept only
+            the features section for now, since I'm working through processes step by step.</p>
+        <p><strong>Key insight:</strong> Problems cannot be tackled head-on. There must always be prior analysis and
+            gradual problem-solving — working on one piece at a time.</p>
+        <p><strong>Open question:</strong> Can the local model divide and separate tasks into manageable sub-tasks?
+            When creating full plans, local models lack the power — they end up in loops, ignore many things, or take
+            too long to respond. Instead of full plans, the approach should be to design a flow with local AI that breaks
+            features or tasks into minimal manageable processes that can be worked on without much effort.</p>
+    </section>
+
+    <section class="entry cat-idea" id="task-progress-log">
+        <p class="tab">💡 Idea</p>
+        <h2>Task Progress Log</h2>
+        <p>Work has progressed incrementally through layers:</p>
+        <ul>
+            <li><strong>Dependencias</strong> — resolved dependency issues first</li>
+            <li><strong>Configuraciones</strong> — fixed configuration problems</li>
+            <li><strong>Sub-dependencias</strong> — prepared sub-dependencies</li>
+            <li><strong>Data de prueba</strong> — set up test data</li>
+            <li><strong>Now:</strong> DB creation, data ingestion, MCP endpoint</li>
+        </ul>
+        <p>A long road, but getting closer. Would like graphs and visual elements to help with understanding the full
+            picture.</p>
+    </section>
+
+    <section class="entry cat-idea" id="task-decomposition-flow">
+        <p class="tab">💡 Idea</p>
+        <h2>Task Decomposition Flow</h2>
+
+        <pre class="mermaid">graph LR
+    subgraph Plan["Full Plan (❌ Local models struggle)"]
+        P1["All-in-one plan"]
+        P1 --&gt;|loops| P2["Stuck in loops"]
+        P1 --&gt;|ignores| P3["Skips details"]
+        P1 --&gt;|slow| P4["Takes too long"]
+    end
+
+    subgraph Incremental["Incremental Approach (✅ Works)"]
+        S1["Analyze first"]
+        S1 --&gt;|break down| S2["Minimal manageable<br/>processes"]
+        S2 --&gt;|work on one| S3["Solve specific<br/>problem"]
+        S3 --&gt;|next| S4["Repeat with<br/>new piece"]
+    end
+
+    subgraph Progress["Current Progress"]
+        D1["Dependencias"]
+        D2["Configuraciones"]
+        D3["Sub-dependencias"]
+        D4["Data de prueba"]
+        D5["DB creation"]
+        D6["Data ingestion"]
+        D7["MCP endpoint"]
+    end
+
+    S1 --&gt; D1
+    S2 --&gt; D2
+    S3 --&gt; D3
+    S2 --&gt; D4
+    S3 --&gt; D5
+    S3 --&gt; D6
+    S3 --&gt; D7</pre>
+    </section>
+
+    <section class="entry cat-docs" id="ai-tool-observations">
+        <p class="tab">📝 Documentation</p>
+        <h2>AI Tool Observations — Consistency, Prompting, and MCP Usage</h2>
+        <p>The DB session was quite difficult. Had to make multiple attempts to reach a functional point — even tried
+            creating a plan with a large model like Opus 4.8 and everything turned out messy. Had to minimize the prompt
+            and fill many gaps, indicating where to take data, where the classes were, how to order for the DB, the
+            balance point between SQL search and Hibernate Search search, and even had to provide Hibernate Search
+            details. A big headache.</p>
+        <p><strong>Current state:</strong> Something semi-functional. Know I'm short on direct SQL query functionality,
+            but will address that later — want to get it into a functional stage first.</p>
+        <p><strong>Observations on model consistency:</strong></p>
+        <ul>
+            <li>Cloud and local models alike sometimes need a reset — the same model that has worked well for hours
+                simply breaks, and even simple commands stop working</li>
+            <li>Guessing it's by design, but it's uncomfortable not having at least a minimally consistent level of
+                performance</li>
+            <li>Will try other MCP models from the same qwen family for faster results, so failures are less tedious and
+                annoying</li>
+        </ul>
+        <p><strong>Observations on tool behavior:</strong></p>
+        <ul>
+            <li>Claude Code doesn't follow the elements in its own CLAUDE.md very well, especially when it comes to file
+                reading via MCP — it seems to disregard them</li>
+            <li>Junie CLI is much more correct with MCP usage and prioritizes it heavily</li>
+            <li>The advantages of Claude Code are sequential criteria and certain practical commands, but Junie is more
+                practical and agile</li>
+            <li>Need to examine how the qwopus models work in Junie with more detail and update my information</li>
+        </ul>
+    </section>
+
+    <footer class="bb-foot">
+        <span>Black Book · JAIDoc</span>
+        <nav>
+            <a href="2026-06-15.html">← 2026-06-15</a>
+            <a href="BLACKBOOK.md">Index</a>
+        </nav>
+    </footer>
+</article>
+
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: 'base',
+        themeVariables: {
+            fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+            fontSize: '13px',
+            background: '#10141b',
+            primaryColor: '#1b212b',
+            primaryBorderColor: '#3a4452',
+            primaryTextColor: '#dfe4ea',
+            lineColor: '#6e7d8f',
+            tertiaryColor: '#161b22',
+            clusterBkg: '#141922',
+            clusterBorder: '#2b3543',
+            titleColor: '#dfe4ea',
+            edgeLabelBackground: '#10141b'
+        }
+    });
+</script>
+</body>
+</html>
