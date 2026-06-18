@@ -1,6 +1,5 @@
-package com.purrbyte.ai.persistence;
+package com.purrbyte.ai.model.converter;
 
-import com.purrbyte.ai.model.converter.FloatArrayConverter;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;

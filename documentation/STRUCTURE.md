@@ -18,6 +18,7 @@ JAIDoc/
 │       └── api/                    # per-type JSON files
 ├── documentation/                   # Deep-dive docs
 │   ├── DOCLET.md                    # Doclet architecture, CLI options, output format
+│   ├── DATABASE.md                  # Database schema, Hibernate Search mapping, ingestion/search flows
 │   ├── JACKSON.md                   # Jackson customizer pattern
 │   ├── JDK-DATA.md                  # JDK source ZIP and JSON Javadoc data pipeline
 │   ├── AI-MODELS.md                 # Local AI models, quantization, and performance benchmarks
@@ -35,36 +36,44 @@ JAIDoc/
     ├── main/
     │   ├── java/com/purrbyte/ai/
     │   │   ├── JAIDoc.java          # Spring Boot entry point
-    │   │   ├── configuration/       # JSON serialization config, MCP tool registration
+    │   │   ├── configuration/       # JSON serialization config
     │   │   ├── doclet/              # JSON Javadoc serialization
-    │   │   ├── entity/              # JPA entities (JdkVersion, DocElement, DocChunk, ElementKind)
+    │   │   ├── domain/              # JPA entities (JdkVersion, JdkDocChunk, JdkDocElement)
     │   │   ├── mcp/                 # MCP tool objects (JavaDocMCP)
-    │   │   ├── model/               # DTOs (Progress, SearchResult)
-    │   │   ├── persistence/         # JPA converters (FloatArrayConverter)
+    │   │   ├── model/               # Domain models and DTOs
+    │   │   │   ├── ElementKind.java          # Element categorization (CLASS, METHOD, FIELD, etc.)
+    │   │   │   ├── IngestStatus.java         # Ingestion lifecycle state
+    │   │   │   ├── converter/                # JPA attribute converters
+    │   │   │   │   └── FloatArrayConverter.java   # float[] ↔ SQLite BLOB mapping
+    │   │   │   └── dto/                      # Data transfer objects
     │   │   ├── repository/          # Spring Data JPA repositories
     │   │   ├── service/             # Application services
     │   │   │   ├── DocumentationService.java  # JDK source → JSON pipeline (download, extract, javadoc, versioned output)
     │   │   │   ├── EmbeddingService.java      # Transformer embedding wrapper (e5 prefixes)
-    │   │   │   ├── IngestionService.java      # Explicit ingestion of Javadoc JSON into DB
-    │   │   │   └── JavadocSearchService.java  # Vector kNN search filtered by version
-    │   │   ├── util/                # Shared utilities
-    │   │   └── web/                 # REST controllers (IngestionController)
+    │   │   │   └── JdkSearchService.java      # Vector kNN search filtered by version
+    │   │   └── util/                # Shared utilities
     │   └── resources/
     │       ├── application.yaml     # Main config
     │       └── configurations/      # Profile YAMLs
     └── test/
         ├── java/com/purrbyte/ai/
-        │   ├── doclet/                 # JSON doclet utility tests (chunking, normalization, entity decoding)
-        │   ├── persistence/            # JPA converter tests (FloatArrayConverter)
-        │   ├── service/                # Service layer tests (JavaDoc generation E2E, ingestion + search)
-        │   ├── test/
-        │   │   ├── BaseTest.java       # Abstract base — shared annotations, tags
-        │   │   ├── IntegrationTest.java # Spring context integration tests
-        │   │   ├── UnitTest.java       # Non-Spring unit tests
-        │   │   └── extension/            
-        │   │       └── TimeExtension.java  # Measures and logs test execution time
-        │   ├── util/                   # Utility class tests (version parsing, download)
-        │   └── JAIDocTest.java         # Integration test for main class
+        │   ├── test/                          # Test base classes and utilities
+        │   │   ├── BaseTest.java              # Abstract base — shared annotations, tags
+        │   │   ├── UnitTest.java              # Non-Spring unit tests
+        │   │   ├── IntegrationTest.java       # Spring context integration tests
+        │   │   └── extension/
+        │   │       └── TimeExtension.java     # Measures and logs test execution time
+        │   ├── doclet/                        # JSON doclet utility tests (chunking, normalization, entity decoding)
+        │   │   ├── ChunkWriterTest.java
+        │   │   └── DocTreeJsonTest.java
+        │   ├── model/converter/               # JPA converter tests (FloatArrayConverter)
+        │   │   └── FloatArrayConverterTest.java
+        │   ├── service/                       # Service layer tests (JavaDoc generation, search)
+        │   │   ├── DocumentationServiceTest.java
+        │   │   └── DocumentationServiceIntegrationTest.java  # E2E JavaDoc generation (local JDK + downloaded JDK)
+        │   ├── util/                          # Utility class tests (version parsing, download)
+        │   │   └── JdkDistributionDownloaderTest.java
+        │   └── JAIDocTest.java                # Integration test for main class
         └── resources/
             └── application-test.yaml   # Test profile configuration
 ```
@@ -78,7 +87,7 @@ JAIDoc/
 3. **db-configuration.yml** — SQLite datasource, Hibernate dialect, ddl-auto
 4. **documentation-configuration.yml** — JDK source download directory, doclet work/output directories
 5. **logging-configuration.yml** — Logback rolling policy, log file path
-6. **mcp-configuration.yml** — Spring AI MCP server (name, streamable protocol, stdio)
+6. **mcp-configuration.yml** — Spring AI MCP server (name, streamable protocol)
 7. **search-configuration.yml** — Hibernate Search Lucene backend (directory type, root, sync)
 8. **springdoc-configuration.yml** — OpenAPI/Swagger UI toggles
 
@@ -89,6 +98,20 @@ All values use environment variable placeholders for flexibility.
 The `data/` directory holds versioned JSON documentation generated by the `JsonDoclet` via `DocumentationService`. Each
 JDK version gets its own subdirectory with one `index.json`, `chunks.jsonl`, and per-type JSON files. Generated by
 `javadoc` CLI invocation from `runJavadocDoclet()`.
+
+## Database layer
+
+The `domain/` package defines JPA entities persisted in SQLite via Hibernate:
+
+- **`JdkVersion`** — JDK version metadata (version string, Adoptium tag, distribution)
+- **`JdkDocChunk`** — Chunked Javadoc content with a vector embedding (`float[]`) for semantic search
+- **`JdkDocElement`** — Structured Javadoc element (class, method, field) with metadata
+
+The `repository/` package provides Spring Data JPA repositories for these entities. Hibernate Search maps the vector
+fields via `@VectorField` (384 dimensions, cosine similarity) enabling kNN semantic search on `JdkDocChunk`.
+
+The `model/converter/` package holds the `FloatArrayConverter`, a JPA attribute converter that maps `float[]` to SQLite
+BLOB storage.
 
 ## Build output
 
@@ -140,13 +163,14 @@ The doclet jar is used by `javadoc -docletpath` to generate JSON documentation v
 
 ### AI & MCP
 
-| Component            | Technology                                                  |
-|----------------------|-------------------------------------------------------------|
-| MCP Server           | Spring AI MCP Server 2.0.0-RC2 (streamable protocol, stdio) |
-| MCP Tool Callbacks   | MethodToolCallbackProvider (auto-discovered @Tool objects)  |
-| Spring AI BOM        | 2.0.0-RC2                                                   |
-| Spring Cloud         | 2025.1.2                                                    |
-| Hibernate Search BOM | 8.4.0.Final                                                 |
+| Component            | Technology                                                 |
+|----------------------|------------------------------------------------------------|
+| MCP Server           | Spring AI MCP Server 2.0.0 (streamable protocol)           |
+| MCP Tool Callbacks   | MethodToolCallbackProvider (auto-discovered @Tool objects) |
+| MCP WebMVC Adapter   | spring-ai-starter-mcp-server-webmvc                        |
+| Spring AI BOM        | 2.0.0                                                      |
+| Spring Cloud         | 2025.1.2                                                   |
+| Hibernate Search BOM | 8.4.0.Final                                                |
 
 ### JSON & Serialization
 

@@ -17,7 +17,8 @@ verify how a method works or what a class does, you have to leave your IDE, sear
 and find the right version.
 
 JAIDoc is also an **example for the community** on how to organize, track, and expose technical documentation through
-MCP tools. Currently focused on the JDK SDK as a foundation, the project aims to grow into Spring Boot — where
+MCP tools. Currently focused on the JDK SDK as a foundation (database layer complete, MCP tools planned), the project
+aims to grow into Spring Boot — where
 documentation is far more complex (migration guides, how-to guides, AsciiDoc formats, cross-references) — and serve as
 a reference for building your own documentation MCP servers.
 
@@ -30,10 +31,10 @@ It does this by:
 2. **Indexing** it for semantic search (vector embeddings, Hibernate Search/Lucene)
 3. **Exposing** it through the MCP protocol so AI models can query it directly
 
-- **MCP tools**: `ingestVersion()`, `listVersions()`, `searchJavadoc()` — register with the MCP server via `MethodToolCallbackProvider`
-- **REST API**: `POST /api/ingest`, `GET /api/search` — programmatic ingestion and search
+- **Doclet pipeline**: JDK source → `JsonDoclet` → JSON Javadoc (fully implemented)
+- **MCP tools** (planned): `listVersions()`, `searchJavadoc()` — JavaDocMCP is a placeholder, no tools implemented yet
 
-This project demonstrates the full stack: doclet → JSON → SQLite + Hibernate Search → MCP tools. It's meant to be studied, adapted, and
+This project demonstrates the full stack: doclet → JSON → SQLite + Hibernate Search → MCP tools (planned). It's meant to be studied, adapted, and
 used as a reference for building your own documentation MCP servers — starting with the JDK SDK and growing into Spring
 Boot's more complex documentation ecosystem.
 
@@ -48,7 +49,7 @@ mvn clean package
 ### Run
 
 ```bash
-java -jar target/jaidoc-0.1.0.jar
+java -jar target/jaidoc-0.2.0.jar
 ```
 
 ### Embedding Model
@@ -61,7 +62,7 @@ models, variants, and configuration options.
 
 ## Example Queries
 
-Once connected, the MCP server exposes tools for querying documentation. Here's what you can do:
+Planned MCP server tools will expose the following query capabilities:
 
 - **Search by class name** — Find a specific class and its members
 - **Search by method signature** — Look up a method's parameters, return type, and description
@@ -73,12 +74,16 @@ Once connected, the MCP server exposes tools for querying documentation. Here's 
 You can ask the AI model: *"How do I create a WebClient in Spring Boot?"* and the model will query the MCP server for
 Spring Boot documentation, returning the precise API reference with parameters and usage examples.
 
+### Example: Search for JDK API documentation
+
+You can ask the AI model: *"How do I read a file with NIO?"* and the model will query the MCP server for JDK documentation,
+returning the precise API reference with parameters and usage examples.
+
 ### Ingesting documentation
 
 Before searching, documentation must be ingested into the database:
 
-- **MCP tool**: `ingestVersion("25.0.3")` — parses `data/25.0.3/`, calculates embeddings, and indexes chunks
-- **REST API**: `POST /api/ingest?version=25.0.3` — same operation via HTTP
+- **Doclet pipeline**: Run `JsonDoclet` on the JDK source to produce JSON Javadoc, then store chunks and elements in the database via the service layer. The `JdkVersionRepository` tracks which versions have been processed.
 
 The ingest is idempotent — re-ingesting a version replaces any prior ingestion.
 
@@ -93,7 +98,7 @@ The JDK doesn't ship its Javadoc as JSON, so we need to generate it from the sou
    extracting class signatures, method descriptions, parameters, return types, and annotations in a format optimized for
    LLM comprehension.
 3. **Vector Indexing** — Embed and index the JSON data into SQLite + Hibernate Search/Lucene for semantic search.
-4. **MCP Tools Exposure** — Register MCP tools that allow AI models to query by class name, method signature, keyword
+4. **MCP Tools Exposure** (planned) — Register MCP tools that allow AI models to query by class name, method signature, keyword
    search, or semantic similarity.
 
 This pipeline is modular and version-aware: each JDK version gets its own ingestion run, and the database stores them
@@ -101,7 +106,7 @@ separately so users can query documentation for any supported version.
 
 ## Roadmap
 
-- **Phase 1** — JDK documentation ingestion and MCP tools for querying (current)
+- **Phase 1** — JDK documentation ingestion and database layer; MCP tools for querying (planned)
 - **Phase 2** — Spring Boot ingestion: adoc parsing, migration guides, how-to guides, and structured MCP tools
 - **Phase 3** — Spring Framework API docs: annotations, generics, cross-references
 - **Phase 4** — Support for additional ecosystems (Quarkus, Micronaut, etc.)
@@ -131,14 +136,14 @@ complexity lives (huge MCP schema, complex cross-references, versioned migration
 ```mermaid
 graph LR
     ai["🤖 AI / LLM"]
-    server["🖥️ JAIDoc Server<br/>MCP Protocol / stdio"]
+    server["🖥️ JAIDoc Server<br/>MCP Protocol / streamable"]
     db["📊 SQLite + Lucene<br/>JDK · Spring · …"]
     jdkdocs["📄 JDK Docs<br/>Javadoc JSON"]
     sbdocs["📄 Spring Boot Docs<br/>adoc · Migration · How-To"]
-    ai <-->|" MCP "| server
+    ai <-->|" MCP (planned) "| server
     server -->|" Search "| db
     server -->|" Ingest (Doclet) "| jdkdocs
-    server -->|" Ingest (adoc) "| sbdocs
+    server -->|" Ingest (adoc, planned) "| sbdocs
 ```
 
 ## Philosophy
@@ -160,7 +165,7 @@ the privacy.
 
 - **Doclet internals** — [`documentation/DOCLET.md`](documentation/DOCLET.md)
 - **JDK documentation data** — [`documentation/JDK-DATA.md`](documentation/JDK-DATA.md)
-- **Database** — [`documentation/DATABASE.md`](documentation/DATABASE.md) — schema, ingestion, vector search
+- **Database** — [`documentation/DATABASE.md`](documentation/DATABASE.md)
 - **AI models** — [`documentation/AI-MODELS.md`](documentation/AI-MODELS.md)
 - **MCP setup** — [`documentation/MCP.md`](documentation/MCP.md)
 - **Project structure** — [`documentation/STRUCTURE.md`](documentation/STRUCTURE.md)

@@ -52,9 +52,7 @@ IntegrationTest extends BaseTest (abstract)
 
 ## Design principles
 
-## No Spring in unit tests
-
-### 1. No Spring in unit tests
+### No Spring in unit tests
 
 `UnitTest` does **not** have `@SpringBootTest`. It builds `JsonMapper` manually in the constructor, applying the same
 `JsonMapperBuilderCustomizer` that `ObjectMapperConfiguration` provides:
@@ -70,13 +68,13 @@ public UnitTest() {
 This means if someone modifies the customizer, the unit tests will **fail** — just as they would in production. The
 manual instantiation is intentional; it keeps the test aligned with real configuration changes.
 
-### 2. Spring beans in integration tests
+### Spring beans in integration tests
 
 `IntegrationTest` has `@SpringBootTest`, which starts the full application context. `JsonMapper` is injected via
 `@Autowired` from the bean — no manual construction needed. This is the correct approach for integration tests that
 depend on Spring wiring.
 
-### 3. Test tags for pipeline selection
+### Test tags for pipeline selection
 
 Test class hierarchy classes carry JUnit 5 `@Tag` annotations so the CI pipeline can run only unit or integration tests
 independently. Tag constants are defined in `BaseTest`:
@@ -126,14 +124,16 @@ src/test/java/com/purrbyte/ai/
 │   └── extension/
 │       └── TimeExtension.java
 ├── service/
-│   ├── DocumentationServiceIntegrationTest.java  # E2E JavaDoc generation (local JDK + downloaded JDK)
-│   └── DocumentationServiceTest.java
+│   ├── DocumentationServiceTest.java                     # Unit tests for DocumentationService
+│   └── DocumentationServiceIntegrationTest.java          # E2E JavaDoc generation (local JDK + downloaded JDK)
+├── model/converter/
+│   └── FloatArrayConverterTest.java                      # JPA converter tests (float[] ↔ BLOB)
 ├── util/
-│   └── JdkDistributionDownloaderTest.java        # Adoptium OS/arch/version mapping (no network)
+│   └── JdkDistributionDownloaderTest.java                # Adoptium OS/arch/version mapping (no network)
 ├── doclet/
-│   ├── DocTreeJsonTest.java
-│   └── ChunkWriterTest.java
-├── JAIDocTest.java                # Integration test for main class
+│   ├── ChunkWriterTest.java
+│   └── DocTreeJsonTest.java
+└── JAIDocTest.java                # Integration test for main class
 ```
 
 Test classes use the same package structure as their production counterparts. Test-specific classes (base classes,
@@ -221,8 +221,8 @@ sequence. The `@Order` values are typically sequential integers (1, 2, 3...).
 
 ### Actual network calls
 
-Some integration tests make real network calls (e.g., `ServiceIntegrationTest` downloads external resources).
-These tests require network access and may be slow. They are disabled by default via `@Disabled`.
+Some integration tests make real network calls (e.g., `DocumentationServiceIntegrationTest` downloads external
+resources). These tests require network access and may be slow. They are disabled by default via `@Disabled`.
 
 ### E2E JavaDoc generation pipeline
 
@@ -241,16 +241,6 @@ cleaned up automatically.
 
 `ChunkWriterTest` writes actual JSONL files to a `@TempDir` directory and verifies the output content. It uses the
 `jsonMapper` injected from the Spring context to serialize objects.
-
-Defined in `BaseTest` as public static final fields:
-
-```java
-public static final String TAG_UNIT = "UNIT";
-public static final String TAG_INTEGRATION = "INTEGRATION";
-```
-
-All test classes reference these constants via `BaseTest.TAG_UNIT` / `BaseTest.TAG_INTEGRATION` — never as raw strings.
-This ensures consistency and makes it easy to add new tag types in one place.
 
 ## JsonMapper configuration
 

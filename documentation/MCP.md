@@ -14,17 +14,15 @@ spring:
         protocol: streamable
 ```
 
-The `JavaDocMCP` component exposes three tools for JDK Javadoc persistence and search:
+The `JavaDocMCP` component is auto-discovered by Spring AI's `MethodToolCallbackProvider`. Currently it is a
+placeholder — no `@Tool` methods are implemented yet. The planned tools are:
 
-#### JDK Javadoc Tools
+#### JDK Javadoc Tools (planned)
 
-| Tool | Description | Parameters |
-|------|-------------|------------|
-| `ingestVersion` | Ingest the generated Javadoc JSON of a JDK version into the searchable database | `version` (string) — JDK version, e.g. `25.0.3` |
-| `listVersions` | List JDK versions whose documentation has been generated | *none* |
+| Tool            | Description                                                | Parameters                                                                                                 |
+|-----------------|------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| `listVersions`  | List JDK versions whose documentation has been generated   | *none*                                                                                                     |
 | `searchJavadoc` | Semantic search of the JDK Javadoc within a single version | `version` (string) — JDK version, `query` (string) — natural language query, `topK` (number) — max results |
-
-The `McpToolsConfiguration` bean registers these tools via `MethodToolCallbackProvider`.
 
 ## JetBrains MCP Server
 
@@ -42,7 +40,8 @@ The project ships with a pre-configured `.mcp.json` for direct streamable-HTTP c
 }
 ```
 
-This bypasses the stdio-to-HTTP adapter and connects directly to the JetBrains MCP Server plugin running on port `64960`.
+This bypasses the stdio-to-HTTP adapter and connects directly to the JetBrains MCP Server plugin running on port
+`64960`.
 
 ### JetBrains Tools
 
@@ -50,17 +49,17 @@ Tools allow the AI model to execute actions on the host machine:
 
 #### File Operations
 
-| Tool                  | Description                                                                                                     | Parameters                                                                                                      |
-|-----------------------|-----------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
-| `read_file`           | Read file content from the filesystem                                                                           | `file_path` (string) — absolute path to the file, `mode` (string, optional), `start_line` (number, optional), `max_lines` (number, optional)          |
-| `write_file`          | Write content to a file, creating parent directories if needed                                                  | `file_path` (string) — absolute path, `content` (string) — file content                                                                       |
-| `edit_file`           | Edit a file by searching and replacing text                                                                     | `path` (string) — absolute path, `old_string` (string) — text to find, `new_string` (string) — replacement text |
-| `create_file`         | Create a new file with given content                                                                            | `path` (string) — absolute path, `content` (string) — file content                                              |
-| `delete_file`         | Delete a file from the filesystem                                                                               | `path` (string) — absolute path                                                                                 |
-| `list_directory`      | List directory contents in tree format                                                                          | `path` (string) — absolute path to directory                                                                    |
-| `list_directory_tree` | Provides a tree representation of the specified directory in the pseudo graphic format like `tree` utility does | `directoryPath` (string) — directory path, `maxDepth` (number, optional), `timeout` (number, optional)          |
-| `reformat_file`       | Reformat a file using the IDE's code formatter                                                                  | `path` (string) — absolute path to the file                                                                     |
-| `open_file_in_editor` | Opens the specified file in the JetBrains IDE editor                                                            | `filePath` (string) — path relative to the project root                                                         |
+| Tool                  | Description                                                                                                     | Parameters                                                                                                                                   |
+|-----------------------|-----------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| `read_file`           | Read file content from the filesystem                                                                           | `file_path` (string) — absolute path to the file, `mode` (string, optional), `start_line` (number, optional), `max_lines` (number, optional) |
+| `write_file`          | Write content to a file, creating parent directories if needed                                                  | `file_path` (string) — absolute path, `content` (string) — file content                                                                      |
+| `edit_file`           | Edit a file by searching and replacing text                                                                     | `path` (string) — absolute path, `old_string` (string) — text to find, `new_string` (string) — replacement text                              |
+| `create_file`         | Create a new file with given content                                                                            | `path` (string) — absolute path, `content` (string) — file content                                                                           |
+| `delete_file`         | Delete a file from the filesystem                                                                               | `path` (string) — absolute path                                                                                                              |
+| `list_directory`      | List directory contents in tree format                                                                          | `path` (string) — absolute path to directory                                                                                                 |
+| `list_directory_tree` | Provides a tree representation of the specified directory in the pseudo graphic format like `tree` utility does | `directoryPath` (string) — directory path, `maxDepth` (number, optional), `timeout` (number, optional)                                       |
+| `reformat_file`       | Reformat a file using the IDE's code formatter                                                                  | `path` (string) — absolute path to the file                                                                                                  |
+| `open_file_in_editor` | Opens the specified file in the JetBrains IDE editor                                                            | `filePath` (string) — path relative to the project root                                                                                      |
 
 #### Search Operations
 

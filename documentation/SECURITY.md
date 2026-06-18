@@ -19,5 +19,6 @@ Log file paths use cross-platform defaults:
 
 - Directory: `./logs` (override with `LOGGING_PATH_DIRECTORY`)
 - File: `{dir}/{spring.application.name}/output.log`
+- Max backup files: `5` (override with `LOGGING_MAX_BACKUP_FILES`)
 
 The default path `./logs` is resolved relative to the working directory and works on both Linux/Unix and Windows.
