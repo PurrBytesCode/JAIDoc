@@ -1,8 +1,11 @@
 {
   "baseUrl": "http://localhost:11434/v1/chat/completions",
-  "id": "Jackrong-Qwopus3.6-35B-A3B-v1",
+  "id": "Jackrong-Qwopus3.6-35B-A3B-v1-MULTI-GPU",
   "apiType": "OpenAICompletion",
   "primaryModel": {
     "id": "Jackrong-Qwopus3.6-35B-A3B-v1"
+  },
+  "fasterModel": {
+    "id": "JetBrains-Mellum2-12B-A2.5B"
   }
 }
