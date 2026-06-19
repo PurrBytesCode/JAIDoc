@@ -1,8 +1,0 @@
-{
-  "baseUrl": "http://localhost:11434/v1/chat/completions",
-  "id": "unsloth-LFM2.5-8B-A1B",
-  "apiType": "OpenAICompletion",
-  "primaryModel": {
-    "id": "unsloth-LFM2.5-8B-A1B"
-  }
-}
