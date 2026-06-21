@@ -1,9 +1,11 @@
 package com.purrbyte.ai.service;
 
+import com.purrbyte.ai.repository.JdkVersionRepository;
 import com.purrbyte.ai.test.UnitTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -16,6 +18,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 class DocumentationServiceTest extends UnitTest {
 
@@ -60,53 +63,40 @@ class DocumentationServiceTest extends UnitTest {
     @Nested
     class ListAvailableVersionsTest {
 
+        private DocumentationService createServiceWithRepo(JdkVersionRepository repo) {
+            return new DocumentationService(null, repo, workDirectory, outputDirectory, "", docletDirectory, "");
+        }
+
         @Test
         void noVersions_returnsEmptyList() throws IOException {
             setupDirectories();
-            DocumentationService service = createService();
+            JdkVersionRepository mockRepository = Mockito.mock(JdkVersionRepository.class);
+            when(mockRepository.findAllVersionStringsOrderByMajorDesc()).thenReturn(List.of());
+            DocumentationService service = createServiceWithRepo(mockRepository);
             List<String> versions = service.listAvailableVersions();
             assertThat(versions).isEmpty();
         }
 
         @Test
-        void oneVersionWithIndex_returnsIt() throws IOException {
+        void oneVersion_returnsIt() throws IOException {
             setupDirectories();
-            createTestZip(outputDirectory, "25.0.3", "index.json", "{}", "elements.json", "[]");
-            DocumentationService service = createService();
+            JdkVersionRepository mockRepository = Mockito.mock(JdkVersionRepository.class);
+            when(mockRepository.findAllVersionStringsOrderByMajorDesc()).thenReturn(List.of("25.0.3"));
+            DocumentationService service = createServiceWithRepo(mockRepository);
             List<String> versions = service.listAvailableVersions();
             assertThat(versions).containsExactly("25.0.3");
         }
 
         @Test
-        void twoVersions_returnsSorted() throws IOException {
+        void multipleVersions_returnedInMajorDescendingOrder() throws IOException {
             setupDirectories();
-            createTestZip(outputDirectory, "21.0.11", "index.json", "{}", "elements.json", "[]");
-            createTestZip(outputDirectory, "25.0.3", "index.json", "{}", "elements.json", "[]");
-            DocumentationService service = createService();
+            JdkVersionRepository mockRepository = Mockito.mock(JdkVersionRepository.class);
+            // Simulates DB ordering: major DESC, minor DESC, security DESC
+            when(mockRepository.findAllVersionStringsOrderByMajorDesc())
+                    .thenReturn(List.of("25.0.3", "21.0.11"));
+            DocumentationService service = createServiceWithRepo(mockRepository);
             List<String> versions = service.listAvailableVersions();
-            assertThat(versions).containsExactly("21.0.11", "25.0.3");
-        }
-
-        @Test
-        void versionWithoutIndex_ignored() throws IOException {
-            setupDirectories();
-            // Create a ZIP that does NOT contain index.json
-            createTestZip(outputDirectory, "25.0.3", "elements.json", "[]");
-            DocumentationService service = createService();
-            List<String> versions = service.listAvailableVersions();
-            assertThat(versions).isEmpty();
-        }
-
-        @Test
-        void nonZipFiles_ignored() throws IOException {
-            setupDirectories();
-            // Create a directory with index.json — should be ignored (only ZIPs are scanned)
-            Path versionDir = outputDirectory.resolve("25.0.3");
-            Files.createDirectories(versionDir);
-            Files.writeString(versionDir.resolve("index.json"), "{}");
-            DocumentationService service = createService();
-            List<String> versions = service.listAvailableVersions();
-            assertThat(versions).isEmpty();
+            assertThat(versions).containsExactly("25.0.3", "21.0.11");
         }
     }
 
@@ -114,9 +104,19 @@ class DocumentationServiceTest extends UnitTest {
     class IsVersionGeneratedTest {
 
         @Test
-        void versionWithZip_returnsTrue() throws IOException {
+        void versionWithIndexInZip_returnsTrue() throws IOException {
             setupDirectories();
-            createTestZip(outputDirectory, "25.0.3", "index.json", "{}", "elements.json", "[]");
+            createTestZipWithVersionDir(outputDirectory, "25.0.3", "index.json", "{}", "elements.json", "[]");
+            DocumentationService service = createService();
+            assertThat(service.isVersionGenerated("25.0.3")).isTrue();
+        }
+
+        @Test
+        void versionWithIndexInZipInSubdir_returnsTrue() throws IOException {
+            setupDirectories();
+            Path subDir = outputDirectory.resolve("jdk");
+            Files.createDirectories(subDir);
+            createTestZipWithVersionDir(subDir, "25.0.3", "index.json", "{}", "elements.json", "[]");
             DocumentationService service = createService();
             assertThat(service.isVersionGenerated("25.0.3")).isTrue();
         }
@@ -125,7 +125,18 @@ class DocumentationServiceTest extends UnitTest {
         void versionWithoutIndexInZip_returnsFalse() throws IOException {
             setupDirectories();
             // ZIP exists but no index.json inside
-            createTestZip(outputDirectory, "25.0.3", "elements.json", "[]");
+            createTestZipWithVersionDir(outputDirectory, "25.0.3", "elements.json", "[]");
+            DocumentationService service = createService();
+            assertThat(service.isVersionGenerated("25.0.3")).isFalse();
+        }
+
+        @Test
+        void versionWithoutIndexInZipInSubdir_returnsFalse() throws IOException {
+            setupDirectories();
+            Path subDir = outputDirectory.resolve("jdk");
+            Files.createDirectories(subDir);
+            // ZIP exists but no index.json inside
+            createTestZipWithVersionDir(subDir, "25.0.3", "elements.json", "[]");
             DocumentationService service = createService();
             assertThat(service.isVersionGenerated("25.0.3")).isFalse();
         }
@@ -142,11 +153,22 @@ class DocumentationServiceTest extends UnitTest {
     class GetVersionZipTest {
 
         @Test
-        void existingVersion_returnsZipPath() throws IOException {
+        void existingVersionAtRoot_returnsZipPath() throws IOException {
             setupDirectories();
-            createTestZip(outputDirectory, "25.0.3", "index.json", "{}", "elements.json", "[]");
+            createTestZipWithVersionDir(outputDirectory, "25.0.3", "index.json", "{}", "elements.json", "[]");
             DocumentationService service = createService();
             Path zipPath = outputDirectory.resolve("25.0.3.zip");
+            assertThat(service.getVersionZip("25.0.3")).isEqualTo(zipPath);
+        }
+
+        @Test
+        void existingVersionInSubdir_returnsZipPath() throws IOException {
+            setupDirectories();
+            Path subDir = outputDirectory.resolve("jdk");
+            Files.createDirectories(subDir);
+            createTestZipWithVersionDir(subDir, "25.0.3", "index.json", "{}", "elements.json", "[]");
+            DocumentationService service = createService();
+            Path zipPath = subDir.resolve("25.0.3.zip");
             assertThat(service.getVersionZip("25.0.3")).isEqualTo(zipPath);
         }
 
@@ -216,8 +238,32 @@ class DocumentationServiceTest extends UnitTest {
         return zipFile;
     }
 
+    /**
+     * Creates a test ZIP with a version-prefixed directory structure, matching what
+     * {@link DocumentationService#zipVersion} produces.
+     */
+    @SuppressWarnings("SameParameterValue")
+    private Path createTestZipWithVersionDir(Path dir, String version, String... entries) throws IOException {
+        Path zipFile = dir.resolve(version + ".zip");
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipFile))) {
+            // Version directory entry
+            ZipEntry dirEntry = new ZipEntry(version + "/");
+            zos.putNextEntry(dirEntry);
+            zos.closeEntry();
+            for (int i = 0; i < entries.length; i += 2) {
+                String name = entries[i];
+                String content = entries[i + 1];
+                ZipEntry entry = new ZipEntry(version + "/" + name);
+                zos.putNextEntry(entry);
+                zos.write(content.getBytes(StandardCharsets.UTF_8));
+                zos.closeEntry();
+            }
+        }
+        return zipFile;
+    }
+
     private DocumentationService createService() {
-        return new DocumentationService(null, workDirectory, outputDirectory, "", docletDirectory, "");
+        return new DocumentationService(null, null, workDirectory, outputDirectory, "", docletDirectory, "");
     }
 
     @SuppressWarnings("SameParameterValue")

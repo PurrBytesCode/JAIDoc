@@ -40,29 +40,34 @@ public class IngestionSearchIntegrationTest extends IntegrationTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        // Create test ZIP fixture at the configured output directory
+        // Create test ZIP fixture at the configured output directory.
+        // The ZIP structure must match what DocumentationService.zipVersion produces:
+        // a version-prefixed directory containing the JSON files.
         Path outputDir = dataDirectory;
         Files.createDirectories(outputDir);
         Path zipFile = outputDir.resolve("25.0.3.zip");
         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipFile))) {
-            // index.json
+            // Directory entry for the version folder
+            zos.putNextEntry(new ZipEntry("25.0.3/"));
+            zos.closeEntry();
+            // index.json inside the version directory
             String indexJson = """
                     {"javaRuntime":"temurin","generator":"JAIDoc","generatedAt":"2025-01-01T00:00:00Z",
                      "typeCount":10,"chunkCount":5,"packages":[],"modules":[]}
                     """;
-            zos.putNextEntry(new ZipEntry("index.json"));
+            zos.putNextEntry(new ZipEntry("25.0.3/index.json"));
             zos.write(indexJson.getBytes(StandardCharsets.UTF_8));
             zos.closeEntry();
-            // elements.json
+            // elements.json inside the version directory
             String elementsJson = "[{\"kind\":\"MODULE\",\"name\":\"java.base\",\"qualifiedName\":\"java.base\"}]";
-            zos.putNextEntry(new ZipEntry("elements.json"));
+            zos.putNextEntry(new ZipEntry("25.0.3/elements.json"));
             zos.write(elementsJson.getBytes(StandardCharsets.UTF_8));
             zos.closeEntry();
-            // chunks.jsonl
+            // chunks.jsonl inside the version directory
             String chunkLine = "{\"id\":\"c1\",\"text\":\"Read bytes from a stream\","
                     + "\"metadata\":{\"kind\":\"METHOD\",\"type\":\"java.io.InputStream\","
                     + "\"package\":\"java.io\",\"module\":\"java.base\"}}";
-            zos.putNextEntry(new ZipEntry("chunks.jsonl"));
+            zos.putNextEntry(new ZipEntry("25.0.3/chunks.jsonl"));
             zos.write(chunkLine.getBytes(StandardCharsets.UTF_8));
             zos.closeEntry();
         }
