@@ -5,7 +5,6 @@ import com.purrbyte.ai.test.IntegrationTest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -29,15 +28,12 @@ public class IngestionSearchIntegrationTest extends IntegrationTest {
     @Autowired
     private JdkSearchService searchService;
 
-    @TempDir
-    Path tempDir;
-
     @Value("${data.directory}")
     Path dataDirectory;
 
     @BeforeEach
     void setUp() throws IOException {
-        // Create test ZIP fixture at the configured output directory.
+        // Create a test ZIP fixture at the configured output directory.
         // The ZIP structure must match what DocumentationService.zipVersion produces:
         // a version-prefixed directory containing the JSON files.
         Path outputDir = dataDirectory;
@@ -79,7 +75,7 @@ public class IngestionSearchIntegrationTest extends IntegrationTest {
         ingestionService.ingest("25.0.3");
         List<JdkSearchResult> hits = searchService.search("25.0.3", "read bytes from a stream", 5);
         assertFalse(hits.isEmpty(), "expected vector hits for the ingested version");
-        // Version isolation: a version that was not ingested returns nothing.
+        // Version isolation: a version that was not ingested returns anything.
         assertTrue(searchService.search("21.0.1", "read bytes from a stream", 5).isEmpty());
     }
 }
