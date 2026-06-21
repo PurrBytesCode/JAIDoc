@@ -21,6 +21,7 @@ import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Generates JSON documentation for the JDK using the {@code JsonDoclet}.
@@ -54,7 +55,7 @@ public class DocumentationService {
     public DocumentationService(
             JdkDistributionDownloader jdkDistributionDownloader,
             @Value("${doclet.work.directory}") Path workDirectory,
-            @Value("${doclet.output.directory}") Path outputDirectory,
+            @Value("${data.directory}") Path outputDirectory,
             @Value("${doclet.modules:}") String modulesCsv,
             @Value("${doclet.jar.directory:doclet}") Path docletDirectory,
             @Value("${doclet.javadoc.home:}") String javadocHome) {
@@ -300,6 +301,50 @@ public class DocumentationService {
     }
 
     /**
+     * Compresses the version directory into a ZIP file at {@code data/<version>.zip}
+     * and deletes the original extracted directory. Idempotent: skips if ZIP already exists.
+     *
+     * @param versionDir the extracted version directory to compress
+     * @param version    the version string (used for ZIP filename)
+     */
+    void zipVersion(Path versionDir, String version) throws IOException {
+        Path zipPath = versionDir.resolveSibling(version + ".zip");
+        if (Files.exists(zipPath)) {
+            log.info("ZIP already exists at {}, skipping compression", zipPath);
+            return;
+        }
+        log.info("Compressing {} into {}", versionDir, zipPath);
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipPath))) {
+            Files.walk(versionDir).forEach(source -> {
+                try {
+                    String entryName = versionDir.relativize(source).toString();
+                    if (Files.isDirectory(source)) {
+                        zos.putNextEntry(new ZipEntry(entryName + "/"));
+                        zos.closeEntry();
+                    } else {
+                        zos.putNextEntry(new ZipEntry(entryName));
+                        Files.copy(source, zos);
+                        zos.closeEntry();
+                    }
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            });
+        }
+        // Delete the original directory after successful compression
+        Files.walk(versionDir)
+                .sorted(Comparator.reverseOrder())
+                .forEach(p -> {
+                    try {
+                        Files.delete(p);
+                    } catch (IOException e) {
+                        log.warn("Failed to delete {}: {}", p, e.getMessage());
+                    }
+                });
+        log.info("Compression complete: {}", zipPath);
+    }
+
+    /**
      * Resolves the modules to document: the configured list if any, otherwise every module found under
      * the source root (a directory is a module when it contains a {@code module-info.java}).
      */
@@ -319,8 +364,7 @@ public class DocumentationService {
         return modules;
     }
 
-    private Path runJavadocDoclet(Path moduleRoot, String version, List<String> modules,
-                                  Consumer<Progress> progressCallback) throws IOException {
+    private Path runJavadocDoclet(Path moduleRoot, String version, List<String> modules, Consumer<Progress> progressCallback) throws IOException {
         if (modules.isEmpty()) {
             throw new IOException("No modules found to document under " + moduleRoot);
         }
@@ -400,10 +444,10 @@ public class DocumentationService {
             log.warn("javadoc exited with code {} but index.json was produced; continuing with partial documentation",
                     exitCode);
         }
-        Path dataDir = outputDirectory.resolve(version);
-        Files.createDirectories(dataDir);
+        Path versionDir = outputDirectory.resolve(version);
+        Files.createDirectories(versionDir);
         try {
-            copyDirectory(tempOutputDir, dataDir);
+            copyDirectory(tempOutputDir, versionDir);
         } catch (IOException e) {
             throw new IOException("Failed to copy javadoc output to output directory: " + e.getMessage(), e);
         }
@@ -412,8 +456,10 @@ public class DocumentationService {
         } catch (IOException e) {
             log.warn("Failed to clean up temp dir {}: {}", tempOutputDir, e.getMessage());
         }
-        log.info("JDK documentation generated at {}", dataDir);
-        return dataDir;
+        // Compress the version directory into a ZIP and remove the extracted directory
+        zipVersion(versionDir, version);
+        log.info("JDK documentation generated at {}", versionDir);
+        return versionDir;
     }
 
     /**
@@ -512,11 +558,20 @@ public class DocumentationService {
      * @return sorted list of version strings
      */
     public List<String> listAvailableVersions() {
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(outputDirectory)) {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(outputDirectory, "*.zip")) {
             List<String> versions = new ArrayList<>();
-            for (Path entry : stream) {
-                if (Files.isDirectory(entry) && Files.exists(entry.resolve("index.json"))) {
-                    versions.add(entry.getFileName().toString());
+            for (Path zipEntry : stream) {
+                String name = zipEntry.getFileName().toString();
+                if (name.endsWith(".zip")) {
+                    String version = name.substring(0, name.length() - 4);
+                    // Verify the ZIP contains index.json
+                    try (ZipFile zf = new ZipFile(zipEntry.toFile())) {
+                        if (zf.getEntry("index.json") != null) {
+                            versions.add(version);
+                        }
+                    } catch (IOException e) {
+                        log.warn("Failed to read ZIP {}: {}", zipEntry, e.getMessage());
+                    }
                 }
             }
             Collections.sort(versions);
@@ -528,15 +583,15 @@ public class DocumentationService {
     }
 
     /**
-     * Returns the path for a specific version's documentation, or null if not found.
+     * Returns the path for a specific version's documentation ZIP, or null if not found.
      *
      * @param version JDK version
-     * @return path to the version directory, or null
+     * @return path to the version ZIP file, or null
      */
-    public Path getVersionDir(String version) {
-        Path versionDir = outputDirectory.resolve(version);
-        if (Files.exists(versionDir)) {
-            return versionDir;
+    public Path getVersionZip(String version) {
+        Path zipPath = outputDirectory.resolve(version + ".zip");
+        if (Files.exists(zipPath)) {
+            return zipPath;
         }
         return null;
     }
@@ -545,9 +600,18 @@ public class DocumentationService {
      * Checks if documentation has been generated for the specified version.
      *
      * @param version JDK version
-     * @return true if index.json exists for this version
+     * @return true if <version>.zip exists and contains index.json
      */
     public boolean isVersionGenerated(String version) {
-        return Files.exists(outputDirectory.resolve(version).resolve("index.json"));
+        Path zipPath = outputDirectory.resolve(version + ".zip");
+        if (!Files.exists(zipPath)) {
+            return false;
+        }
+        try (ZipFile zf = new ZipFile(zipPath.toFile())) {
+            return zf.getEntry("index.json") != null;
+        } catch (IOException e) {
+            log.warn("Failed to read ZIP {}: {}", zipPath, e.getMessage());
+            return false;
+        }
     }
 }

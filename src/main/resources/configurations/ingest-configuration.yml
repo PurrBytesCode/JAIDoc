@@ -1,0 +1,4 @@
+ingest:
+  enabled: ${INGEST_ENABLED:true}
+  scan:
+    auto: ${INGEST_AUTO_SCAN:true}

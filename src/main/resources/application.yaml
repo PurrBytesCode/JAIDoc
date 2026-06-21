@@ -7,6 +7,7 @@ spring:
       - configurations/ai-configuration.yml
       - configurations/db-configuration.yml
       - configurations/documentation-configuration.yml
+      - configurations/ingest-configuration.yml
       - configurations/logging-configuration.yml
       - configurations/mcp-configuration.yml
       - configurations/search-configuration.yml

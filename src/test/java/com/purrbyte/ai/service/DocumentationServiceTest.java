@@ -71,9 +71,7 @@ class DocumentationServiceTest extends UnitTest {
         @Test
         void oneVersionWithIndex_returnsIt() throws IOException {
             setupDirectories();
-            Path versionDir = outputDirectory.resolve("25.0.3");
-            Files.createDirectories(versionDir);
-            Files.writeString(versionDir.resolve("index.json"), "{}");
+            createTestZip(outputDirectory, "25.0.3", "index.json", "{}", "elements.json", "[]");
             DocumentationService service = createService();
             List<String> versions = service.listAvailableVersions();
             assertThat(versions).containsExactly("25.0.3");
@@ -82,12 +80,8 @@ class DocumentationServiceTest extends UnitTest {
         @Test
         void twoVersions_returnsSorted() throws IOException {
             setupDirectories();
-            Path v21Dir = outputDirectory.resolve("21.0.11");
-            Files.createDirectories(v21Dir);
-            Files.writeString(v21Dir.resolve("index.json"), "{}");
-            Path v25Dir = outputDirectory.resolve("25.0.3");
-            Files.createDirectories(v25Dir);
-            Files.writeString(v25Dir.resolve("index.json"), "{}");
+            createTestZip(outputDirectory, "21.0.11", "index.json", "{}", "elements.json", "[]");
+            createTestZip(outputDirectory, "25.0.3", "index.json", "{}", "elements.json", "[]");
             DocumentationService service = createService();
             List<String> versions = service.listAvailableVersions();
             assertThat(versions).containsExactly("21.0.11", "25.0.3");
@@ -96,9 +90,20 @@ class DocumentationServiceTest extends UnitTest {
         @Test
         void versionWithoutIndex_ignored() throws IOException {
             setupDirectories();
-            Path incompleteDir = outputDirectory.resolve("25.0.3");
-            Files.createDirectories(incompleteDir);
-            // No index.json — should be ignored
+            // Create a ZIP that does NOT contain index.json
+            createTestZip(outputDirectory, "25.0.3", "elements.json", "[]");
+            DocumentationService service = createService();
+            List<String> versions = service.listAvailableVersions();
+            assertThat(versions).isEmpty();
+        }
+
+        @Test
+        void nonZipFiles_ignored() throws IOException {
+            setupDirectories();
+            // Create a directory with index.json — should be ignored (only ZIPs are scanned)
+            Path versionDir = outputDirectory.resolve("25.0.3");
+            Files.createDirectories(versionDir);
+            Files.writeString(versionDir.resolve("index.json"), "{}");
             DocumentationService service = createService();
             List<String> versions = service.listAvailableVersions();
             assertThat(versions).isEmpty();
@@ -109,18 +114,18 @@ class DocumentationServiceTest extends UnitTest {
     class IsVersionGeneratedTest {
 
         @Test
-        void versionWithIndex_returnsTrue() throws IOException {
+        void versionWithZip_returnsTrue() throws IOException {
             setupDirectories();
-            Path versionDir = outputDirectory.resolve("25.0.3");
-            Files.createDirectories(versionDir);
-            Files.writeString(versionDir.resolve("index.json"), "{}");
+            createTestZip(outputDirectory, "25.0.3", "index.json", "{}", "elements.json", "[]");
             DocumentationService service = createService();
             assertThat(service.isVersionGenerated("25.0.3")).isTrue();
         }
 
         @Test
-        void versionWithoutIndex_returnsFalse() throws IOException {
+        void versionWithoutIndexInZip_returnsFalse() throws IOException {
             setupDirectories();
+            // ZIP exists but no index.json inside
+            createTestZip(outputDirectory, "25.0.3", "elements.json", "[]");
             DocumentationService service = createService();
             assertThat(service.isVersionGenerated("25.0.3")).isFalse();
         }
@@ -134,22 +139,22 @@ class DocumentationServiceTest extends UnitTest {
     }
 
     @Nested
-    class GetVersionDirTest {
+    class GetVersionZipTest {
 
         @Test
-        void existingVersion_returnsPath() throws IOException {
+        void existingVersion_returnsZipPath() throws IOException {
             setupDirectories();
-            Path versionDir = outputDirectory.resolve("25.0.3");
-            Files.createDirectories(versionDir);
+            createTestZip(outputDirectory, "25.0.3", "index.json", "{}", "elements.json", "[]");
             DocumentationService service = createService();
-            assertThat(service.getVersionDir("25.0.3")).isEqualTo(versionDir);
+            Path zipPath = outputDirectory.resolve("25.0.3.zip");
+            assertThat(service.getVersionZip("25.0.3")).isEqualTo(zipPath);
         }
 
         @Test
         void nonExistentVersion_returnsNull() throws IOException {
             setupDirectories();
             DocumentationService service = createService();
-            assertThat(service.getVersionDir("25.0.3")).isNull();
+            assertThat(service.getVersionZip("25.0.3")).isNull();
         }
     }
 
@@ -193,6 +198,22 @@ class DocumentationServiceTest extends UnitTest {
             Path evilFile = Path.of("/etc/evil.txt");
             assertThat(Files.exists(evilFile)).isFalse();
         }
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private Path createTestZip(Path dir, String version, String... entries) throws IOException {
+        Path zipFile = dir.resolve(version + ".zip");
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipFile))) {
+            for (int i = 0; i < entries.length; i += 2) {
+                String name = entries[i];
+                String content = entries[i + 1];
+                ZipEntry entry = new ZipEntry(name);
+                zos.putNextEntry(entry);
+                zos.write(content.getBytes(StandardCharsets.UTF_8));
+                zos.closeEntry();
+            }
+        }
+        return zipFile;
     }
 
     private DocumentationService createService() {
