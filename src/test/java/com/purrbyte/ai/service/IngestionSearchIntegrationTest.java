@@ -1,11 +1,9 @@
 package com.purrbyte.ai.service;
 
 import com.purrbyte.ai.model.dto.JdkSearchResult;
-import com.purrbyte.ai.test.BaseTest;
 import com.purrbyte.ai.test.IntegrationTest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
-@Tag(BaseTest.TAG_INTEGRATION)
 public class IngestionSearchIntegrationTest extends IntegrationTest {
 
     @Autowired

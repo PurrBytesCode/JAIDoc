@@ -333,7 +333,7 @@ final class TypeJsonBuilder {
                 s.put("line", lm.getLineNumber(pos));
             }
         } catch (RuntimeException ignored) {
-            // position not available (e.g. synthetic elements)
+            // position not available (e.g., synthetic elements)
         }
     }
 
