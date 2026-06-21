@@ -47,7 +47,7 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
                 distributionDownloader,
                 jdkVersionRepository,
                 Path.of("target/test-jdk-doc-workspace"),
-                Path.of("target/test-javadoc-output"),
+                Path.of("target/data"),
                 "java.base",
                 Path.of(System.getProperty("user.dir"), "doclet"),
                 ""
@@ -78,7 +78,7 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
                 distributionDownloader,
                 jdkVersionRepository,
                 Path.of("target/test-jdk-doc-workspace"),
-                Path.of("target/test-javadoc-output"),
+                Path.of("target/data"),
                 "java.base",
                 Path.of(System.getProperty("user.dir"), "doclet"),
                 ""
