@@ -17,6 +17,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -212,8 +213,7 @@ public class JdkDistributionDownloader {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record AdoptiumRelease(@JsonProperty("version_data") VersionData versionData,
-                           java.util.List<AdoptiumBinary> binaries) {
+    record AdoptiumRelease(@JsonProperty("version_data") VersionData versionData, List<AdoptiumBinary> binaries) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
