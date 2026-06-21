@@ -4,7 +4,9 @@ import jdk.javadoc.doclet.Doclet;
 import jdk.javadoc.doclet.DocletEnvironment;
 import jdk.javadoc.doclet.Reporter;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectWriter;
+import tools.jackson.databind.cfg.DateTimeFeature;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -29,7 +31,7 @@ import java.util.*;
  *       {@code com.sun.javadoc} API was removed in JDK 13.</li>
  *   <li>Jackson 3 ({@code tools.jackson.*}) requires Java 17, so the
  *       application must run with JDK 17 or higher (17, 21, 25, 27...).</li>
- *   <li>To document source code from Java 8 to 27 it is sufficient that the
+ *   <li>To document source code from Java 8 to 27, it is enough that the
  *       source code is compiled with {@code --release N} (or {@code -source N}).</li>
  * </ul>
  *
@@ -41,7 +43,7 @@ import java.util.*;
  *   <li>{@code module-<name>.json} — documentation for each module.</li>
  *   <li>{@code index.json} — manifest with all types/packages/modules.</li>
  *   <li>{@code chunks.jsonl} — one "chunk" per documented element (JSON line with
- *       flat id, text and metadata), ready to embed.</li>
+ *       flat id, text, and metadata), ready to embed.</li>
  * </ul>
  */
 @Slf4j
@@ -157,7 +159,10 @@ public class JsonDoclet implements Doclet {
     public boolean run(DocletEnvironment env) {
         try {
             Files.createDirectories(outputDir);
-            JsonMapper mapper = JsonMapper.builder().build();
+            JsonMapper mapper = JsonMapper.builder()
+                    .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+                    .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                    .build();
             ObjectWriter writer = pretty ? mapper.writerWithDefaultPrettyPrinter() : mapper.writer();
             Path chunksPath = chunksFile != null ? chunksFile : outputDir.resolve("chunks.jsonl");
             try (ChunkWriter chunks = noChunks ? null : new ChunkWriter(chunksPath, mapper, maxChunkChars, chunkOverlap, onlyDocumented)) {

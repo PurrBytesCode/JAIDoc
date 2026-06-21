@@ -37,7 +37,7 @@ final class ChunkWriter implements Closeable {
         this.out = Files.newBufferedWriter(file, StandardCharsets.UTF_8);
         this.mapper = mapper;
         this.maxChars = Math.max(500, maxChars);
-        this.overlap = Math.max(0, Math.min(overlap, this.maxChars / 2));
+        this.overlap = Math.clamp(overlap, 0, this.maxChars / 2);
         this.onlyDocumented = onlyDocumented;
     }
 
@@ -58,7 +58,7 @@ final class ChunkWriter implements Closeable {
                 }
                 line.put("text", parts.get(i));
                 line.set("metadata", meta);
-                out.write(mapper.writeValueAsString(line));
+                out.write(line.toString());
                 out.write('\n');
                 count++;
             }

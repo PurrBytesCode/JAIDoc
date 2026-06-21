@@ -2,12 +2,10 @@ package com.purrbyte.ai.service;
 
 import com.purrbyte.ai.model.dto.Progress;
 import com.purrbyte.ai.repository.JdkVersionRepository;
-import com.purrbyte.ai.test.BaseTest;
 import com.purrbyte.ai.test.IntegrationTest;
 import com.purrbyte.ai.util.JdkDistributionDownloader;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -31,7 +29,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * {@code -Dtest.integration.enabled=true}. The download test additionally needs network access.
  */
 @Slf4j
-@Tag(BaseTest.TAG_INTEGRATION)
 class DocumentationServiceIntegrationTest extends IntegrationTest {
 
     @Autowired

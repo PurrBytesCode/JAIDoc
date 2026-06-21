@@ -1,14 +1,11 @@
 package com.purrbyte.ai.doclet;
 
-import com.purrbyte.ai.test.BaseTest;
 import com.purrbyte.ai.test.UnitTest;
 import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Tag(BaseTest.TAG_UNIT)
 class DocTreeJsonTest extends UnitTest {
 
     @Test

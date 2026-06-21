@@ -25,7 +25,7 @@ import java.util.Set;
  * </ul>
  *
  * <p>Forward compatibility: nodes whose type does not exist in JDK 17
- * (e.g. {@code SNIPPET} from JDK 18, {@code SPEC} from JDK 20 or Markdown text
+ * (e.g. {@code SNIPPET} from JDK 18, {@code SPEC} from JDK 20, or Markdown text
  * from JDK 23+) are serialized generically with their {@code kind} and
  * {@code toString()}, so the doclet works unchanged on JDK 18..27.
  */
@@ -64,7 +64,7 @@ final class DocTreeJson {
     }
 
     /**
-     * Complete plain text (body + block tags) for embeddings.
+     * Complete plain text (body and block tags) for embeddings.
      */
     String fullText(DocTrees trees, Element e) {
         DocCommentTree dct = trees.getDocCommentTree(e);
