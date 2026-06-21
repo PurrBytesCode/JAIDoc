@@ -27,7 +27,7 @@ public class JdkSearchService {
         return session.search(JdkDocChunk.class)
                 .select(f -> f.composite()
                         .from(f.entity(), f.score())
-                        .as((chunk, score) -> toResult((JdkDocChunk) chunk, score)))
+                        .as(this::toResult))
                 .where(f -> f.knn(topK)
                         .field("embedding")
                         .matching(queryVector)

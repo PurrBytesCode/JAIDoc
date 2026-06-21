@@ -150,7 +150,7 @@ public class IngestionService {
     }
 
     /**
-     * Returns true if the element was persisted, false if it was skipped (e.g. missing 'kind' field).
+     * Returns true if the element was persisted, false if it was skipped (e.g., missing 'kind' field).
      */
     private boolean persistElementFromJson(JdkVersion v, String json) {
         JsonNode node = jsonMapper.readTree(json);
