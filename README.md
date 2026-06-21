@@ -48,7 +48,7 @@ mvn clean package
 ### Run
 
 ```bash
-java -jar target/jaidoc-0.2.0.jar
+java -jar target/jaidoc-1.0.0.jar
 ```
 
 ### Embedding Model
