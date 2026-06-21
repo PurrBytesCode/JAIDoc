@@ -156,7 +156,7 @@ public class IngestionService {
         JdkDocElement jdkDocElement = JdkDocElement.builder()
                 .jdkVersion(jdkVersion)
                 .rawJson(json)
-                .kind(kind.equals("TYPE") ? ElementKind.TYPE : ElementKind.valueOf(kind))
+                .kind("MODULE".equals(kind) || "PACKAGE".equals(kind) ? ElementKind.valueOf(kind) : ElementKind.TYPE)
                 .qualifiedId(qualifiedId)
                 .simpleName((kind.equals("TYPE")) ? name : null)
                 .packageName((kind.equals("TYPE")) ? str(node, "package") : (kind.equals("PACKAGE") ? name : null))
