@@ -27,6 +27,7 @@ onnx/*.json
 *.mv.db
 *.trace.db
 *.sqlite
+*.sqlite-journal
 
 ### STS ###
 .apt_generated

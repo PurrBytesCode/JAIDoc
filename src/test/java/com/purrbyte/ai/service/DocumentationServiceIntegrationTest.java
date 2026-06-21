@@ -1,6 +1,7 @@
 package com.purrbyte.ai.service;
 
 import com.purrbyte.ai.model.dto.Progress;
+import com.purrbyte.ai.repository.JdkVersionRepository;
 import com.purrbyte.ai.test.BaseTest;
 import com.purrbyte.ai.test.IntegrationTest;
 import com.purrbyte.ai.util.JdkDistributionDownloader;
@@ -36,6 +37,9 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
     @Autowired
     private JdkDistributionDownloader distributionDownloader;
 
+    @Autowired
+    private JdkVersionRepository jdkVersionRepository;
+
     private final Consumer<Progress> progressCallback = progress -> log.info("Progress [{}]: {}%", progress.getModule(), progress.getPercentage());
 
     @Test
@@ -43,6 +47,7 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
     void generateJdkDocumentation_jdk25_0_3_producesJsonOutput() throws ExecutionException, InterruptedException {
         var service = new DocumentationService(
                 distributionDownloader,
+                jdkVersionRepository,
                 Path.of("target/test-jdk-doc-workspace"),
                 Path.of("target/test-javadoc-output"),
                 "java.base",
@@ -73,6 +78,7 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
         String version = "21.0.11";
         var service = new DocumentationService(
                 distributionDownloader,
+                jdkVersionRepository,
                 Path.of("target/test-jdk-doc-workspace"),
                 Path.of("target/test-javadoc-output"),
                 "java.base",

@@ -1,6 +1,7 @@
 package com.purrbyte.ai.service;
 
 import com.purrbyte.ai.model.dto.Progress;
+import com.purrbyte.ai.repository.JdkVersionRepository;
 import com.purrbyte.ai.util.JdkDistributionDownloader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -46,6 +47,7 @@ public class DocumentationService {
 
     private final Executor documentationExecutor = Executors.newVirtualThreadPerTaskExecutor();
     private final JdkDistributionDownloader jdkDistributionDownloader;
+    private final JdkVersionRepository jdkVersionRepository;
     private final Path workDirectory;
     private final Path outputDirectory;
     private final Path docletDirectory;
@@ -54,12 +56,14 @@ public class DocumentationService {
 
     public DocumentationService(
             JdkDistributionDownloader jdkDistributionDownloader,
+            JdkVersionRepository jdkVersionRepository,
             @Value("${doclet.work.directory}") Path workDirectory,
             @Value("${data.directory}") Path outputDirectory,
             @Value("${doclet.modules:}") String modulesCsv,
             @Value("${doclet.jar.directory:doclet}") Path docletDirectory,
             @Value("${doclet.javadoc.home:}") String javadocHome) {
         this.jdkDistributionDownloader = jdkDistributionDownloader;
+        this.jdkVersionRepository = jdkVersionRepository;
         this.workDirectory = workDirectory;
         this.outputDirectory = outputDirectory;
         this.docletDirectory = docletDirectory;
@@ -553,65 +557,79 @@ public class DocumentationService {
     }
 
     /**
-     * Lists available JDK versions that have been generated.
+     * Lists available JDK versions that have been generated and ingested.
      *
-     * @return sorted list of version strings
+     * <p>Reads from the database (only versions with READY ingest status) instead of
+     * scanning the filesystem, which is faster and more reliable.
+     *
+     * @return list of version strings ordered from newest major to oldest
      */
     public List<String> listAvailableVersions() {
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(outputDirectory, "*.zip")) {
-            List<String> versions = new ArrayList<>();
-            for (Path zipEntry : stream) {
-                String name = zipEntry.getFileName().toString();
-                if (name.endsWith(".zip")) {
-                    String version = name.substring(0, name.length() - 4);
-                    // Verify the ZIP contains index.json
-                    try (ZipFile zf = new ZipFile(zipEntry.toFile())) {
-                        if (zf.getEntry("index.json") != null) {
-                            versions.add(version);
-                        }
-                    } catch (IOException e) {
-                        log.warn("Failed to read ZIP {}: {}", zipEntry, e.getMessage());
-                    }
-                }
-            }
-            Collections.sort(versions);
-            return versions;
-        } catch (IOException e) {
-            log.warn("Failed to list available versions: {}", e.getMessage());
-            return Collections.emptyList();
-        }
+        return jdkVersionRepository.findAllVersionStringsOrderByMajorDesc();
     }
 
     /**
      * Returns the path for a specific version's documentation ZIP, or null if not found.
+     * Searches recursively under the configured data directory.
      *
      * @param version JDK version
      * @return path to the version ZIP file, or null
      */
     public Path getVersionZip(String version) {
-        Path zipPath = outputDirectory.resolve(version + ".zip");
-        if (Files.exists(zipPath)) {
-            return zipPath;
+        try (var stream = Files.walk(outputDirectory)) {
+            return stream
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().equals(version + ".zip"))
+                    .findFirst()
+                    .orElse(null);
+        } catch (IOException e) {
+            log.warn("Failed to list data directory {}: {}", outputDirectory, e.getMessage());
+            return null;
         }
-        return null;
     }
 
     /**
      * Checks if documentation has been generated for the specified version.
+     * Searches recursively under the configured data directory.
      *
      * @param version JDK version
      * @return true if <version>.zip exists and contains index.json
      */
     public boolean isVersionGenerated(String version) {
-        Path zipPath = outputDirectory.resolve(version + ".zip");
-        if (!Files.exists(zipPath)) {
+        Path zipPath;
+        try (var stream = Files.walk(outputDirectory)) {
+            zipPath = stream
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().equals(version + ".zip"))
+                    .findFirst()
+                    .orElse(null);
+        } catch (IOException e) {
+            log.warn("Failed to list data directory {}: {}", outputDirectory, e.getMessage());
+            return false;
+        }
+        if (zipPath == null) {
             return false;
         }
         try (ZipFile zf = new ZipFile(zipPath.toFile())) {
-            return zf.getEntry("index.json") != null;
+            return findZipEntry(zf, "index.json") != null;
         } catch (IOException e) {
             log.warn("Failed to read ZIP {}: {}", zipPath, e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Finds a ZIP entry by filename, searching recursively (entries may be under a version-prefixed directory).
+     */
+    private static ZipEntry findZipEntry(ZipFile zipFile, String name) throws IOException {
+        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+        while (entries.hasMoreElements()) {
+            ZipEntry entry = entries.nextElement();
+            String entryName = entry.getName();
+            if (entryName.equals(name) || entryName.endsWith("/" + name)) {
+                return entry;
+            }
+        }
+        return null;
     }
 }
