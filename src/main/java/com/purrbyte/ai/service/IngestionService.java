@@ -9,7 +9,6 @@ import com.purrbyte.ai.repository.JdkDocChunkRepository;
 import com.purrbyte.ai.repository.JdkDocElementRepository;
 import com.purrbyte.ai.repository.JdkVersionRepository;
 import com.purrbyte.ai.util.JdkDistributionDownloader;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,7 +33,6 @@ public class IngestionService {
 
     private static final int BATCH_SIZE = 200;
 
-    private final EntityManager em;
     private final DocumentationService documentationService;
     private final EmbeddingService embeddingService;
     private final JdkVersionRepository versionRepository;
@@ -50,14 +48,11 @@ public class IngestionService {
         if (zipPath == null) {
             throw new IOException("No generated documentation found for version " + version);
         }
-        // Idempotent: drop any prior ingest of this version (cascade removes elements + chunks).
-        versionRepository.findByVersion(version).ifPresent(versionRepository::delete);
-        // Clear the Hibernate session after the delete to prevent stale actions from corrupting
-        // the session state. Without this, the next save() may try to UPDATE instead of INSERT
-        // because the session still has unprocessed delete actions.
-        versionRepository.flush();
-        em.clear();
-        JdkVersion jdkVersion;
+        JdkVersion jdkVersion = versionRepository.findByVersion(version).orElse(null);
+        if (jdkVersion != null) {
+            log.info("Version {} already exists, returning existing version (status={})", version, jdkVersion.getStatus());
+            return jdkVersion;
+        }
         try (ZipFile zipFile = new ZipFile(zipPath.toFile())) {
             long t0 = System.nanoTime();
             log.info("[{}/manifest] Reading manifest from ZIP", version);
@@ -78,7 +73,7 @@ public class IngestionService {
                 jdkVersion.setStatus(IngestStatus.READY);
                 jdkVersion.setIngestedAt(Instant.now());
                 log.info("Ingested JDK {}: {} chunks ({}ms)", version, jdkVersion.getChunkCount(), elapsedMs(t2));
-                log.info("Total ingest for JDK {}: {} ({}ms)", version, formatDuration(totalStart, System.nanoTime()), elapsedMs(totalStart));
+                log.info("Total ingest for JDK {}: {} ({}ms)", version, formatDuration(totalStart), elapsedMs(totalStart));
             } catch (RuntimeException | IOException e) {
                 jdkVersion.setStatus(IngestStatus.FAILED);
                 log.error("Ingestion failed for {}: {} ({})", version, e.getMessage(), elapsedMs(totalStart), e);
@@ -255,7 +250,7 @@ public class IngestionService {
     /**
      * Formats elapsed time as a human-readable string.
      */
-    private static String formatDuration(long startNanos, long endNanos) {
+    private static String formatDuration(long startNanos) {
         long elapsedMs = elapsedMs(startNanos);
         if (elapsedMs < 1000) {
             return elapsedMs + "ms";
