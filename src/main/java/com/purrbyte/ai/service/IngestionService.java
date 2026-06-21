@@ -9,6 +9,7 @@ import com.purrbyte.ai.repository.JdkDocChunkRepository;
 import com.purrbyte.ai.repository.JdkDocElementRepository;
 import com.purrbyte.ai.repository.JdkVersionRepository;
 import com.purrbyte.ai.util.JdkDistributionDownloader;
+import com.purrbyte.ai.util.ZIPHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -45,7 +46,7 @@ public class IngestionService {
 
     @Transactional
     public JdkVersion ingest(String version) throws IOException {
-        long totalStart = System.nanoTime();
+        long totalStart = System.currentTimeMillis();
         log.info("Starting ingest for JDK {} (ZIP: {})", version, documentationService.getVersionZip(version));
         Path zipPath = documentationService.getVersionZip(version);
         if (zipPath == null) {
@@ -58,7 +59,7 @@ public class IngestionService {
             return jdkVersion;
         }
         try (ZipFile zipFile = new ZipFile(zipPath.toFile())) {
-            long t0 = System.nanoTime();
+            long t0 = System.currentTimeMillis();
             log.info("[{}/manifest] Reading manifest from ZIP", version);
             jdkVersion = readManifestFromZip(version, zipFile);
             jdkVersion.setStatus(IngestStatus.READY);
@@ -69,66 +70,50 @@ public class IngestionService {
                     jdkVersion.getTypeCount(), jdkVersion.getChunkCount(), elapsedMs(t0));
             try {
                 log.info("[{}/elements] Ingesting structural elements from ZIP", version);
-                long startTimeNano = System.nanoTime();
+                long startTime = System.currentTimeMillis();
                 ingestElementsFromZip(jdkVersion, zipFile, jdkVersion.getTypeCount() + jdkVersion.getPackageCount() + jdkVersion.getModuleCount(), t0);
-                log.info("[{}/elements] Structural elements ingested ({}ms)", version, elapsedMs(startTimeNano));
+                log.info("[{}/elements] Structural elements ingested ({}ms)", version, elapsedMs(startTime));
                 log.info("[{}/chunks] Ingesting {} chunks and generating embeddings (ZIP: {})", version, jdkVersion.getChunkCount(), documentationService.getVersionZip(version));
-                long endTimeNano = System.nanoTime();
-                ingestChunksFromZip(jdkVersion, zipFile, jdkVersion.getChunkCount(), startTimeNano);
-                log.info("Ingested JDK {}: {} chunks ({}ms)", version, jdkVersion.getChunkCount(), elapsedMs(endTimeNano));
-                log.info("Total ingest for JDK {}: {} ({}ms)", version, formatDuration(totalStart), elapsedMs(totalStart));
+                long endTime = System.currentTimeMillis();
+                ingestChunksFromZip(jdkVersion, zipFile, jdkVersion.getChunkCount(), startTime);
+                log.info("Ingested JDK {}: {} chunks ({}ms)", version, jdkVersion.getChunkCount(), elapsedMs(endTime));
             } catch (RuntimeException | IOException e) {
                 jdkVersion.setStatus(IngestStatus.FAILED);
                 log.error("Ingestion failed for {}: {} ({})", version, e.getMessage(), elapsedMs(totalStart), e);
                 throw e;
             }
+            log.info("Total ingest for JDK {}: {} ({}ms)", version, formatDuration(totalStart), elapsedMs(totalStart));
         }
         return jdkVersion;
     }
 
-    /**
-     * Finds a ZIP entry by filename, searching recursively (entries may be under a version-prefixed directory).
-     */
-    private ZipEntry findZipEntry(ZipFile zipFile, String name) {
-        Enumeration<? extends ZipEntry> entries = zipFile.entries();
-        while (entries.hasMoreElements()) {
-            ZipEntry entry = entries.nextElement();
-            String entryName = entry.getName();
-            if (entryName.equals(name) || entryName.endsWith("/" + name)) {
-                return entry;
-            }
-        }
-        return null;
-    }
 
     private JdkVersion readManifestFromZip(String version, ZipFile zipFile) throws IOException {
-        ZipEntry indexEntry = findZipEntry(zipFile, "index.json");
+        ZipEntry indexEntry = ZIPHelper.findZipEntry(zipFile, "index.json");
         if (indexEntry == null) {
             throw new IOException("index.json not found in ZIP for version " + version);
         }
         byte[] bytes = zipFile.getInputStream(indexEntry).readAllBytes();
         JsonNode root = jsonMapper.readTree(bytes);
         int[] parsed = JdkDistributionDownloader.parseVersion(version); // {major, minor, security}
-        JdkVersion jdkVersion = new JdkVersion();
-        jdkVersion.setVersion(version);
-        jdkVersion.setMajor(parsed[0]);
-        jdkVersion.setMinor(parsed[1]);
-        jdkVersion.setSecurity(parsed[2]);
-        jdkVersion.setJavaRuntime(str(root, "javaRuntime"));
-        jdkVersion.setGenerator(str(root, "generator"));
         String generatedAt = str(root, "generatedAt");
-        if (generatedAt != null) {
-            Instant instantParsed = Instant.parse(generatedAt);
-            jdkVersion.setGeneratedAt(LocalDateTime.ofInstant(instantParsed, ZoneId.systemDefault()));
-        }
-        jdkVersion.setTypeCount(root.path("typeCount").asInt());
-        jdkVersion.setChunkCount(root.path("chunkCount").asInt());
-        jdkVersion.setPackageCount(root.path("packages").size());
-        jdkVersion.setModuleCount(root.path("modules").size());
-        return jdkVersion;
+        Instant instantParsed = (generatedAt != null) ? Instant.parse(generatedAt) : null;
+        return JdkVersion.builder()
+                .version(version)
+                .major(parsed[0])
+                .minor(parsed[1])
+                .security(parsed[2])
+                .javaRuntime(str(root, "javaRuntime"))
+                .generator(str(root, "generator"))
+                .generatedAt((instantParsed != null) ? LocalDateTime.ofInstant(instantParsed, ZoneId.systemDefault()) : null)
+                .typeCount(root.path("typeCount").asInt())
+                .chunkCount(root.path("chunkCount").asInt())
+                .packageCount(root.path("packages").size())
+                .moduleCount(root.path("modules").size())
+                .build();
     }
 
-    private void ingestElementsFromZip(JdkVersion jdkVersion, ZipFile zipFile, int totalExpected, long startNanos) throws IOException {
+    private void ingestElementsFromZip(JdkVersion jdkVersion, ZipFile zipFile, int totalExpected, long startMillis) throws IOException {
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
         int total = 0;
         int persisted = 0;
@@ -143,12 +128,12 @@ public class IngestionService {
                     persisted++;
                 }
                 if (total % BATCH_SIZE == 0) {
-                    log.info("[{}/elements] Processed {} / {} entries, persisted {} elements ({}ms elapsed)", jdkVersion.getVersion(), total, totalExpected, persisted, elapsedMs(startNanos));
+                    log.info("[{}/elements] Processed {} / {} entries, persisted {} elements ({}ms elapsed)", jdkVersion.getVersion(), total, totalExpected, persisted, elapsedMs(startMillis));
                 }
             }
         }
         if (total > BATCH_SIZE && total % (BATCH_SIZE * 10) == 0) {
-            log.info("[{}/elements] Processed {} / {} entries, persisted {} elements ({}ms elapsed)", jdkVersion.getVersion(), total, totalExpected, persisted, elapsedMs(startNanos));
+            log.info("[{}/elements] Processed {} / {} entries, persisted {} elements ({}ms elapsed)", jdkVersion.getVersion(), total, totalExpected, persisted, elapsedMs(startMillis));
         }
     }
 
@@ -157,47 +142,39 @@ public class IngestionService {
      */
     private boolean persistElementFromJson(JdkVersion jdkVersion, String json) {
         JsonNode node = jsonMapper.readTree(json);
-        JdkDocElement jdkDocElement = new JdkDocElement();
-        jdkDocElement.setJdkVersion(jdkVersion);
-        jdkDocElement.setRawJson(json);
         String kind = node.path("kind").asString(null);
         if (kind == null) {
             log.debug("Skipping element without 'kind' field: {}", json);
             return false;
         }
-        switch (kind) {
-            case "MODULE" -> {
-                jdkDocElement.setKind(ElementKind.MODULE);
-                jdkDocElement.setModuleName(str(node, "name"));
-                jdkDocElement.setQualifiedId("module:" + str(node, "name"));
-            }
-            case "PACKAGE" -> {
-                jdkDocElement.setKind(ElementKind.PACKAGE);
-                jdkDocElement.setPackageName(str(node, "name"));
-                jdkDocElement.setQualifiedId(str(node, "name"));
-            }
-            default -> {
-                jdkDocElement.setKind(ElementKind.TYPE);
-                jdkDocElement.setSimpleName(str(node, "name"));
-                jdkDocElement.setPackageName(str(node, "package"));
-                jdkDocElement.setModuleName(str(node, "module"));
-                jdkDocElement.setQualifiedId(str(node, "qualifiedName"));
-            }
-        }
+        String name = str(node, "name");
+        String qualifiedId = switch (kind) {
+            case "MODULE" -> "module:" + name;
+            case "PACKAGE" -> name;
+            default -> str(node, "qualifiedName");
+        };
+        JdkDocElement jdkDocElement = JdkDocElement.builder()
+                .jdkVersion(jdkVersion)
+                .rawJson(json)
+                .kind(kind.equals("TYPE") ? ElementKind.TYPE : ElementKind.valueOf(kind))
+                .qualifiedId(qualifiedId)
+                .simpleName((kind.equals("TYPE")) ? name : null)
+                .packageName((kind.equals("TYPE")) ? str(node, "package") : (kind.equals("PACKAGE") ? name : null))
+                .moduleName((kind.equals("MODULE")) ? name : (kind.equals("TYPE") ? str(node, "module") : null))
+                .build();
         jdkDocElementRepository.save(jdkDocElement);
         return true;
     }
 
-    private void ingestChunksFromZip(JdkVersion jdkVersion, ZipFile zipFile, int totalChunks, long startNanos) throws IOException {
-        ZipEntry chunksEntry = findZipEntry(zipFile, "chunks.jsonl");
+    private void ingestChunksFromZip(JdkVersion jdkVersion, ZipFile zipFile, int totalChunks, long startMillis) throws IOException {
+        ZipEntry chunksEntry = ZIPHelper.findZipEntry(zipFile, "chunks.jsonl");
         if (chunksEntry == null) {
             log.info("[{}/chunks] No chunks.jsonl found in ZIP", jdkVersion.getVersion());
             return;
         }
         int count = 0;
         int skipped = 0;
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(zipFile.getInputStream(chunksEntry), StandardCharsets.UTF_8))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(zipFile.getInputStream(chunksEntry), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.isBlank()) {
@@ -205,41 +182,43 @@ public class IngestionService {
                 }
                 JsonNode node = jsonMapper.readTree(line);
                 JsonNode meta = node.path("metadata");
-                JdkDocChunk jdkDocChunk = new JdkDocChunk();
-                jdkDocChunk.setJdkVersion(jdkVersion);
-                jdkDocChunk.setVersion(jdkVersion.getVersion());
-                jdkDocChunk.setChunkId(node.path("id").asString(null));
-                jdkDocChunk.setText(node.path("text").asString(null));
-                jdkDocChunk.setEmbedding(embeddingService.embedPassage(jdkDocChunk.getText()));
-                jdkDocChunk.setKind(str(meta, "kind"));
-                jdkDocChunk.setQualifiedType(str(meta, "type"));
-                jdkDocChunk.setPackageName(str(meta, "package"));
-                jdkDocChunk.setModuleName(str(meta, "module"));
-                jdkDocChunk.setMember(str(meta, "member"));
-                jdkDocChunk.setSignature(str(meta, "signature"));
-                jdkDocChunk.setSince(str(meta, "since"));
-                jdkDocChunk.setDeprecated(meta.path("deprecated").asBoolean());
-                jdkDocChunk.setSourceFile(str(meta, "file"));
-                jdkDocChunk.setSourceLine(meta.path("line").asInt());
-                jdkDocChunk.setPart(meta.path("part").asInt());
-                jdkDocChunk.setParts(meta.path("parts").asInt());
-                jdkDocChunk.setParentChunkId(str(meta, "parentId"));
-                // Link to its owning structural element (enclosing type for members, else self).
+                String chunkId = node.path("id").asString(null);
+                String text = node.path("text").asString(null);
                 String ownerId = str(meta, "type");
                 if (ownerId == null) {
-                    ownerId = jdkDocChunk.getChunkId();
+                    ownerId = chunkId;
                 }
+                JdkDocChunk jdkDocChunk = JdkDocChunk.builder()
+                        .jdkVersion(jdkVersion)
+                        .version(jdkVersion.getVersion())
+                        .chunkId(chunkId)
+                        .text(text)
+                        .embedding(embeddingService.embedPassage(text))
+                        .kind(str(meta, "kind"))
+                        .qualifiedType(str(meta, "type"))
+                        .packageName(str(meta, "package"))
+                        .moduleName(str(meta, "module"))
+                        .member(str(meta, "member"))
+                        .signature(str(meta, "signature"))
+                        .since(str(meta, "since"))
+                        .deprecated(meta.path("deprecated").asBoolean())
+                        .sourceFile(str(meta, "file"))
+                        .sourceLine(meta.path("line").asInt())
+                        .part(meta.path("part").asInt())
+                        .parts(meta.path("parts").asInt())
+                        .parentChunkId(str(meta, "parentId"))
+                        .build();
                 jdkDocElementRepository.findByJdkVersionAndQualifiedId(jdkVersion, ownerId).ifPresent(jdkDocChunk::setJDKDocElement);
                 jdkDocChunkRepository.save(jdkDocChunk);
                 if (++count % BATCH_SIZE == 0) {
                     jdkDocChunkRepository.flush();
                 }
                 if (count > BATCH_SIZE && count % (BATCH_SIZE * 10) == 0) {
-                    log.info("[{}/chunks] Processed {} / {} chunks ({} skipped, {}ms elapsed)", jdkVersion.getVersion(), count, totalChunks, skipped, elapsedMs(startNanos));
+                    log.info("[{}/chunks] Processed {} / {} chunks ({} skipped, {}ms elapsed)", jdkVersion.getVersion(), count, totalChunks, skipped, elapsedMs(startMillis));
                 }
             }
         }
-        log.info("[{}/chunks] Chunk ingestion complete: {} / {} processed, {} skipped ({}ms elapsed)", jdkVersion.getVersion(), count, totalChunks, skipped, elapsedMs(startNanos));
+        log.info("[{}/chunks] Chunk ingestion complete: {} / {} processed, {} skipped ({}ms elapsed)", jdkVersion.getVersion(), count, totalChunks, skipped, elapsedMs(startMillis));
     }
 
     /**
@@ -247,14 +226,14 @@ public class IngestionService {
      */
     private static String str(JsonNode node, String field) {
         JsonNode value = node.path(field);
-        return value.isMissingNode() || value.isNull() ? null : value.asString("");
+        return value.isMissingNode() || value.isNull() ? null : value.asString(null);
     }
 
     /**
      * Formats elapsed time as a human-readable string.
      */
-    private static String formatDuration(long startNanos) {
-        long elapsedMs = elapsedMs(startNanos);
+    private static String formatDuration(long startMillis) {
+        long elapsedMs = elapsedMs(startMillis);
         if (elapsedMs < 1000) {
             return elapsedMs + "ms";
         }
@@ -267,7 +246,7 @@ public class IngestionService {
         return minutes + "m" + secs + "s";
     }
 
-    private static long elapsedMs(long startNanos) {
-        return (System.nanoTime() - startNanos) / 1_000_000L;
+    private static long elapsedMs(long startMillis) {
+        return System.currentTimeMillis() - startMillis;
     }
 }
