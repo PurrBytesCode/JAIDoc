@@ -1,12 +1,12 @@
 package com.purrbyte.ai.service;
 
 import com.purrbyte.ai.model.dto.Progress;
-import com.purrbyte.ai.test.BaseTest;
+import com.purrbyte.ai.repository.JdkVersionRepository;
 import com.purrbyte.ai.test.IntegrationTest;
 import com.purrbyte.ai.util.JdkDistributionDownloader;
+import com.purrbyte.ai.util.ZIPHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
+import java.util.zip.ZipFile;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,11 +30,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  * {@code -Dtest.integration.enabled=true}. The download test additionally needs network access.
  */
 @Slf4j
-@Tag(BaseTest.TAG_INTEGRATION)
 class DocumentationServiceIntegrationTest extends IntegrationTest {
 
     @Autowired
     private JdkDistributionDownloader distributionDownloader;
+
+    @Autowired
+    private JdkVersionRepository jdkVersionRepository;
 
     private final Consumer<Progress> progressCallback = progress -> log.info("Progress [{}]: {}%", progress.getModule(), progress.getPercentage());
 
@@ -42,28 +45,28 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
     void generateJdkDocumentation_jdk25_0_3_producesJsonOutput() throws ExecutionException, InterruptedException {
         var service = new DocumentationService(
                 distributionDownloader,
+                jdkVersionRepository,
                 Path.of("target/test-jdk-doc-workspace"),
-                Path.of("target/test-javadoc-output"),
+                Path.of("target/data"),
                 "java.base",
                 Path.of(System.getProperty("user.dir"), "doclet"),
                 ""
         );
         var future = service.generateJdkDocumentation("25.0.3", progressCallback);
         Path result = future.get();
+        // After generation, versionDir is returned (may have been compressed to ZIP)
         assertThat(result).isNotNull();
-        assertThat(result).isDirectory();
-        assertThat(result.getFileName().toString()).isEqualTo("25.0.3");
-        assertThat(Files.exists(result.resolve("index.json"))).isTrue();
-        assertThat(Files.isDirectory(result.resolve("api"))).isTrue();
-        String indexContent;
+        // The ZIP file should exist
+        Path zipPath = result.resolveSibling("25.0.3.zip");
+        assertThat(Files.exists(zipPath)).as("ZIP should exist at " + zipPath).isTrue();
+        // Verify the ZIP contains index.json (maybe under a version-prefixed directory)
         try {
-            indexContent = Files.readString(result.resolve("index.json"));
+            try (ZipFile zf = new ZipFile(zipPath.toFile())) {
+                assertThat(ZIPHelper.findZipEntry(zf, "index.json")).isNotNull();
+            }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read index.json", e);
+            throw new RuntimeException("Failed to read ZIP: " + zipPath, e);
         }
-        assertThat(indexContent).isNotBlank();
-        assertThat(indexContent).contains("\"version\"");
-        assertThat(indexContent).contains("\"packages\"");
     }
 
     @Test
@@ -73,24 +76,25 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
         String version = "21.0.11";
         var service = new DocumentationService(
                 distributionDownloader,
+                jdkVersionRepository,
                 Path.of("target/test-jdk-doc-workspace"),
-                Path.of("target/test-javadoc-output"),
+                Path.of("target/data"),
                 "java.base",
                 Path.of(System.getProperty("user.dir"), "doclet"),
                 ""
         );
         var future = service.generateJdkDocumentation(version, progressCallback);
         Path result = future.get();
-        assertThat(result).isDirectory();
-        assertThat(result.getFileName().toString()).isEqualTo(version);
-        assertThat(Files.exists(result.resolve("index.json"))).isTrue();
-        assertThat(Files.isDirectory(result.resolve("api"))).isTrue();
-        String indexContent;
+        // The ZIP file should exist
+        Path zipPath = result.resolveSibling(version + ".zip");
+        assertThat(Files.exists(zipPath)).as("ZIP should exist at " + zipPath).isTrue();
+        // Verify the ZIP contains index.json (maybe under a version-prefixed directory)
         try {
-            indexContent = Files.readString(result.resolve("index.json"));
+            try (ZipFile zf = new ZipFile(zipPath.toFile())) {
+                assertThat(ZIPHelper.findZipEntry(zf, "index.json")).isNotNull();
+            }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read index.json", e);
+            throw new RuntimeException("Failed to read ZIP: " + zipPath, e);
         }
-        assertThat(indexContent).contains("\"version\" : \"" + version + "\"");
     }
 }

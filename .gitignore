@@ -10,6 +10,9 @@ data.xml
 logs/
 .env
 
+### RUNTIME ###
+JdkDocChunk/
+
 ### AI ###
 .agents/
 .cline/
@@ -24,6 +27,7 @@ onnx/*.json
 *.mv.db
 *.trace.db
 *.sqlite
+*.sqlite-journal
 
 ### STS ###
 .apt_generated

@@ -13,8 +13,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EmbeddingService {
 
-    // multilingual-e5-small
-    static final int DIMENSION = 384;
     private static final String PASSAGE_PREFIX = "passage: ";
     private static final String QUERY_PREFIX = "query: ";
 

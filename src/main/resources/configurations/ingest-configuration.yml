@@ -1,0 +1,6 @@
+ingest:
+  enabled: ${INGEST_ENABLED:true}
+  scan:
+    auto: ${INGEST_AUTO_SCAN:true}
+  embed-parallelism: ${INGEST_EMBED_PARALLELISM:8}
+  embed-timeout: ${INGEST_EMBED_TIMEOUT:1800}

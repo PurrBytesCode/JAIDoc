@@ -6,11 +6,6 @@ spring:
     password: ${DB_PASSWORD}
   jpa:
     database-platform: org.hibernate.community.dialect.SQLiteDialect
-    defer-datasource-initialization: true
     hibernate:
       ddl-auto: create-only
-    show-sql: ${DB_SHOW_SQL:true}
-  sql:
-    init:
-      data-locations: classpath:/data/*.sql
-      mode: always
+    show-sql: ${DB_SHOW_SQL:false}

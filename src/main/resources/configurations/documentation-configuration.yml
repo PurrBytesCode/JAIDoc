@@ -4,11 +4,13 @@ jdk:
       # Directory where downloaded JDK distributions (for documenting non-running versions) are cached.
       directory: ${JDK_DIST_DOWNLOAD_DIR:./jdk-distributions}
 
+data:
+  # Unified directory for both doclet output and ingest discovery.
+  directory: ${DATA_DIR:./data}
+
 doclet:
   work:
     directory: ${DOCLET_WORK_DIR:./jdk-doc-workspace}
-  output:
-    directory: ${DOCLET_OUTPUT_DIR:./data}
   jar:
     # Directory containing JAIDoc-doclet.jar (passed to Javadoc via -docletpath).
     directory: ${DOCLET_JAR_DIR:./doclet}

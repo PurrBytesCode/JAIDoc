@@ -6,6 +6,8 @@ import lombok.*;
 import org.hibernate.search.engine.backend.types.VectorSimilarity;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 
+import java.util.UUID;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -17,8 +19,8 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 public class JdkDocChunk {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "jdk_version_id")

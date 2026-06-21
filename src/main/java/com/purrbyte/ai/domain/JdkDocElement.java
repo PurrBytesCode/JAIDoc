@@ -4,18 +4,20 @@ import com.purrbyte.ai.model.ElementKind;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.UUID;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Getter
 @Setter
 @Entity
-@Table(name = "jdk_doc_element", uniqueConstraints = @UniqueConstraint(columnNames = {"jdk_version_id", "qualified_id"}))
+@Table(name = "jdk_doc_element")
 public class JdkDocElement {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "jdk_version_id")

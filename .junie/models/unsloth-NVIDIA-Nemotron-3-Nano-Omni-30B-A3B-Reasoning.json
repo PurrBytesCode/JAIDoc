@@ -1,8 +1,0 @@
-{
-  "baseUrl": "http://localhost:11434/v1/chat/completions",
-  "id": "unsloth-NVIDIA-Nemotron-3-Nano-Omni-30B-A3B-Reasoning",
-  "apiType": "OpenAICompletion",
-  "primaryModel": {
-    "id": "unsloth-NVIDIA-Nemotron-3-Nano-Omni-30B-A3B-Reasoning"
-  }
-}

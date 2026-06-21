@@ -1,8 +1,0 @@
-{
-  "baseUrl": "http://localhost:11434/v1/responses",
-  "id": "hf-JetBrains-Mellum2-12B-A2.5B-Thinking-GGUF-Q4_K_M:Q4_K_M",
-  "apiType": "OpenAIResponses",
-  "primaryModel": {
-    "id": "hf-JetBrains-Mellum2-12B-A2.5B-Thinking-GGUF-Q4_K_M:Q4_K_M"
-  }
-}

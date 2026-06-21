@@ -1,15 +1,12 @@
 package com.purrbyte.ai;
 
-import com.purrbyte.ai.test.BaseTest;
 import com.purrbyte.ai.test.IntegrationTest;
 import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.metrics.buffering.BufferingApplicationStartup;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Tag(BaseTest.TAG_INTEGRATION)
 class JAIDocTest extends IntegrationTest {
 
     @Test

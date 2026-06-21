@@ -1,8 +1,0 @@
-{
-  "baseUrl": "http://localhost:11434/v1/responses",
-  "id": "hf-unsloth-gemma-4-12b-it-GGUF-IQ4_NL",
-  "apiType": "OpenAIResponses",
-  "primaryModel": {
-    "id": "hf-unsloth-gemma-4-12b-it-GGUF-IQ4_NL"
-  }
-}

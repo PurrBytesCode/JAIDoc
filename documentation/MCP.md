@@ -14,10 +14,55 @@ spring:
         protocol: streamable
 ```
 
-The `JavaDocMCP` component is auto-discovered by Spring AI's `MethodToolCallbackProvider`. Currently it is a
-placeholder — no `@Tool` methods are implemented yet. The planned tools are:
+MCP tools are organized by domain using `@Component` classes. Spring AI MCP Server automatically discovers all beans
+with `@Tool` methods and registers them — no additional registration is needed.
 
-#### JDK Javadoc Tools (planned)
+### Session Management
+
+The server runs in **streamable** mode: it maintains a session with the client using the `Mcp-Session-Id` header.
+The typical workflow is:
+
+1. **Initialize** — send an `initialize` JSON-RPC request to establish a session. The server responds with an
+   `Mcp-Session-Id` header.
+2. **Use tools** — include the `Mcp-Session-Id` header in all subsequent requests (`tools/list`, `tools/call`, etc.).
+3. **Session lifetime** — the server may close idle sessions automatically. Re-initialize if the session expires.
+
+When testing with IntelliJ's HTTP client, capture the `Mcp-Session-Id` from the `initialize` response and reuse it via
+environment variables.
+See `test/mcp-tools.http` for a complete working example.
+
+### MCP Domains
+
+| Domain       | Class           | Description                    | Status |
+|--------------|-----------------|--------------------------------|--------|
+| `java`       | `JavaDocMCP`    | JDK Javadoc search and listing | Active |
+| `springboot` | `SpringBootMCP` | Spring Boot documentation      | Active |
+
+### Adding a New Domain
+
+To add a new MCP domain:
+
+1. Create a new `@Component` class in the `com.purrbyte.ai.mcp` package
+2. Annotate `@Tool` methods within the class for each MCP tool you want to expose
+3. Spring AI MCP Server will automatically register these tools on startup
+
+Example structure:
+
+```java
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class SpringBootMCP {
+
+    @Tool(description = "Search Spring Boot documentation")
+    public String searchSpringBootDocs(String query) {
+        // implementation
+    }
+}
+```
+
+#### JDK Javadoc Tools
 
 | Tool            | Description                                                | Parameters                                                                                                 |
 |-----------------|------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|

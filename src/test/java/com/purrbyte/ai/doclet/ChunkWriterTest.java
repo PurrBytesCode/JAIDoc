@@ -1,9 +1,7 @@
 package com.purrbyte.ai.doclet;
 
-import com.purrbyte.ai.test.BaseTest;
 import com.purrbyte.ai.test.UnitTest;
 import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import tools.jackson.databind.node.ObjectNode;
@@ -14,13 +12,12 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Tag(BaseTest.TAG_UNIT)
 class ChunkWriterTest extends UnitTest {
 
     @TempDir
     Path tempDir;
 
-   /**
+    /**
      * ChunkWriter constructor enforces maxChars >= 500.
      * Use values > 500 to test splitting behavior.
      */

@@ -10,5 +10,15 @@
             "type": "git",
             "url": "https://github.com/JetBrains/junie-extensions"
         }
+    },
+    "github-anthropics-claude-plugins-official": {
+        "url": "https://github.com/anthropics/claude-plugins-official",
+        "extensions": [
+            "frontend-design"
+        ],
+        "source": {
+            "type": "git",
+            "url": "https://github.com/anthropics/claude-plugins-official"
+        }
     }
 }

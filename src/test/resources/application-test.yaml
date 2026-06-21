@@ -1,13 +1,11 @@
 jdk:
-  source:
-    download:
-      directory: target/test-jdk-source
   distribution:
     download:
       directory: target/test-jdk-distributions
-
+data:
+  directory: target/data
 doclet:
   work:
     directory: target/test-jdk-doc-workspace
-  output:
-    directory: target/test-javadoc-output
+  jar:
+    directory: target/test-jdk-doc-workspace/doclet

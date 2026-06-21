@@ -12,6 +12,12 @@ import java.nio.FloatBuffer;
 @Converter
 public class FloatArrayConverter implements AttributeConverter<float[], byte[]> {
 
+    /**
+     * Converts a {@code float[]} embedding to a byte array for storage in SQLite BLOB.
+     *
+     * @param attribute the float array embedding, or {@code null}
+     * @return the byte array representation, or {@code null} if input is {@code null}
+     */
     @Override
     public byte[] convertToDatabaseColumn(float[] attribute) {
         if (attribute == null) {
@@ -22,6 +28,12 @@ public class FloatArrayConverter implements AttributeConverter<float[], byte[]> 
         return buffer.array();
     }
 
+    /**
+     * Converts a byte array from SQLite BLOB back to a {@code float[]} embedding.
+     *
+     * @param dbData the byte array from the database, or {@code null}
+     * @return the float array, or {@code null} if input is {@code null}
+     */
     @Override
     public float[] convertToEntityAttribute(byte[] dbData) {
         if (dbData == null) {
