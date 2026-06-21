@@ -9,7 +9,7 @@ spring:
     defer-datasource-initialization: true
     hibernate:
       ddl-auto: create-only
-    show-sql: ${DB_SHOW_SQL:true}
+    show-sql: ${DB_SHOW_SQL:false}
   sql:
     init:
       data-locations: classpath:/data/*.sql
