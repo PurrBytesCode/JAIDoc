@@ -72,6 +72,7 @@ public class IngestDiscoveryService {
                         String fileName = zipPath.getFileName().toString();
                         String version = fileName.substring(0, fileName.length() - 4); // strip .zip
                         discoveredVersions.add(version);
+                        log.info("[discovery] Found ZIP for version {} at {}", version, zipPath);
                         processVersion(version);
                     });
             log.info("Ingest auto-discovery complete. Discovered {} version(s) with generated docs.", discoveredVersions.size());
@@ -99,7 +100,7 @@ public class IngestDiscoveryService {
             JdkVersion result = ingestionService.ingest(version);
             log.info("Successfully ingested version {} (status={}, chunks={})", result.getVersion(), result.getStatus(), result.getChunkCount());
         } catch (IOException e) {
-            log.error("Ingestion failed for version {}: {}", version, e.getMessage());
+            log.error("Ingestion failed for version {}: {}", version, e.getMessage(), e);
         } catch (Exception e) {
             log.error("Unexpected error processing version {}: {}", version, e.getMessage(), e);
         }
