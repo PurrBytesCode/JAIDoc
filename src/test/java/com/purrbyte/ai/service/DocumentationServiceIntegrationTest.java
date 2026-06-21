@@ -4,6 +4,7 @@ import com.purrbyte.ai.model.dto.Progress;
 import com.purrbyte.ai.repository.JdkVersionRepository;
 import com.purrbyte.ai.test.IntegrationTest;
 import com.purrbyte.ai.util.JdkDistributionDownloader;
+import com.purrbyte.ai.util.ZIPHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -58,10 +59,10 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
         // The ZIP file should exist
         Path zipPath = result.resolveSibling("25.0.3.zip");
         assertThat(Files.exists(zipPath)).as("ZIP should exist at " + zipPath).isTrue();
-        // Verify the ZIP contains index.json
+        // Verify the ZIP contains index.json (maybe under a version-prefixed directory)
         try {
             try (ZipFile zf = new ZipFile(zipPath.toFile())) {
-                assertThat(zf.getEntry("index.json")).isNotNull();
+                assertThat(ZIPHelper.findZipEntry(zf, "index.json")).isNotNull();
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to read ZIP: " + zipPath, e);
@@ -87,10 +88,10 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
         // The ZIP file should exist
         Path zipPath = result.resolveSibling(version + ".zip");
         assertThat(Files.exists(zipPath)).as("ZIP should exist at " + zipPath).isTrue();
-        // Verify the ZIP contains index.json
+        // Verify the ZIP contains index.json (maybe under a version-prefixed directory)
         try {
             try (ZipFile zf = new ZipFile(zipPath.toFile())) {
-                assertThat(zf.getEntry("index.json")).isNotNull();
+                assertThat(ZIPHelper.findZipEntry(zf, "index.json")).isNotNull();
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to read ZIP: " + zipPath, e);

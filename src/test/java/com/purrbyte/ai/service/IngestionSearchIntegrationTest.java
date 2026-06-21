@@ -56,7 +56,10 @@ public class IngestionSearchIntegrationTest extends IntegrationTest {
             zos.write(indexJson.getBytes(StandardCharsets.UTF_8));
             zos.closeEntry();
             // elements.json inside the version directory
-            String elementsJson = "[{\"kind\":\"MODULE\",\"name\":\"java.base\",\"qualifiedName\":\"java.base\"}]";
+            String elementsJson = """
+                    [{"kind":"MODULE","name":"java.base","qualifiedName":"java.base"},
+                     {"kind":"TYPE","name":"InputStream","qualifiedName":"java.io.InputStream","package":"java.io","module":"java.base"}]
+                    """;
             zos.putNextEntry(new ZipEntry("25.0.3/elements.json"));
             zos.write(elementsJson.getBytes(StandardCharsets.UTF_8));
             zos.closeEntry();
