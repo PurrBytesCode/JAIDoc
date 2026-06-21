@@ -39,7 +39,7 @@ JAIDoc/
     │   │   ├── configuration/       # JSON serialization config
     │   │   ├── doclet/              # JSON Javadoc serialization
     │   │   ├── domain/              # JPA entities (JdkVersion, JdkDocChunk, JdkDocElement)
-    │   │   ├── mcp/                 # MCP tool objects (JavaDocMCP)
+    │   │   ├── mcp/                 # MCP tool objects (JavaDocMCP, SpringBootMCP)
     │   │   ├── model/               # Domain models and DTOs
     │   │   │   ├── ElementKind.java          # Element categorization (CLASS, METHOD, FIELD, etc.)
     │   │   │   ├── IngestStatus.java         # Ingestion lifecycle state
@@ -50,6 +50,7 @@ JAIDoc/
     │   │   ├── service/             # Application services
     │   │   │   ├── DocumentationService.java  # JDK source → JSON pipeline (download, extract, javadoc, versioned output)
     │   │   │   ├── EmbeddingService.java      # Transformer embedding wrapper (e5 prefixes)
+    │   │   │   ├── IngestDiscoveryService.java # Auto-discovers and ingests JDK versions from the data directory on startup
     │   │   │   └── JdkSearchService.java      # Vector kNN search filtered by version
     │   │   └── util/                # Shared utilities
     │   └── resources/
@@ -80,16 +81,17 @@ JAIDoc/
 
 ## Configuration hierarchy
 
-`application.yaml` is the entry point; it imports 8 profile YAMLs:
+`application.yaml` is the entry point; it imports 9 profile YAMLs:
 
 1. **actuator-configuration.yml** — Actuator endpoints, health, loggers, env, configprops
 2. **ai-configuration.yml** — ONNX transformer model and tokenizer URIs for embeddings
 3. **db-configuration.yml** — SQLite datasource, Hibernate dialect, ddl-auto
 4. **documentation-configuration.yml** — JDK source download directory, doclet work/output directories
-5. **logging-configuration.yml** — Logback rolling policy, log file path
-6. **mcp-configuration.yml** — Spring AI MCP server (name, streamable protocol)
-7. **search-configuration.yml** — Hibernate Search Lucene backend (directory type, root, sync)
-8. **springdoc-configuration.yml** — OpenAPI/Swagger UI toggles
+5. **ingest-configuration.yml** — Ingest auto-discovery configuration
+6. **logging-configuration.yml** — Logback rolling policy, log file path
+7. **mcp-configuration.yml** — Spring AI MCP server (name, streamable protocol)
+8. **search-configuration.yml** — Hibernate Search Lucene backend (directory type, root, sync)
+9. **springdoc-configuration.yml** — OpenAPI/Swagger UI toggles
 
 All values use environment variable placeholders for flexibility.
 

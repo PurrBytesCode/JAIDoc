@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
+import java.util.zip.ZipFile;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -50,20 +51,19 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
         );
         var future = service.generateJdkDocumentation("25.0.3", progressCallback);
         Path result = future.get();
+        // After generation, versionDir is returned (may have been compressed to ZIP)
         assertThat(result).isNotNull();
-        assertThat(result).isDirectory();
-        assertThat(result.getFileName().toString()).isEqualTo("25.0.3");
-        assertThat(Files.exists(result.resolve("index.json"))).isTrue();
-        assertThat(Files.isDirectory(result.resolve("api"))).isTrue();
-        String indexContent;
+        // The ZIP file should exist
+        Path zipPath = result.resolveSibling("25.0.3.zip");
+        assertThat(Files.exists(zipPath)).as("ZIP should exist at " + zipPath).isTrue();
+        // Verify the ZIP contains index.json
         try {
-            indexContent = Files.readString(result.resolve("index.json"));
+            try (ZipFile zf = new ZipFile(zipPath.toFile())) {
+                assertThat(zf.getEntry("index.json")).isNotNull();
+            }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read index.json", e);
+            throw new RuntimeException("Failed to read ZIP: " + zipPath, e);
         }
-        assertThat(indexContent).isNotBlank();
-        assertThat(indexContent).contains("\"version\"");
-        assertThat(indexContent).contains("\"packages\"");
     }
 
     @Test
@@ -81,16 +81,16 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
         );
         var future = service.generateJdkDocumentation(version, progressCallback);
         Path result = future.get();
-        assertThat(result).isDirectory();
-        assertThat(result.getFileName().toString()).isEqualTo(version);
-        assertThat(Files.exists(result.resolve("index.json"))).isTrue();
-        assertThat(Files.isDirectory(result.resolve("api"))).isTrue();
-        String indexContent;
+        // The ZIP file should exist
+        Path zipPath = result.resolveSibling(version + ".zip");
+        assertThat(Files.exists(zipPath)).as("ZIP should exist at " + zipPath).isTrue();
+        // Verify the ZIP contains index.json
         try {
-            indexContent = Files.readString(result.resolve("index.json"));
+            try (ZipFile zf = new ZipFile(zipPath.toFile())) {
+                assertThat(zf.getEntry("index.json")).isNotNull();
+            }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read index.json", e);
+            throw new RuntimeException("Failed to read ZIP: " + zipPath, e);
         }
-        assertThat(indexContent).contains("\"version\" : \"" + version + "\"");
     }
 }

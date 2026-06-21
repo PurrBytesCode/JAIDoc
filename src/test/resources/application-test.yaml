@@ -6,8 +6,9 @@ jdk:
     download:
       directory: target/test-jdk-distributions
 
+data:
+  directory: target/test-javadoc-output
+
 doclet:
   work:
     directory: target/test-jdk-doc-workspace
-  output:
-    directory: target/test-javadoc-output
