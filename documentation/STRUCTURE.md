@@ -41,11 +41,13 @@ JAIDoc/
     │   │   ├── domain/              # JPA entities (JdkVersion, JdkDocChunk, JdkDocElement)
     │   │   ├── mcp/                 # MCP tool objects (JavaDocMCP, SpringBootMCP)
     │   │   ├── model/               # Domain models and DTOs
-    │   │   │   ├── ElementKind.java          # Element categorization (CLASS, METHOD, FIELD, etc.)
+    │   │   │   ├── ElementKind.java          # Element categorization (MODULE, PACKAGE, TYPE)
     │   │   │   ├── IngestStatus.java         # Ingestion lifecycle state
     │   │   │   ├── converter/                # JPA attribute converters
     │   │   │   │   └── FloatArrayConverter.java   # float[] ↔ SQLite BLOB mapping
     │   │   │   └── dto/                      # Data transfer objects
+    │   │   │       ├── JdkSearchResult.java  # kNN search result DTO
+    │   │   │       └── Progress.java         # Pipeline progress update DTO
     │   │   ├── repository/          # Spring Data JPA repositories
     │   │   ├── service/             # Application services
     │   │   │   ├── DocumentationService.java  # JDK source → JSON pipeline (download, extract, javadoc, versioned output)
