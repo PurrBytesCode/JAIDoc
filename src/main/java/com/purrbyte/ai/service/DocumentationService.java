@@ -262,15 +262,12 @@ public class DocumentationService {
     /**
      * Extracts a source zip into {@code <work>/jdk-sources/<version>} with zip-slip protection.
      * The extraction is idempotent: if the directory already exists it is reused.
-     *
-     * @return the extract directory, which is the {@code --module-source-path} root (its immediate
-     * subdirectories are JDK modules)
      */
-    private Path extractSourceZip(Path zipFile, String version, Consumer<Double> progressCallback) throws IOException {
+    private void extractSourceZip(Path zipFile, String version, Consumer<Double> progressCallback) throws IOException {
         Path extractDir = workDirectory.resolve("jdk-sources").resolve(version);
         if (Files.exists(extractDir)) {
             log.info("Source already extracted at {}", extractDir);
-            return extractDir;
+            return;
         }
         Files.createDirectories(extractDir);
         int totalEntries;
@@ -301,7 +298,6 @@ public class DocumentationService {
             }
         }
         log.info("JDK source extracted to: {}", extractDir);
-        return extractDir;
     }
 
     /**
