@@ -37,18 +37,18 @@ import java.util.Optional;
 public class IngestDiscoveryService {
 
     private final IngestionService ingestionService;
-    private final JdkVersionRepository versionRepository;
+    private final JdkVersionRepository jdkVersionRepository;
 
     private final Path dataDirectory;
     private final boolean autoScanEnabled;
 
     public IngestDiscoveryService(IngestionService ingestionService,
-                                  JdkVersionRepository versionRepository,
+                                  JdkVersionRepository jdkVersionRepository,
                                   @Value("${data.directory}") Path dataDirectory,
                                   @Value("${ingest.scan.auto}") boolean autoScanEnabled
     ) {
         this.ingestionService = ingestionService;
-        this.versionRepository = versionRepository;
+        this.jdkVersionRepository = jdkVersionRepository;
         this.dataDirectory = dataDirectory;
         this.autoScanEnabled = autoScanEnabled;
     }
@@ -86,7 +86,7 @@ public class IngestDiscoveryService {
      */
     private void processVersion(String version) {
         try {
-            Optional<JdkVersion> existing = versionRepository.findByVersion(version);
+            Optional<JdkVersion> existing = jdkVersionRepository.findByVersion(version);
             if (existing.isPresent()) {
                 IngestStatus status = existing.get().getStatus();
                 if (status == IngestStatus.READY) {
@@ -97,8 +97,8 @@ public class IngestDiscoveryService {
             } else {
                 log.info("Version {} not found in database, triggering ingestion", version);
             }
-            JdkVersion result = ingestionService.ingest(version);
-            log.info("Successfully ingested version {} (status={}, chunks={})", result.getVersion(), result.getStatus(), result.getChunkCount());
+            JdkVersion jdkVersion = ingestionService.ingest(version);
+            log.info("Successfully ingested version {} (status={}, chunks={})", jdkVersion.getVersion(), jdkVersion.getStatus(), jdkVersion.getChunkCount());
         } catch (IOException e) {
             log.error("Ingestion failed for version {}: {}", version, e.getMessage(), e);
         } catch (Exception e) {
