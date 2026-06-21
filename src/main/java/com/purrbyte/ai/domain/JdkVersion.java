@@ -4,9 +4,10 @@ import com.purrbyte.ai.model.IngestStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,12 +15,12 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-@Table(name = "jdk_version", uniqueConstraints = @UniqueConstraint(columnNames = "version"))
+@Table(name = "jdk_version")
 public class JdkVersion {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(nullable = false, unique = true)
     private String version; // "25.0.3"
@@ -30,21 +31,24 @@ public class JdkVersion {
 
     private String javaRuntime; // index.json "javaRuntime"
     private String generator; // index.json "generator"
-    private Instant generatedAt; // index.json "generatedAt"
+    private LocalDateTime generatedAt; // index.json "generatedAt"
 
     private int typeCount;
     private int packageCount;
     private int moduleCount;
     private int chunkCount;
 
-    private Instant ingestedAt;
+    private LocalDateTime ingestedAt;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     private IngestStatus status = IngestStatus.INGESTING;
 
+    @Builder.Default
     @OneToMany(mappedBy = "jdkVersion", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<JdkDocElement> elements = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "jdkVersion", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<JdkDocChunk> chunks = new ArrayList<>();
 }

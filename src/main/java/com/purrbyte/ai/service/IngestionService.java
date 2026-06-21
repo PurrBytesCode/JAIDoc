@@ -22,7 +22,10 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Enumeration;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -35,7 +38,7 @@ public class IngestionService {
 
     private final DocumentationService documentationService;
     private final EmbeddingService embeddingService;
-    private final JdkVersionRepository versionRepository;
+    private final JdkVersionRepository jdkVersionRepository;
     private final JdkDocElementRepository jdkDocElementRepository;
     private final JdkDocChunkRepository jdkDocChunkRepository;
     private final JsonMapper jsonMapper;
@@ -48,7 +51,8 @@ public class IngestionService {
         if (zipPath == null) {
             throw new IOException("No generated documentation found for version " + version);
         }
-        JdkVersion jdkVersion = versionRepository.findByVersion(version).orElse(null);
+        Optional<JdkVersion> optionalJdkVersion = jdkVersionRepository.findByVersion(version);
+        JdkVersion jdkVersion = optionalJdkVersion.orElse(null);
         if (jdkVersion != null) {
             log.info("Version {} already exists, returning existing version (status={})", version, jdkVersion.getStatus());
             return jdkVersion;
@@ -57,22 +61,21 @@ public class IngestionService {
             long t0 = System.nanoTime();
             log.info("[{}/manifest] Reading manifest from ZIP", version);
             jdkVersion = readManifestFromZip(version, zipFile);
-            versionRepository.save(jdkVersion);
+            jdkVersion.setStatus(IngestStatus.READY);
+            jdkVersion.setIngestedAt(LocalDateTime.now());
+            jdkVersionRepository.save(jdkVersion);
             log.info("[{}/manifest] Manifest loaded — {} modules, {} packages, {} types, {} chunks ({}ms)",
                     version, jdkVersion.getModuleCount(), jdkVersion.getPackageCount(),
                     jdkVersion.getTypeCount(), jdkVersion.getChunkCount(), elapsedMs(t0));
             try {
                 log.info("[{}/elements] Ingesting structural elements from ZIP", version);
-                long t1 = System.nanoTime();
+                long startTimeNano = System.nanoTime();
                 ingestElementsFromZip(jdkVersion, zipFile, jdkVersion.getTypeCount() + jdkVersion.getPackageCount() + jdkVersion.getModuleCount(), t0);
-                versionRepository.flush();
-                log.info("[{}/elements] Structural elements ingested ({}ms)", version, elapsedMs(t1));
+                log.info("[{}/elements] Structural elements ingested ({}ms)", version, elapsedMs(startTimeNano));
                 log.info("[{}/chunks] Ingesting {} chunks and generating embeddings (ZIP: {})", version, jdkVersion.getChunkCount(), documentationService.getVersionZip(version));
-                long t2 = System.nanoTime();
-                ingestChunksFromZip(jdkVersion, zipFile, jdkVersion.getChunkCount(), t1);
-                jdkVersion.setStatus(IngestStatus.READY);
-                jdkVersion.setIngestedAt(Instant.now());
-                log.info("Ingested JDK {}: {} chunks ({}ms)", version, jdkVersion.getChunkCount(), elapsedMs(t2));
+                long endTimeNano = System.nanoTime();
+                ingestChunksFromZip(jdkVersion, zipFile, jdkVersion.getChunkCount(), startTimeNano);
+                log.info("Ingested JDK {}: {} chunks ({}ms)", version, jdkVersion.getChunkCount(), elapsedMs(endTimeNano));
                 log.info("Total ingest for JDK {}: {} ({}ms)", version, formatDuration(totalStart), elapsedMs(totalStart));
             } catch (RuntimeException | IOException e) {
                 jdkVersion.setStatus(IngestStatus.FAILED);
@@ -115,7 +118,8 @@ public class IngestionService {
         jdkVersion.setGenerator(str(root, "generator"));
         String generatedAt = str(root, "generatedAt");
         if (generatedAt != null) {
-            jdkVersion.setGeneratedAt(Instant.parse(generatedAt));
+            Instant instantParsed = Instant.parse(generatedAt);
+            jdkVersion.setGeneratedAt(LocalDateTime.ofInstant(instantParsed, ZoneId.systemDefault()));
         }
         jdkVersion.setTypeCount(root.path("typeCount").asInt());
         jdkVersion.setChunkCount(root.path("chunkCount").asInt());
@@ -124,7 +128,7 @@ public class IngestionService {
         return jdkVersion;
     }
 
-    private void ingestElementsFromZip(JdkVersion v, ZipFile zipFile, int totalExpected, long startNanos) throws IOException {
+    private void ingestElementsFromZip(JdkVersion jdkVersion, ZipFile zipFile, int totalExpected, long startNanos) throws IOException {
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
         int total = 0;
         int persisted = 0;
@@ -135,27 +139,26 @@ public class IngestionService {
                 total++;
                 byte[] bytes = zipFile.getInputStream(entry).readAllBytes();
                 String json = new String(bytes, StandardCharsets.UTF_8);
-                if (persistElementFromJson(v, json)) {
+                if (persistElementFromJson(jdkVersion, json)) {
                     persisted++;
                 }
                 if (total % BATCH_SIZE == 0) {
-                    jdkDocElementRepository.flush();
-                    log.info("[{}/elements] Processed {} / {} entries, persisted {} elements ({}ms elapsed)", v.getVersion(), total, totalExpected, persisted, elapsedMs(startNanos));
+                    log.info("[{}/elements] Processed {} / {} entries, persisted {} elements ({}ms elapsed)", jdkVersion.getVersion(), total, totalExpected, persisted, elapsedMs(startNanos));
                 }
             }
         }
         if (total > BATCH_SIZE && total % (BATCH_SIZE * 10) == 0) {
-            log.info("[{}/elements] Processed {} / {} entries, persisted {} elements ({}ms elapsed)", v.getVersion(), total, totalExpected, persisted, elapsedMs(startNanos));
+            log.info("[{}/elements] Processed {} / {} entries, persisted {} elements ({}ms elapsed)", jdkVersion.getVersion(), total, totalExpected, persisted, elapsedMs(startNanos));
         }
     }
 
     /**
      * Returns true if the element was persisted, false if it was skipped (e.g., missing 'kind' field).
      */
-    private boolean persistElementFromJson(JdkVersion v, String json) {
+    private boolean persistElementFromJson(JdkVersion jdkVersion, String json) {
         JsonNode node = jsonMapper.readTree(json);
         JdkDocElement jdkDocElement = new JdkDocElement();
-        jdkDocElement.setJdkVersion(v);
+        jdkDocElement.setJdkVersion(jdkVersion);
         jdkDocElement.setRawJson(json);
         String kind = node.path("kind").asString(null);
         if (kind == null) {
@@ -185,10 +188,10 @@ public class IngestionService {
         return true;
     }
 
-    private void ingestChunksFromZip(JdkVersion v, ZipFile zipFile, int totalChunks, long startNanos) throws IOException {
+    private void ingestChunksFromZip(JdkVersion jdkVersion, ZipFile zipFile, int totalChunks, long startNanos) throws IOException {
         ZipEntry chunksEntry = findZipEntry(zipFile, "chunks.jsonl");
         if (chunksEntry == null) {
-            log.info("[{}/chunks] No chunks.jsonl found in ZIP", v.getVersion());
+            log.info("[{}/chunks] No chunks.jsonl found in ZIP", jdkVersion.getVersion());
             return;
         }
         int count = 0;
@@ -203,8 +206,8 @@ public class IngestionService {
                 JsonNode node = jsonMapper.readTree(line);
                 JsonNode meta = node.path("metadata");
                 JdkDocChunk jdkDocChunk = new JdkDocChunk();
-                jdkDocChunk.setJdkVersion(v);
-                jdkDocChunk.setVersion(v.getVersion());
+                jdkDocChunk.setJdkVersion(jdkVersion);
+                jdkDocChunk.setVersion(jdkVersion.getVersion());
                 jdkDocChunk.setChunkId(node.path("id").asString(null));
                 jdkDocChunk.setText(node.path("text").asString(null));
                 jdkDocChunk.setEmbedding(embeddingService.embedPassage(jdkDocChunk.getText()));
@@ -226,17 +229,17 @@ public class IngestionService {
                 if (ownerId == null) {
                     ownerId = jdkDocChunk.getChunkId();
                 }
-                jdkDocElementRepository.findByJdkVersionAndQualifiedId(v, ownerId).ifPresent(jdkDocChunk::setJDKDocElement);
+                jdkDocElementRepository.findByJdkVersionAndQualifiedId(jdkVersion, ownerId).ifPresent(jdkDocChunk::setJDKDocElement);
                 jdkDocChunkRepository.save(jdkDocChunk);
                 if (++count % BATCH_SIZE == 0) {
                     jdkDocChunkRepository.flush();
                 }
                 if (count > BATCH_SIZE && count % (BATCH_SIZE * 10) == 0) {
-                    log.info("[{}/chunks] Processed {} / {} chunks ({} skipped, {}ms elapsed)", v.getVersion(), count, totalChunks, skipped, elapsedMs(startNanos));
+                    log.info("[{}/chunks] Processed {} / {} chunks ({} skipped, {}ms elapsed)", jdkVersion.getVersion(), count, totalChunks, skipped, elapsedMs(startNanos));
                 }
             }
         }
-        log.info("[{}/chunks] Chunk ingestion complete: {} / {} processed, {} skipped ({}ms elapsed)", v.getVersion(), count, totalChunks, skipped, elapsedMs(startNanos));
+        log.info("[{}/chunks] Chunk ingestion complete: {} / {} processed, {} skipped ({}ms elapsed)", jdkVersion.getVersion(), count, totalChunks, skipped, elapsedMs(startNanos));
     }
 
     /**
