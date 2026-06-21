@@ -90,7 +90,8 @@ The process:
 - Loads structural JSON → `JdkDocElement`
 - Reads `chunks.jsonl`, embeds and persists → `JdkDocChunk`
 
-The `IngestDiscoveryService` auto-discovers and ingests JDK versions on startup. The `IngestStatus` enum tracks the lifecycle state (`INGESTING`, `READY`, `FAILED`).
+The `IngestDiscoveryService` auto-discovers and ingests JDK versions on startup. The `IngestStatus` enum tracks the
+lifecycle state (`INGESTING`, `READY`, `FAILED`).
 
 ## Search
 

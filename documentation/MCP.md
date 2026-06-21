@@ -22,18 +22,20 @@ with `@Tool` methods and registers them — no additional registration is needed
 The server runs in **streamable** mode: it maintains a session with the client using the `Mcp-Session-Id` header.
 The typical workflow is:
 
-1. **Initialize** — send an `initialize` JSON-RPC request to establish a session. The server responds with an `Mcp-Session-Id` header.
+1. **Initialize** — send an `initialize` JSON-RPC request to establish a session. The server responds with an
+   `Mcp-Session-Id` header.
 2. **Use tools** — include the `Mcp-Session-Id` header in all subsequent requests (`tools/list`, `tools/call`, etc.).
 3. **Session lifetime** — the server may close idle sessions automatically. Re-initialize if the session expires.
 
-When testing with IntelliJ's HTTP client, capture the `Mcp-Session-Id` from the `initialize` response and reuse it via environment variables.
+When testing with IntelliJ's HTTP client, capture the `Mcp-Session-Id` from the `initialize` response and reuse it via
+environment variables.
 See `test/mcp-tools.http` for a complete working example.
 
 ### MCP Domains
 
-| Domain     | Class          | Description                    | Status |
-|------------|----------------|--------------------------------|--------|
-| `java`     | `JavaDocMCP`   | JDK Javadoc search and listing | Active |
+| Domain       | Class           | Description                    | Status |
+|--------------|-----------------|--------------------------------|--------|
+| `java`       | `JavaDocMCP`    | JDK Javadoc search and listing | Active |
 | `springboot` | `SpringBootMCP` | Spring Boot documentation      | Active |
 
 ### Adding a New Domain
@@ -47,6 +49,7 @@ To add a new MCP domain:
 Example structure:
 
 ```java
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
