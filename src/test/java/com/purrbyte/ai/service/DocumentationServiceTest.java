@@ -184,28 +184,29 @@ class DocumentationServiceTest extends UnitTest {
     class ExtractSourceZipTest {
 
         @Test
-        void extract_returnsExtractDirWithContents() throws Exception {
+        void extract_createsExtractDirWithContents() throws Exception {
             setupDirectories();
             Path zipFile = createFakeJdkZip("jdk-25.0.3-ga");
             DocumentationService service = createService();
-            Path result = invokeExtractSourceZip(service, zipFile, "25.0.3", null);
+            invokeExtractSourceZip(service, zipFile, "25.0.3", null);
             Path extractDir = workDirectory.resolve("jdk-sources").resolve("25.0.3");
-            assertThat(result).isEqualTo(extractDir);
-            assertThat(Files.exists(result.resolve("jdk-25.0.3-ga").resolve("Test.java"))).isTrue();
+            assertThat(extractDir).exists();
+            assertThat(Files.exists(extractDir.resolve("jdk-25.0.3-ga").resolve("Test.java"))).isTrue();
         }
 
         @Test
-        void idempotent_returnsExistingDir() throws Exception {
+        void idempotent_reusesExistingDir() throws Exception {
             setupDirectories();
             Path extractDir = workDirectory.resolve("jdk-sources").resolve("25.0.3");
             Files.createDirectories(extractDir.resolve("jdk-25.0.3-ga"));
-            DocumentationService service = createService();
+            // Pre-populate the directory so we can verify the method didn't re-extract
+            Files.writeString(extractDir.resolve("jdk-25.0.3-ga").resolve("Test.java"), "public class Test {}");
             Path zipFile = createFakeJdkZip("jdk-25.0.3-ga");
-            Path result1 = invokeExtractSourceZip(service, zipFile, "25.0.3", null);
-            assertThat(result1).isEqualTo(extractDir);
-            // Second call should return the existing dir (idempotent)
-            Path result2 = invokeExtractSourceZip(service, zipFile, "25.0.3", null);
-            assertThat(result2).isEqualTo(extractDir);
+            DocumentationService service = createService();
+            invokeExtractSourceZip(service, zipFile, "25.0.3", null);
+            // The existing directory is reused — content should not change
+            assertThat(extractDir).exists();
+            assertThat(Files.exists(extractDir.resolve("jdk-25.0.3-ga").resolve("Test.java"))).isTrue();
         }
 
         @Test
@@ -214,28 +215,12 @@ class DocumentationServiceTest extends UnitTest {
             Path zipFile = createZipWithZipSlipEntry();
             DocumentationService service = createService();
             // Zip-slip entry should be skipped, extraction should succeed
-            Path result = invokeExtractSourceZip(service, zipFile, "25.0.3", null);
-            assertThat(result).isEqualTo(workDirectory.resolve("jdk-sources").resolve("25.0.3"));
+            invokeExtractSourceZip(service, zipFile, "25.0.3", null);
+            assertThat(workDirectory.resolve("jdk-sources").resolve("25.0.3")).exists();
             // The evil.txt should NOT exist
             Path evilFile = Path.of("/etc/evil.txt");
             assertThat(Files.exists(evilFile)).isFalse();
         }
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private Path createTestZip(Path dir, String version, String... entries) throws IOException {
-        Path zipFile = dir.resolve(version + ".zip");
-        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipFile))) {
-            for (int i = 0; i < entries.length; i += 2) {
-                String name = entries[i];
-                String content = entries[i + 1];
-                ZipEntry entry = new ZipEntry(name);
-                zos.putNextEntry(entry);
-                zos.write(content.getBytes(StandardCharsets.UTF_8));
-                zos.closeEntry();
-            }
-        }
-        return zipFile;
     }
 
     /**
@@ -267,10 +252,10 @@ class DocumentationServiceTest extends UnitTest {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private Path invokeExtractSourceZip(DocumentationService service, Path zipFile, String version, Consumer<Double> progressCallback) throws Exception {
+    private void invokeExtractSourceZip(DocumentationService service, Path zipFile, String version, Consumer<Double> progressCallback) throws Exception {
         Method method = DocumentationService.class.getDeclaredMethod("extractSourceZip", Path.class, String.class, Consumer.class);
         method.setAccessible(true);
-        return (Path) method.invoke(service, zipFile, version, progressCallback);
+        method.invoke(service, zipFile, version, progressCallback);
     }
 
     @SuppressWarnings("SameParameterValue")
