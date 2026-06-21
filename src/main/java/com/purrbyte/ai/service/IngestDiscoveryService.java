@@ -18,14 +18,14 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Auto-discovers JDK documentation versions in the configured data directory
- * and triggers ingestion for any version that has been generated but not yet
- * processed (status != READY in the database).
+ * Auto-discovers JDK documentation ZIP files in the configured data directory
+ * (recursively, including all subdirectories) and triggers ingestion for any
+ * version that has been generated but not yet processed (status != READY in the database).
  * <p>
- * This service runs on application startup when auto-scan is enabled. It reads
- * the configured directory, lists all subdirectories containing an {@code index.json},
- * checks the database for each version, and calls {@link IngestionService#ingest(String)}
- * for unprocessed versions.
+ * This service runs on application startup when auto-scan is enabled. It walks
+ * the configured directory tree looking for {@code *.zip} files at any depth,
+ * extracts the version from the filename, checks the database for each version,
+ * and calls {@link IngestionService#ingest(String)} for unprocessed versions.
  * </p>
  * <p>
  * Errors during ingestion of one version do NOT block processing of other versions.
@@ -64,9 +64,10 @@ public class IngestDiscoveryService {
             return;
         }
         log.info("Starting ingest auto-discovery in: {}", dataDirectory);
-        try (var stream = Files.list(dataDirectory)) {
+        try (var stream = Files.walk(dataDirectory)) {
             List<String> discoveredVersions = new ArrayList<>();
-            stream.filter(p -> Files.isRegularFile(p) && p.getFileName().toString().endsWith(".zip"))
+            stream.filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().endsWith(".zip"))
                     .forEach(zipPath -> {
                         String fileName = zipPath.getFileName().toString();
                         String version = fileName.substring(0, fileName.length() - 4); // strip .zip

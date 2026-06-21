@@ -10,6 +10,9 @@ data.xml
 logs/
 .env
 
+### RUNTIME ###
+JdkDocChunk/
+
 ### AI ###
 .agents/
 .cline/
