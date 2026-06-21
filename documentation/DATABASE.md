@@ -79,17 +79,18 @@ Without these prefixes, ranking degrades silently.
 
 ## Ingestion
 
-Ingestion is an explicit step (not yet implemented):
+Ingestion is an explicit step (partially implemented):
 
 1. **Doclet pipeline** (current): JDK source → `JsonDoclet` → JSON Javadoc
 
 The process:
 
 - Verifies that `data/<version>/index.json` exists
-- Deletes any prior ingestion of that version (idempotent)
 - Parses the manifest → `JdkVersion`
 - Loads structural JSON → `JdkDocElement`
 - Reads `chunks.jsonl`, embeds and persists → `JdkDocChunk`
+
+The `IngestDiscoveryService` auto-discovers and ingests JDK versions on startup. The `IngestStatus` enum tracks the lifecycle state (`INGESTING`, `READY`, `FAILED`).
 
 ## Search
 

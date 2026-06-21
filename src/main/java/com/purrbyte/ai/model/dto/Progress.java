@@ -28,7 +28,14 @@ public class Progress {
      */
     public static final String MODULE_JAVADOC = "javadoc";
 
+    /**
+     * Progress percentage within the phase (0.0 to 100.0).
+     */
     private final double percentage;
+
+    /**
+     * Name of the process/module performing the progress.
+     */
     private final String module;
 
     /**
