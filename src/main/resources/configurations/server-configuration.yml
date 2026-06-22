@@ -1,0 +1,29 @@
+management:
+  defaults:
+    metrics:
+      export:
+        enabled: false
+  endpoint:
+    health:
+      show-details: ${ACTUATOR_HEALTH_SHOW_DETAILS:ALWAYS}
+    loggers:
+      access: ${ACTUATOR_LOGGERS_ACCESS:READ_ONLY}
+    env:
+      show-values: ${ACTUATOR_ENV_SHOW_VALUES:NEVER}
+    configprops:
+      show-values: ${ACTUATOR_CONFIGPROPS_SHOW_VALUES:NEVER}
+  endpoints:
+    web:
+      exposure:
+        include: ${ACTUATOR_ENDPOINTS_WEB_EXPOSE:*}
+    jmx:
+      exposure:
+        include: ${ACTUATOR_ENDPOINTS_EXPOSE:*}
+  info:
+    build:
+      enabled: ${ACTUATOR_INFO_BUILD_ENABLED:true}
+    java:
+      enabled: ${ACTUATOR_INFO_JAVA_ENABLED:true}
+  observations:
+    annotations:
+      enabled: true
