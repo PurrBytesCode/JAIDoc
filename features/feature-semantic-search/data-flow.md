@@ -2,7 +2,9 @@
 
 ## Overview
 
-The semantic search service performs kNN vector search over JDK documentation chunks. It embeds the user's query, finds the top-K most similar chunks using cosine similarity, filters by version, and returns results with metadata and raw JSON.
+The semantic search service performs kNN vector search over JDK documentation chunks. It embeds the user's query, finds
+the top-K most similar chunks using cosine similarity, filters by version, and returns results with metadata and raw
+JSON.
 
 ## Sequence Diagram
 

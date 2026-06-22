@@ -4,7 +4,13 @@
     "input": {
       "type": "float[]",
       "dimension": 384,
-      "example": [0.123f, -0.456f, 0.789f, 0.012f, -0.345f],
+      "example": [
+        0.123f,
+        -0.456f,
+        0.789f,
+        0.012f,
+        -0.345f
+      ],
       "description": "384-dimensional float array from the multilingual-e5 embedding model"
     },
     "output": {

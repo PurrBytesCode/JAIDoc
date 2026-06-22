@@ -2,7 +2,9 @@
 
 ## Overview
 
-The data models define the persistence layer for JDK documentation. A `JdkVersion` entity is created for each JDK version, with its structural elements (`JdkDocElement`) and text chunks (`JdkDocChunk`) stored as child entities. The chunk entity is indexed with Hibernate Search for full-text search and kNN vector search on 384-dimensional embeddings.
+The data models define the persistence layer for JDK documentation. A `JdkVersion` entity is created for each JDK
+version, with its structural elements (`JdkDocElement`) and text chunks (`JdkDocChunk`) stored as child entities. The
+chunk entity is indexed with Hibernate Search for full-text search and kNN vector search on 384-dimensional embeddings.
 
 ## Sequence Diagram
 

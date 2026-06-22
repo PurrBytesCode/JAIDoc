@@ -10,9 +10,12 @@ date: 2026-06-21
 
 ## Context
 
-The MCP configuration class creates two `ToolCallbackProvider` beans — one for JDK documentation tools and one for Spring Boot documentation tools. Each bean uses Spring AI's `MethodToolCallbackProvider` to discover `@Tool`-annotated methods from the corresponding MCP component (`JavaDocMCP` and `SpringBootMCP`).
+The MCP configuration class creates two `ToolCallbackProvider` beans — one for JDK documentation tools and one for
+Spring Boot documentation tools. Each bean uses Spring AI's `MethodToolCallbackProvider` to discover `@Tool`-annotated
+methods from the corresponding MCP component (`JavaDocMCP` and `SpringBootMCP`).
 
-The MCP server infrastructure (configured in `mcp-configuration.yml`) picks up these beans automatically and exposes them as MCP tools to AI models.
+The MCP server infrastructure (configured in `mcp-configuration.yml`) picks up these beans automatically and exposes
+them as MCP tools to AI models.
 
 ## Feature Inputs
 
@@ -29,7 +32,8 @@ Out: Tool definitions (covered in MCP Tools), MCP server protocol (covered in Co
 
 ### Architecture
 
-The configuration class is a Spring `@Configuration` with two `@Bean` methods. Each creates a `MethodToolCallbackProvider` from the corresponding MCP component, which discovers all `@Tool`-annotated methods.
+The configuration class is a Spring `@Configuration` with two `@Bean` methods. Each creates a
+`MethodToolCallbackProvider` from the corresponding MCP component, which discovers all `@Tool`-annotated methods.
 
 ### Files
 
@@ -55,9 +59,11 @@ None — the beans are registered programmatically. The MCP server protocol conf
 
 ## Tests
 
-No dedicated unit tests exist for the MCP Configuration. It is implicitly tested through the integration tests that exercise the full MCP tool pipeline.
+No dedicated unit tests exist for the MCP Configuration. It is implicitly tested through the integration tests that
+exercise the full MCP tool pipeline.
 
 ## Notes
 
-- The `MethodToolCallbackProvider` uses reflection to discover `@Tool`-annotated methods — no explicit method registration is needed.
+- The `MethodToolCallbackProvider` uses reflection to discover `@Tool`-annotated methods — no explicit method
+  registration is needed.
 - The MCP server protocol configuration (streamable protocol, etc.) is in `mcp-configuration.yml`, not in this class.

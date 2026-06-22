@@ -2,7 +2,8 @@
 
 ## Overview
 
-The application bootstrap configures the main application class with a unique APP_ID and BufferingApplicationStartup, and registers Jackson 3 mapper customizers.
+The application bootstrap configures the main application class with a unique APP_ID and BufferingApplicationStartup,
+and registers Jackson 3 mapper customizers.
 
 ## Sequence Diagram
 

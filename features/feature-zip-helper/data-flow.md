@@ -2,7 +2,8 @@
 
 ## Overview
 
-The ZIP helper searches through all entries in a ZIP file to find the first entry whose name matches the target filename, accounting for version-prefixed directories and Windows-style paths.
+The ZIP helper searches through all entries in a ZIP file to find the first entry whose name matches the target
+filename, accounting for version-prefixed directories and Windows-style paths.
 
 ## Sequence Diagram
 

@@ -10,9 +10,13 @@ date: 2026-06-21
 
 ## Context
 
-The semantic search service performs k-nearest-neighbors search on `JdkDocChunk` entities using 384-dimensional vector embeddings. It embeds the user's query with the "query: " prefix (matching the "passage: " prefix used during indexing), then uses Hibernate Search's kNN feature to find the top-K most similar chunks. The search is filtered by version — only chunks from one JDK version at a time are returned.
+The semantic search service performs k-nearest-neighbors search on `JdkDocChunk` entities using 384-dimensional vector
+embeddings. It embeds the user's query with the "query: " prefix (matching the "passage: " prefix used during indexing),
+then uses Hibernate Search's kNN feature to find the top-K most similar chunks. The search is filtered by version — only
+chunks from one JDK version at a time are returned.
 
-The search result includes the chunk text, metadata (kind, qualified type, member, signature), a cosine similarity score, and the raw JSON representation of the element's Javadoc structure.
+The search result includes the chunk text, metadata (kind, qualified type, member, signature), a cosine similarity
+score, and the raw JSON representation of the element's Javadoc structure.
 
 ## Feature Inputs
 
@@ -23,13 +27,15 @@ The search result includes the chunk text, metadata (kind, qualified type, membe
 ## Scope
 
 In: kNN vector search, version filtering, result construction with raw JSON
-Out: Query parsing/understanding (covered in Embedding Service), chunk generation (covered in JSON Doclet), database ingestion (covered in Database Ingestion)
+Out: Query parsing/understanding (covered in Embedding Service), chunk generation (covered in JSON Doclet), database
+ingestion (covered in Database Ingestion)
 
 ## Implementation
 
 ### Architecture
 
-The service is a Spring `@Service` with constructor injection. It has a single method `search(version, query, topK)` that:
+The service is a Spring `@Service` with constructor injection. It has a single method `search(version, query, topK)`
+that:
 
 1. Embeds the query with "query: " prefix
 2. Uses Hibernate Search's kNN feature to find the top-K similar chunks
@@ -61,10 +67,14 @@ JavaDocMCP.searchJavadoc(version, query, topK=10)
 
 ## Tests
 
-No dedicated unit tests exist for the Semantic Search service. It is implicitly tested through the integration tests that exercise the full search pipeline.
+No dedicated unit tests exist for the Semantic Search service. It is implicitly tested through the integration tests
+that exercise the full search pipeline.
 
 ## Notes
 
-- The `@VectorField(dimension = 384, vectorSimilarity = VectorSimilarity.COSINE)` annotation on `JdkDocChunk.embedding` configures Hibernate Search's vector search with cosine similarity
-- The version filter is critical — without it, the search would return chunks from all versions, mixing results from different JDK APIs
-- The `toResult()` method retrieves the raw JSON from the parent `JdkDocElement` via `c.getJDKDocElement().getRawJson()` — this allows the MCP tool to return the structured Javadoc alongside the text
+- The `@VectorField(dimension = 384, vectorSimilarity = VectorSimilarity.COSINE)` annotation on `JdkDocChunk.embedding`
+  configures Hibernate Search's vector search with cosine similarity
+- The version filter is critical — without it, the search would return chunks from all versions, mixing results from
+  different JDK APIs
+- The `toResult()` method retrieves the raw JSON from the parent `JdkDocElement` via
+  `c.getJDKDocElement().getRawJson()` — this allows the MCP tool to return the structured Javadoc alongside the text

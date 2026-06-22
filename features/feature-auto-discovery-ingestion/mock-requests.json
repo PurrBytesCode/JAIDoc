@@ -3,7 +3,11 @@
     "description": "Example of the Auto-Discovery Ingestion's input/output",
     "input": {
       "dataDirectory": "data/",
-      "zipFiles": ["25.0.3.zip", "21.0.11.zip", "17.0.13.zip"]
+      "zipFiles": [
+        "25.0.3.zip",
+        "21.0.11.zip",
+        "17.0.13.zip"
+      ]
     },
     "output": {
       "discovered": [

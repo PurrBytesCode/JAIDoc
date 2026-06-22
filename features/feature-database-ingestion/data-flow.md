@@ -2,7 +2,9 @@
 
 ## Overview
 
-The ingestion service reads JDK documentation ZIPs and persists them to the database in three phases: manifest parsing, structural element ingestion, and chunk ingestion with embedding generation. The process is idempotent and reports progress throughout.
+The ingestion service reads JDK documentation ZIPs and persists them to the database in three phases: manifest parsing,
+structural element ingestion, and chunk ingestion with embedding generation. The process is idempotent and reports
+progress throughout.
 
 ## Sequence Diagram
 
@@ -45,9 +47,15 @@ IngestionService.ingest(version)
   "packageCount": 234,
   "moduleCount": 12,
   "chunkCount": 50000,
-  "modules": [...],
-  "packages": [...],
-  "types": [...]
+  "modules": [
+    ...
+  ],
+  "packages": [
+    ...
+  ],
+  "types": [
+    ...
+  ]
 }
 ```
 

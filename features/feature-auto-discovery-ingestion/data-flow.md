@@ -2,7 +2,9 @@
 
 ## Overview
 
-The auto-discovery service walks the data directory on startup, finds ZIP files for JDK documentation, and triggers ingestion for any version that hasn't been processed yet. Each version is processed independently — errors don't block others.
+The auto-discovery service walks the data directory on startup, finds ZIP files for JDK documentation, and triggers
+ingestion for any version that hasn't been processed yet. Each version is processed independently — errors don't block
+others.
 
 ## Sequence Diagram
 

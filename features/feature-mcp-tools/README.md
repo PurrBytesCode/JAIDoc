@@ -10,12 +10,16 @@ date: 2026-06-21
 
 ## Context
 
-The MCP tools expose the JAIDoc search functionality to AI models through the Model Context Protocol. There are two tool providers:
+The MCP tools expose the JAIDoc search functionality to AI models through the Model Context Protocol. There are two tool
+providers:
 
-1. **JavaDocMCP** — Two tools: `listVersions()` to list available JDK versions, and `searchJavadoc(version, query, topK)` for semantic search within a single version
-2. **SpringBootMCP** — One placeholder tool: `searchSpringBootDocs(query)` — returns a stub response (TODO: actual implementation)
+1. **JavaDocMCP** — Two tools: `listVersions()` to list available JDK versions, and
+   `searchJavadoc(version, query, topK)` for semantic search within a single version
+2. **SpringBootMCP** — One placeholder tool: `searchSpringBootDocs(query)` — returns a stub response (TODO: actual
+   implementation)
 
-The tools use Spring AI's `@Tool` annotation to define the tool description and parameters, and `@ToolParam` to describe each parameter. The `searchJavadoc()` method defaults `topK` to 10 if not specified (or if <= 0).
+The tools use Spring AI's `@Tool` annotation to define the tool description and parameters, and `@ToolParam` to describe
+each parameter. The `searchJavadoc()` method defaults `topK` to 10 if not specified (or if <= 0).
 
 ## Feature Inputs
 
@@ -33,7 +37,9 @@ Out: MCP protocol implementation (covered in MCP Configuration), search logic (c
 
 ### Architecture
 
-The tools are Spring `@Component` classes with `@Tool` annotated methods. The `@Tool` annotation defines the tool's description and the `@ToolParam` annotations describe each parameter. Spring AI discovers these methods and registers them as MCP tools via the `MethodToolCallbackProvider` bean.
+The tools are Spring `@Component` classes with `@Tool` annotated methods. The `@Tool` annotation defines the tool's
+description and the `@ToolParam` annotations describe each parameter. Spring AI discovers these methods and registers
+them as MCP tools via the `MethodToolCallbackProvider` bean.
 
 ### Files
 
@@ -62,10 +68,14 @@ None — the tools are registered via Spring AI's `MethodToolCallbackProvider` (
 
 ## Tests
 
-No dedicated unit tests exist for the MCP tools. They are implicitly tested through the integration tests that exercise the full search pipeline.
+No dedicated unit tests exist for the MCP tools. They are implicitly tested through the integration tests that exercise
+the full search pipeline.
 
 ## Notes
 
-- The `searchJavadoc()` method defaults `topK` to 10 if not specified or <= 0 — this ensures a reasonable default for AI models that don't specify the parameter
-- The SpringBootMCP tool is a placeholder — it returns a stub response with a TODO comment. It will be implemented when the Spring Boot adoc parsing pipeline is ready.
-- The `@ToolParam` annotations provide descriptions that appear in the MCP tool schema, helping AI models understand what each parameter means
+- The `searchJavadoc()` method defaults `topK` to 10 if not specified or <= 0 — this ensures a reasonable default for AI
+  models that don't specify the parameter
+- The SpringBootMCP tool is a placeholder — it returns a stub response with a TODO comment. It will be implemented when
+  the Spring Boot adoc parsing pipeline is ready.
+- The `@ToolParam` annotations provide descriptions that appear in the MCP tool schema, helping AI models understand
+  what each parameter means

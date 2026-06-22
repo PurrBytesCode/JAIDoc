@@ -2,7 +2,9 @@
 
 ## Overview
 
-The JDK Distribution Downloader queries the Adoptium/Temurin API to find and download a JDK binary archive for a specific version, OS, and architecture. Downloads are cached — if the archive already exists locally, it's reused. Progress is reported via a callback during the download.
+The JDK Distribution Downloader queries the Adoptium/Temurin API to find and download a JDK binary archive for a
+specific version, OS, and architecture. Downloads are cached — if the archive already exists locally, it's reused.
+Progress is reported via a callback during the download.
 
 ## Sequence Diagram
 
@@ -80,5 +82,6 @@ Path — the local file path to the downloaded archive, or an exception if the d
 
 - `IOException("No Adoptium JDK binary found...")` — No matching binary found for the requested version/OS/arch
 - `IOException("Empty response from server")` — The Adoptium API returned no content
-- `IOException("Failed to download JDK distribution...")` — Network error during download (wrapped in `CompletionException`)
+- `IOException("Failed to download JDK distribution...")` — Network error during download (wrapped in
+  `CompletionException`)
 - `CompletionException` — Any exception during the async download is wrapped
