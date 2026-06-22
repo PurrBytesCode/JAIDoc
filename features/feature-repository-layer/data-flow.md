@@ -2,7 +2,8 @@
 
 ## Overview
 
-The repository layer provides JPA data access for JDK documentation entities. Two repositories have custom queries: one to list available versions and one to find elements by version and qualified ID.
+The repository layer provides JPA data access for JDK documentation entities. Two repositories have custom queries: one
+to list available versions and one to find elements by version and qualified ID.
 
 ## Sequence Diagram
 

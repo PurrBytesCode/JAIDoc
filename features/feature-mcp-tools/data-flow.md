@@ -2,7 +2,8 @@
 
 ## Overview
 
-The MCP tools expose two search capabilities to AI models: listing available JDK versions and searching JDK documentation semantically within a single version.
+The MCP tools expose two search capabilities to AI models: listing available JDK versions and searching JDK
+documentation semantically within a single version.
 
 ## Sequence Diagram
 

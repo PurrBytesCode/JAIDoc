@@ -2,7 +2,8 @@
 
 ## Overview
 
-The embedding service is a thin wrapper that adds the "passage: " / "query: " prefixes to texts before delegating to the Spring AI EmbeddingModel. It's used during indexing (passage) and search (query).
+The embedding service is a thin wrapper that adds the "passage: " / "query: " prefixes to texts before delegating to the
+Spring AI EmbeddingModel. It's used during indexing (passage) and search (query).
 
 ## Sequence Diagram
 

@@ -3,7 +3,11 @@
     "description": "Example MCP tool calls and responses",
     "listVersions": {
       "input": {},
-      "output": ["25.0.3", "21.0.11", "17.0.13"]
+      "output": [
+        "25.0.3",
+        "21.0.11",
+        "17.0.13"
+      ]
     },
     "searchJavadoc": {
       "input": {

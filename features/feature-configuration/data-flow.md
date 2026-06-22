@@ -2,7 +2,8 @@
 
 ## Overview
 
-The configuration is organized into 9 YAML files imported by the main application.yaml. Each file groups related configuration keys together, with environment variable overrides for deployment flexibility.
+The configuration is organized into 9 YAML files imported by the main application.yaml. Each file groups related
+configuration keys together, with environment variable overrides for deployment flexibility.
 
 ## Sequence Diagram
 
@@ -63,5 +64,6 @@ accessible via @Value annotations and Spring Boot's configuration binding.
 
 ## Error States
 
-- `IllegalArgumentException` — If an environment variable override uses an invalid value (e.g., non-numeric for a numeric field)
+- `IllegalArgumentException` — If an environment variable override uses an invalid value (e.g., non-numeric for a
+  numeric field)
 - `IOException` — If the ONNX model URI points to a non-existent file

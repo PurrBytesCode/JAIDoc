@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.purrbyte.ai.model.dto.Progress;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -48,17 +47,12 @@ public class JdkDistributionDownloader {
     private final RestClient restClient;
     private final JsonMapper jsonMapper;
 
-    public JdkDistributionDownloader(@Value("${jdk.distribution.download.directory}") String downloadDirectory, RestClient.Builder builder, JsonMapper jsonMapper) {
+    public JdkDistributionDownloader(@Value("${jdk.distribution.download.directory}") String downloadDirectory,
+                                     RestClient restClient,
+                                     JsonMapper jsonMapper) {
         this.downloadDirectory = downloadDirectory;
         this.jsonMapper = jsonMapper;
-        this.restClient = builder.requestFactory(new org.springframework.http.client.SimpleClientHttpRequestFactory() {
-                    @Override
-                    protected void prepareConnection(java.net.@NonNull HttpURLConnection connection, @NonNull String httpMethod) throws java.io.IOException {
-                        super.prepareConnection(connection, httpMethod);
-                        connection.setInstanceFollowRedirects(true);
-                    }
-                })
-                .build();
+        this.restClient = restClient;
     }
 
     /**

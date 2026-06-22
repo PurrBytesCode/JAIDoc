@@ -6,19 +6,23 @@ date: 2026-06-21
 
 # Auto-Discovery Ingestion
 
-> Auto-discovers JDK documentation ZIP files in the data directory on startup and triggers ingestion for any version that hasn't been processed yet.
+> Auto-discovers JDK documentation ZIP files in the data directory on startup and triggers ingestion for any version
+> that hasn't been processed yet.
 
 ## Context
 
-When the application starts, the auto-discovery service walks the configured data directory (recursively) looking for `*.zip` files. For each ZIP found, it extracts the version from the filename (stripping `.zip`) and checks the database:
+When the application starts, the auto-discovery service walks the configured data directory (recursively) looking for
+`*.zip` files. For each ZIP found, it extracts the version from the filename (stripping `.zip`) and checks the database:
 
 - If the version exists with status `READY`, it's skipped
 - If the version exists with any other status, re-ingestion is triggered
 - If the version doesn't exist in the database, ingestion is triggered
 
-Errors during ingestion of one version do NOT block processing of other versions — each version is processed independently.
+Errors during ingestion of one version do NOT block processing of other versions — each version is processed
+independently.
 
-The service is conditionally enabled via `@ConditionalOnProperty(prefix = "ingest", name = "enabled", havingValue = "true")`.
+The service is conditionally enabled via
+`@ConditionalOnProperty(prefix = "ingest", name = "enabled", havingValue = "true")`.
 
 ## Feature Inputs
 
@@ -28,14 +32,17 @@ The service is conditionally enabled via `@ConditionalOnProperty(prefix = "inges
 
 ## Scope
 
-In: ZIP file discovery, version extraction from filename, database status checking, per-version error isolation, conditional activation
+In: ZIP file discovery, version extraction from filename, database status checking, per-version error isolation,
+conditional activation
 Out: The actual ingestion logic (covered in Database Ingestion), ZIP generation (covered in DocumentationService)
 
 ## Implementation
 
 ### Architecture
 
-The service is a Spring `@Service` activated by the `ApplicationReadyEvent`. It uses `@ConditionalOnProperty` to disable itself if `ingest.enabled=false`. It walks the data directory with `Files.walk()` and processes each ZIP file independently.
+The service is a Spring `@Service` activated by the `ApplicationReadyEvent`. It uses `@ConditionalOnProperty` to disable
+itself if `ingest.enabled=false`. It walks the data directory with `Files.walk()` and processes each ZIP file
+independently.
 
 ### Files
 
@@ -69,10 +76,14 @@ ApplicationReadyEvent
 
 ## Tests
 
-No dedicated unit tests exist for the Auto-Discovery Ingestion service. It is implicitly tested through the integration tests that exercise the full ingestion pipeline.
+No dedicated unit tests exist for the Auto-Discovery Ingestion service. It is implicitly tested through the integration
+tests that exercise the full ingestion pipeline.
 
 ## Notes
 
-- The `@ConditionalOnProperty(prefix = "ingest", name = "enabled", havingValue = "true")` annotation means the service won't be created if `ingest.enabled=false` — this allows disabling ingestion entirely
-- The `ingest.scan.auto` flag controls whether auto-scan happens on startup — if false, the service still exists but doesn't do anything
-- The version extraction from filename is simple: `fileName.substring(0, fileName.length() - 4)` — this assumes the filename is `<version>.zip` with no other extensions
+- The `@ConditionalOnProperty(prefix = "ingest", name = "enabled", havingValue = "true")` annotation means the service
+  won't be created if `ingest.enabled=false` — this allows disabling ingestion entirely
+- The `ingest.scan.auto` flag controls whether auto-scan happens on startup — if false, the service still exists but
+  doesn't do anything
+- The version extraction from filename is simple: `fileName.substring(0, fileName.length() - 4)` — this assumes the
+  filename is `<version>.zip` with no other extensions

@@ -2,7 +2,8 @@
 
 ## Overview
 
-The model classes define the domain types used throughout the application. Enums are persisted in JPA entities, DTOs are used for data transfer between services and as MCP tool return types.
+The model classes define the domain types used throughout the application. Enums are persisted in JPA entities, DTOs are
+used for data transfer between services and as MCP tool return types.
 
 ## Sequence Diagram
 

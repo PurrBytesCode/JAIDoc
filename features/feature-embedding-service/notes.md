@@ -7,4 +7,5 @@
 
 ## Decisions
 
-- The prefixes are hard-coded constants (`PASSAGE_PREFIX`, `QUERY_PREFIX`) rather than configuration — this is because they are a property of the model family, not a deployment concern
+- The prefixes are hard-coded constants (`PASSAGE_PREFIX`, `QUERY_PREFIX`) rather than configuration — this is because
+  they are a property of the model family, not a deployment concern

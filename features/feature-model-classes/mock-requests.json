@@ -2,9 +2,17 @@
   "model_classes": {
     "description": "Example states for the model classes feature",
     "enums": {
-      "ElementKind": ["MODULE", "PACKAGE", "TYPE"],
+      "ElementKind": [
+        "MODULE",
+        "PACKAGE",
+        "TYPE"
+      ],
       "IngestStatus": {
-        "values": ["INGESTING", "READY", "FAILED"],
+        "values": [
+          "INGESTING",
+          "READY",
+          "FAILED"
+        ],
         "default": "INGESTING"
       }
     },

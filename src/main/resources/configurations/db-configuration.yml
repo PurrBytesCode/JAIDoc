@@ -1,5 +1,10 @@
 spring:
   datasource:
+    hikari:
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 500
+        prepStmtCacheSqlLimit: 2048
     url: jdbc:sqlite:./jaidoc.sqlite
     driver-class-name: org.sqlite.JDBC
     username: ${DB_USERNAME:jaidoc}

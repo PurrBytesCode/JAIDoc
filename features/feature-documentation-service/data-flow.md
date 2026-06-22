@@ -2,7 +2,9 @@
 
 ## Overview
 
-The Documentation Service orchestrates the entire JDK documentation generation pipeline. It acquires the JDK source (local or downloaded), extracts it, runs the JsonDoclet via the javadoc command, compresses the output, and reports progress through three phases.
+The Documentation Service orchestrates the entire JDK documentation generation pipeline. It acquires the JDK source (
+local or downloaded), extracts it, runs the JsonDoclet via the javadoc command, compresses the output, and reports
+progress through three phases.
 
 ## Sequence Diagram
 

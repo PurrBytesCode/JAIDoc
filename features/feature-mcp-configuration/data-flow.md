@@ -2,7 +2,8 @@
 
 ## Overview
 
-The MCP configuration class registers two `ToolCallbackProvider` beans that expose MCP tools to AI models. The beans are created using Spring AI's `MethodToolCallbackProvider`, which discovers `@Tool`-annotated methods via reflection.
+The MCP configuration class registers two `ToolCallbackProvider` beans that expose MCP tools to AI models. The beans are
+created using Spring AI's `MethodToolCallbackProvider`, which discovers `@Tool`-annotated methods via reflection.
 
 ## Sequence Diagram
 

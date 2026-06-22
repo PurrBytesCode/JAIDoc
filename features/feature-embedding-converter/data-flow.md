@@ -2,7 +2,9 @@
 
 ## Overview
 
-The embedding converter serializes 384-dimensional float arrays to byte arrays for SQLite BLOB storage, and deserializes them back when reading from the database. It is a stateless, thread-safe utility used by Hibernate during entity persistence and retrieval.
+The embedding converter serializes 384-dimensional float arrays to byte arrays for SQLite BLOB storage, and deserializes
+them back when reading from the database. It is a stateless, thread-safe utility used by Hibernate during entity
+persistence and retrieval.
 
 ## Sequence Diagram
 

@@ -2,7 +2,9 @@
 
 ## Overview
 
-The JSON Doclet processes JDK source code through a pipeline: it iterates modules, packages, and types, serializes each to JSON, extracts Javadoc comments in both structured and plain text formats, and writes text chunks for semantic search. The output includes per-element JSON files, a manifest, and a line-delimited JSON file of chunks.
+The JSON Doclet processes JDK source code through a pipeline: it iterates modules, packages, and types, serializes each
+to JSON, extracts Javadoc comments in both structured and plain text formats, and writes text chunks for semantic
+search. The output includes per-element JSON files, a manifest, and a line-delimited JSON file of chunks.
 
 ## Sequence Diagram
 
