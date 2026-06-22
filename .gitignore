@@ -12,6 +12,7 @@ logs/
 
 ### RUNTIME ###
 JdkDocChunk/
+backup.zip
 
 ### AI ###
 .agents/
