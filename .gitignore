@@ -17,7 +17,6 @@ backup.zip
 ### AI ###
 .agents/
 .cline/
-.junie/memory
 .junie/plans
 
 ### AI Transformer ###
