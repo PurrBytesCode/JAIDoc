@@ -11,6 +11,7 @@ spring:
       - configurations/logging-configuration.yml
       - configurations/mcp-configuration.yml
       - configurations/search-configuration.yml
+      - configurations/server-configuration.yml
       - configurations/springdoc-configuration.yml
   threads:
     virtual:
