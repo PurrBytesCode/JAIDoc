@@ -1,0 +1,28 @@
+{
+  "zip_helper": {
+    "description": "Example of the ZIP helper's input/output",
+    "input": {
+      "zipFile": "ZipFile — a java.util.zip.ZipFile opened for reading",
+      "name": "index.json"
+    },
+    "outputs": {
+      "exact_match": {
+        "entry_name": "index.json",
+        "matched_by": "exact match"
+      },
+      "version_prefixed": {
+        "entry_name": "jdk-25.0.3/index.json",
+        "matched_by": "endsWith('/index.json')"
+      },
+      "windows_style": {
+        "entry_name": "jdk-25.0.3\\index.json",
+        "matched_by": "replace('\\\\', '/') + endsWith('/index.json')"
+      },
+      "deep_nested": {
+        "entry_name": "jdk-25.0.3-ga/modules/java.base/index.json",
+        "matched_by": "endsWith('/index.json')"
+      },
+      "not_found": null
+    }
+  }
+}

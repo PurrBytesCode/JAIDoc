@@ -1,0 +1,34 @@
+{
+  "configuration": {
+    "description": "Example of the Configuration's environment variable overrides and defaults",
+    "environment_variables": {
+      "DB_USERNAME": "jaidoc",
+      "DB_PASSWORD": "secret",
+      "DB_SHOW_SQL": "false",
+      "AI_TRANSFORMER_ONNX": "file:./onnx/model.onnx",
+      "AI_TRANSFORMER_TOKENIZER": "file:./onnx/tokenizer.json",
+      "SEARCH_INDEX_DIR": "./jaidoc-index",
+      "INGEST_ENABLED": "true",
+      "INGEST_AUTO_SCAN": "true",
+      "LOGGING_MAX_FILE_SIZE": "10MB",
+      "LOGGING_MAX_HISTORY_DAYS": "7",
+      "LOGGING_MAX_BACKUP_FILES": "5",
+      "LOGGING_PATH_DIRECTORY": "./logs",
+      "SPRINGDOC_API_DOCS_ENABLED": "true",
+      "SPRINGDOC_SWAGGER_UI_ENABLED": "true",
+      "ACTUATOR_HEALTH_SHOW_DETAILS": "ALWAYS",
+      "ACTUATOR_LOGGERS_ACCESS": "READ_ONLY",
+      "ACTUATOR_ENV_SHOW_VALUES": "NEVER",
+      "ACTUATOR_CONFIGPROPS_SHOW_VALUES": "NEVER",
+      "ACTUATOR_ENDPOINTS_WEB_EXPOSE": "*",
+      "ACTUATOR_INFO_BUILD_ENABLED": "true",
+      "ACTUATOR_INFO_JAVA_ENABLED": "true",
+      "JDK_DIST_DOWNLOAD_DIR": "./jdk-distributions",
+      "DATA_DIR": "./data",
+      "DOCLET_WORK_DIR": "./jdk-doc-workspace",
+      "DOCLET_JAR_DIR": "./doclet",
+      "DOCLET_JAVADOC_HOME": "",
+      "DOCLET_MODULES": ""
+    }
+  }
+}

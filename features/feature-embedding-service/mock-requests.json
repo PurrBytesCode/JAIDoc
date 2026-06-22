@@ -1,0 +1,17 @@
+{
+  "embedding_service": {
+    "description": "Example of the Embedding Service's input/output",
+    "embedPassage": {
+      "input": "Reads up to len bytes of data from this input stream.",
+      "prefixed": "passage: Reads up to len bytes of data from this input stream.",
+      "output_dimension": 384,
+      "description": "384-dimensional float array from the multilingual-e5 model"
+    },
+    "embedQuery": {
+      "input": "read bytes from a stream",
+      "prefixed": "query: read bytes from a stream",
+      "output_dimension": 384,
+      "description": "384-dimensional float array from the multilingual-e5 model"
+    }
+  }
+}

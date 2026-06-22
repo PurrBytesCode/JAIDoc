@@ -1,0 +1,40 @@
+{
+  "jdk_distribution_download": {
+    "description": "Example of the JDK Distribution Downloader's API interaction and version matching",
+    "api_query": {
+      "method": "GET",
+      "url": "https://api.adoptium.net/v3/assets/feature_releases/21/ga?architecture=x64&heap_size=normal&image_type=jdk&jvm_impl=hotspot&os=windows&page=0&page_size=50&sort_order=DESC",
+      "description": "Query Adoptium API for JDK 21 GA releases for Windows x64"
+    },
+    "api_response": {
+      "version_data": {
+        "major": 21,
+        "minor": 0,
+        "security": 11
+      },
+      "binaries": [
+        {
+          "os": "windows",
+          "architecture": "x64",
+          "image_type": "jdk",
+          "jvm_impl": "hotspot",
+          "package": {
+            "name": "jdk-21.0.11_windows-x64_bin.zip",
+            "link": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.11%2B7/OpenJDK21U-jdk_x64_windows_21.0.11_7.zip",
+            "size": 189456123
+          }
+        }
+      ]
+    },
+    "version_matching": {
+      "input": "21.0.11",
+      "parsed": [21, 0, 11],
+      "matches": {
+        "21.0.11": true,
+        "21.0.10": false,
+        "21.0.11+7": true,
+        "22.0.1": false
+      }
+    }
+  }
+}

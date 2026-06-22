@@ -1,0 +1,22 @@
+{
+  "embedding_converter": {
+    "description": "Example of the embedding converter's input/output",
+    "input": {
+      "type": "float[]",
+      "dimension": 384,
+      "example": [0.123f, -0.456f, 0.789f, 0.012f, -0.345f],
+      "description": "384-dimensional float array from the multilingual-e5 embedding model"
+    },
+    "output": {
+      "type": "byte[]",
+      "size": 1536,
+      "description": "384 × 4 bytes (big-endian float32 representation)",
+      "example": "[0x3f, 0x9e, 0x47, 0xab, 0xbf, 0xb6, ...]"
+    },
+    "null_handling": {
+      "input_null": "byte[]",
+      "output_null": "float[]",
+      "description": "Both conversion methods return null when the input is null"
+    }
+  }
+}

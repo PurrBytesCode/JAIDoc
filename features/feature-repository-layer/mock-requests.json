@@ -1,0 +1,22 @@
+{
+  "repository_layer": {
+    "description": "Example of the Repository Layer's queries and results",
+    "findAllVersionStringsOrderByMajorDesc": {
+      "output": ["25.0.3", "21.0.11", "17.0.13"]
+    },
+    "findByJdkVersionAndQualifiedId": {
+      "input": {
+        "jdkVersion": "JdkVersion entity for version 25.0.3",
+        "qualifiedId": "java.io.BufferedInputStream"
+      },
+      "output": {
+        "id": "660e8400-e29b-41d4-a716-446655440001",
+        "kind": "TYPE",
+        "qualifiedId": "java.io.BufferedInputStream",
+        "simpleName": "BufferedInputStream",
+        "packageName": "java.io",
+        "moduleName": "java.base"
+      }
+    }
+  }
+}

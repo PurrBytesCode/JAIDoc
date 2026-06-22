@@ -1,0 +1,32 @@
+{
+  "documentation_service": {
+    "description": "Example of the Documentation Service's input/output and progress phases",
+    "input": {
+      "version": "25.0.3",
+      "progressCallback": "Consumer<Progress> — may be null"
+    },
+    "output": {
+      "type": "Path",
+      "example": "data/25.0.3/"
+    },
+    "progress_phases": {
+      "MODULE_DOWNLOAD": "0% → 100% — downloading JDK from Adoptium",
+      "MODULE_EXTRACT": "0% → 100% — extracting source ZIP",
+      "MODULE_JAVADOC": "5% → 100% — running javadoc (rough estimate, no API progress)"
+    },
+    "javadoc_command": {
+      "executable": "javadoc.exe (Windows) or javadoc (Unix)",
+      "options": [
+        "-docletpath <jar>",
+        "-doclet com.purrbyte.ai.doclet.JsonDoclet",
+        "--module-source-path <moduleRoot>",
+        "--module <modules>",
+        "-d <outputDir>",
+        "--pretty",
+        "--doc-version <version>",
+        "-Xmaxerrs 100000",
+        "-Xmaxwarns 100000"
+      ]
+    }
+  }
+}

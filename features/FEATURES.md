@@ -7,9 +7,25 @@ provides the grounded context that makes a good plan possible.
 
 ## Index
 
-| Feature             | Status   | Description                |
-|---------------------|----------|----------------------------|
-| [Example](example/) | Template | Template feature workspace |
+| Feature                          | Status     | Description                                    |
+|----------------------------------|------------|-------------------------------------------------|
+| [Example](example/)              | Template   | Template feature workspace                      |
+| [Data Models](feature-data-models/)       | Implemented | JPA entities for JDK documentation storage     |
+| [Embedding Converter](feature-embedding-converter/) | Implemented | float[] ↔ byte[] BLOB converter for SQLite |
+| [ZIP Helper](feature-zip-helper/)         | Implemented | ZIP entry lookup with version-prefixed paths |
+| [Model Classes](feature-model-classes/)   | Implemented | Enums and DTOs for domain concepts           |
+| [JDK Distribution Download](feature-jdk-distribution-download/) | Implemented | Adoptium/Temurin API integration |
+| [JSON Doclet](feature-json-doclet/)       | Implemented | Custom Javadoc-to-JSON doclet              |
+| [Documentation Service](feature-documentation-service/) | Implemented | JDK doc generation pipeline |
+| [Embedding Service](feature-embedding-service/) | Implemented | Spring AI embedding wrapper          |
+| [Database Ingestion](feature-database-ingestion/) | Implemented | ZIP → database ingestion         |
+| [Auto-Discovery Ingestion](feature-auto-discovery-ingestion/) | Implemented | Startup auto-ingest for ZIPs |
+| [Semantic Search](feature-semantic-search/) | Implemented | kNN vector search over chunks        |
+| [MCP Tools](feature-mcp-tools/)           | Implemented | MCP tools for JDK/Spring Boot docs |
+| [MCP Configuration](feature-mcp-configuration/) | Implemented | ToolCallbackProvider registration |
+| [Application Bootstrap](feature-application-bootstrap/) | Implemented | Main class + Jackson mapper config |
+| [Repository Layer](feature-repository-layer/) | Implemented | JPA repositories for CRUD queries |
+| [Configuration](feature-configuration/)   | Implemented | All YAML config files and keys     |
 
 ## Feature Layout
 

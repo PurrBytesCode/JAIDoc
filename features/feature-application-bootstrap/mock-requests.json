@@ -1,0 +1,22 @@
+{
+  "application_bootstrap": {
+    "description": "Example of the Application Bootstrap's output",
+    "APP_ID": "<UUID>",
+    "BufferingApplicationStartup": {
+      "bufferSize": 2048,
+      "filter": "spring.beans.instantiate"
+    },
+    "JsonMapperBuilderCustomizer": {
+      "WRITE_DATES_AS_TIMESTAMPS": false,
+      "FAIL_ON_UNKNOWN_PROPERTIES": true
+    },
+    "XmlMapperBuilderCustomizer": {
+      "WRITE_DATES_AS_TIMESTAMPS": false,
+      "FAIL_ON_UNKNOWN_PROPERTIES": true
+    },
+    "YAMLMapper": {
+      "WRITE_DATES_AS_TIMESTAMPS": false,
+      "FAIL_ON_UNKNOWN_PROPERTIES": true
+    }
+  }
+}
