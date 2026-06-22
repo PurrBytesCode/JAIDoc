@@ -3,7 +3,7 @@
 [![Java](https://img.shields.io/badge/Java-25-red.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-green.svg)](https://spring.io/projects/spring-boot)
 [![Maven](https://img.shields.io/badge/Maven-3.9.15-blue.svg)](https://maven.apache.org/)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 JAIDoc is an **exercise in creating a Model Context Protocol (MCP) server** that makes JDK and Spring Boot documentation
 searchable and consumable by AI models. It's a practical example of how to bridge the gap between traditional technical
@@ -17,9 +17,10 @@ verify how a method works or what a class does, you have to leave your IDE, sear
 and find the right version.
 
 JAIDoc is also an **example for the community** on how to organize, track, and expose technical documentation through
-MCP tools. Currently focused on the JDK SDK as a foundation (database layer complete, MCP tools planned), the project
-aims to grow into Spring Boot — where documentation is far more complex (migration guides, how-to guides, AsciiDoc
-formats, cross-references) — and serve as a reference for building your own documentation MCP servers.
+MCP tools. The JDK SDK integration is complete — database layer, embedding model, semantic search, and MCP tools are all
+functional. The project aims to grow into Spring Boot — where documentation is far more complex (migration guides,
+how-to guides, AsciiDoc formats, cross-references) — and serve as a reference for building your own documentation MCP
+servers.
 
 JAIDoc solves this by letting the local AI model (Qwen 3.6, Gemma-4, or QWOPUS — running on your machine) answer these
 questions directly, without relying on cloud APIs or sending code context to third-party services.
@@ -31,9 +32,9 @@ It does this by:
 3. **Exposing** it through the MCP protocol so AI models can query it directly
 
 - **Doclet pipeline**: JDK source → `JsonDoclet` → JSON Javadoc (fully implemented)
-- **MCP tools** (planned): `listVersions()`, `searchJavadoc()` — JavaDocMCP is a placeholder, no tools implemented yet
+- **MCP tools**: `listVersions()`, `searchJavadoc()` — fully wired to the semantic search service
 
-This project demonstrates the full stack: doclet → JSON → SQLite + Hibernate Search → MCP tools (planned). It's meant to
+This project demonstrates the full stack: doclet → JSON → SQLite + Hibernate Search/Lucene → MCP tools. It's meant to
 be studied, adapted, and used as a reference for building your own documentation MCP servers — starting with the JDK SDK
 and growing into Spring Boot's more complex documentation ecosystem.
 
@@ -61,31 +62,32 @@ models, variants, and configuration options.
 
 ## Example Queries
 
-Planned MCP server tools will expose the following query capabilities:
+The MCP server exposes the following query capabilities through its tools:
 
-- **Search by class name** — Find a specific class and its members
-- **Search by method signature** — Look up a method's parameters, return type, and description
-- **Keyword search** — Search across all documentation for a term
-- **Semantic search** — Find documentation relevant to a natural language question (vector embeddings)
+- **`searchJavadoc(version, query, topK)`** — Semantic search of JDK API documentation using vector kNN embeddings.
+  Returns chunks ranked by relevance, including kind (class/method/field), signature, and description.
+- **`listVersions()`** — Lists available JDK versions whose documentation has been ingested.
 
-### Example: Find how to create an HTTP client
+### Example: Semantic search for JDK API
 
-You can ask the AI model: *"How do I create a WebClient in Spring Boot?"* and the model will query the MCP server for
-Spring Boot documentation, returning the precise API reference with parameters and usage examples.
-
-### Example: Search for JDK API documentation
-
-You can ask the AI model: *"How do I read a file with NIO?"* and the model will query the MCP server for JDK
-documentation, returning the precise API reference with parameters and usage examples.
+You can ask the AI model: *"How do I read a file with NIO?"* and the model will call
+`searchJavadoc("25", "read file NIO", 5)`
+which returns the most relevant `java.nio.file.Files` documentation chunks — including the `readAllLines` method
+signature
+and description.
 
 ### Ingesting documentation
 
 Before searching, documentation must be ingested into the database:
 
-- **Doclet pipeline**: Run `JsonDoclet` on the JDK source to produce JSON Javadoc, then store chunks and elements in the
-  database via the service layer. The `JdkVersionRepository` tracks which versions have been processed.
+- **Doclet pipeline**: Run `JsonDoclet` on the JDK source to produce JSON Javadoc, then chunk the content via
+  `ChunkWriter`, generate embeddings with the ONNX transformer model, and store chunks and elements in the database via
+  the service layer. The `JdkVersionRepository` tracks which versions have been processed.
 
 The ingest is idempotent — re-ingesting a version replaces any prior ingestion.
+
+A future MCP tool (`ingestJdk(version)`) will allow triggering this entire pipeline directly from the AI model, without
+needing to run the server CLI. This is planned but not yet implemented.
 
 ## How It Works
 
@@ -98,20 +100,19 @@ The JDK doesn't ship its Javadoc as JSON, so we need to generate it from the sou
    extracting class signatures, method descriptions, parameters, return types, and annotations in a format optimized for
    LLM comprehension.
 3. **Vector Indexing** — Embed and index the JSON data into SQLite + Hibernate Search/Lucene for semantic search.
-4. **MCP Tools Exposure** (planned) — Register MCP tools that allow AI models to query by class name, method signature,
-   keyword
-   search, or semantic similarity.
+4. **MCP Tools Exposure** — Register MCP tools (`searchJavadoc`, `listVersions`) that allow AI models to query by
+   semantic similarity or list versions.
 
 This pipeline is modular and version-aware: each JDK version gets its own ingestion run, and the database stores them
 separately so users can query documentation for any supported version.
 
 ## Roadmap
 
-- **Phase 1** — JDK documentation ingestion and database layer; MCP tools for querying (planned)
-- **Phase 2** — Spring Boot ingestion: adoc parsing, migration guides, how-to guides, and structured MCP tools
-- **Phase 3** — Spring Framework API docs: annotations, generics, cross-references
-- **Phase 4** — Support for additional ecosystems (Quarkus, Micronaut, etc.)
-- **Phase 5** — Multi-model support with prompt templates per ecosystem
+- **Phase 1** ✅ JDK documentation ingestion and database layer; semantic search; MCP tools (`searchJavadoc`,
+  `listVersions`)
+- **Phase 2** Spring Boot ingestion: adoc parsing, migration guides, how-to guides, and structured MCP tools
+- **Phase 3** MCP tool `ingestJdk(version)` — trigger ingestion directly from the MCP server (planned)
+- **Phase 3** Spring Framework API docs: annotations, generics, cross-references
 
 ### Phase 2: Spring Boot Integration
 
@@ -129,8 +130,8 @@ ingestion pipeline:
 5. **Community Example** — Document the ingestion approach so others can replicate it for their own documentation
    ecosystems
 
-Currently this work starts with the Java SDK as a foundation, then extrapolates to Spring Boot — which is where the real
-complexity lives (huge MCP schema, complex cross-references, versioned migration guides).
+This is where the real complexity lives: a much larger MCP schema, complex cross-references, and versioned migration
+guides — building on the foundation established by the JDK integration.
 
 ## Project Structure
 
@@ -157,10 +158,10 @@ graph LR
     db["📊 SQLite + Lucene<br/>JDK · Spring · …"]
     jdkdocs["📄 JDK Docs<br/>Javadoc JSON"]
     sbdocs["📄 Spring Boot Docs<br/>adoc · Migration · How-To"]
-    ai <-->|" MCP (planned) "| server
-    server -->|" Search "| db
-    server -->|" Ingest (Doclet) "| jdkdocs
+    ai <-->|" MCP (streamable) "| server
+    server -->|" Search "| jdkdocs
     server -->|" Ingest (adoc, planned) "| sbdocs
+    server -->|" Search "| db
 ```
 
 ## Philosophy
@@ -197,4 +198,4 @@ parsing, add support for additional ecosystems, or improve the MCP tools — ple
 
 ## License
 
-[Apache License 2.0](LICENSE)
+[MIT License](LICENSE)
