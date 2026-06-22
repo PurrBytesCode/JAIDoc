@@ -5,11 +5,11 @@ The model is **not** tracked in Git (see `.gitignore`), so you must download it 
 
 ## Model Selection
 
-| Variant                        | Size    | Description                                                                        |
-|--------------------------------|---------|------------------------------------------------------------------------------------|
-| `model_qint8_avx512_vnni.onnx` | ~113 MB | Quantized INT8, AVX-512 + VNNI — fastest on modern Intel (Ice Lake+) or AMD Zen 3+ |
-| `model_O4.onnx`                | ~224 MB | OpenVINO optimized variant                                                         |
-| `model.onnx`                   | ~449 MB | FP16 base model — largest file, slowest inference                                  |
+| Variant                        | Size    | Status   | Description                                                                        |
+|--------------------------------|---------|----------|------------------------------------------------------------------------------------|
+| `model_qint8_avx512_vnni.onnx` | ~113 MB | **used** | Quantized INT8, AVX-512 + VNNI — fastest on modern Intel (Ice Lake+) or AMD Zen 3+ |
+| `model_O4.onnx`                | ~224 MB | unused   | OpenVINO optimized variant                                                         |
+| `model.onnx`                   | ~449 MB | unused   | FP16 base model — largest file, slowest inference                                  |
 
 The application defaults to `model_qint8_avx512_vnni.onnx` (the fastest). Override the model with the
 `AI_TRANSFORMER_ONNX` environment variable.
@@ -25,6 +25,7 @@ spring:
       transformer:
         onnx:
           model-uri: ${AI_TRANSFORMER_ONNX:./onnx/model_qint8_avx512_vnni.onnx}
+          gpu-device-id: ${AI_TRANSFORMER_ONNX_GPU_ID:-1}
         tokenizer:
           uri: ${AI_TRANSFORMER_TOKENIZER:./onnx/tokenizer.json}
 ```
@@ -43,7 +44,8 @@ export AI_TRANSFORMER_ONNX=./onnx/model.onnx
 
 You can swap the model for a different one — just download the files and set both `AI_TRANSFORMER_ONNX` and
 `AI_TRANSFORMER_TOKENIZER` to point to the correct paths. Different models have different tokenizers, so you must
-update both.
+update both. The default model is **multilingual-e5-small** with the **model_qint8_avx512_vnni.onnx** variant — this is
+the one currently used and tested.
 
 ## URI Scheme Requirement
 
@@ -89,13 +91,13 @@ You must use a `file:` URI scheme:
 - Use **forward slashes** (`/`), not Windows backslashes (`\`)
 - Relative paths (`./onnx/...`) work without any scheme — just run the app from the project root
 
-| Model                                     | Quantized ONNX | Tokenizer | Embedding Dim | Languages |
-|-------------------------------------------|:--------------:|-----------|:-------------:|-----------|
-| **multilingual-e5-small**                 |    ~113 MB     | ~16 MB    |      384      | 50+       |
-| **multilingual-e5-base**                  |    ~113 MB     | ~22 MB    |      768      | 100+      |
-| **paraphrase-multilingual-MiniLM-L12-v2** |    ~113 MB     | ~22 MB    |      384      | 50+       |
-| **all-MiniLM-L12-v2**                     |     ~33 MB     | ~22 MB    |      384      | English   |
-| **all-MiniLM-L6-v2**                      |     ~23 MB     | ~22 MB    |      384      | English   |
+| Model                                     | Quantized ONNX | Tokenizer | Embedding Dim | Languages | Status   |
+|-------------------------------------------|:--------------:|-----------|:-------------:|-----------|----------|
+| **multilingual-e5-small**                 |    ~113 MB     | ~16 MB    |      384      | 50+       | **used** |
+| **multilingual-e5-base**                  |    ~113 MB     | ~22 MB    |      768      | 100+      | unused   |
+| **paraphrase-multilingual-MiniLM-L12-v2** |    ~113 MB     | ~22 MB    |      384      | 50+       | unused   |
+| **all-MiniLM-L12-v2**                     |     ~33 MB     | ~22 MB    |      384      | English   | unused   |
+| **all-MiniLM-L6-v2**                      |     ~23 MB     | ~22 MB    |      384      | English   | unused   |
 
 ### multilingual-e5-small (default)
 
@@ -157,3 +159,73 @@ Run the appropriate script for your platform — it will ask which variant you w
 - **Model**: [intfloat/multilingual-e5-small](https://huggingface.co/intfloat/multilingual-e5-small)
 - **Task**: Text embeddings, multilingual (50+ languages)
 - **Quantization**: INT8 for the `model_qint8_*` variants, FP16 for `model.onnx`
+
+## CUDA/GPU Models
+
+> **Note:** No CUDA provider ONNX models are currently available for the models listed above. The following sections
+> describe the planned support for GPU acceleration once suitable models are found.
+
+### Prerequisites
+
+- NVIDIA GPU with compute capability 6.0+ (Pascal or newer)
+- NVIDIA driver version 450.80.02 or later
+- CUDA Toolkit 11.8 or later (for Java CUDA runtime compatibility)
+- Install CUDA from [https://developer.nvidia.com/cuda-downloads](https://developer.nvidia.com/cuda-downloads)
+- Verify CUDA availability: `nvidia-smi` — should show your GPU and CUDA version
+
+### GPU Device ID
+
+To use GPU acceleration, set the `AI_TRANSFORMER_ONNX_GPU_ID` environment variable to the index of the GPU you want
+to use. You can find available GPU IDs with:
+
+```bash
+nvidia-smi --query-gpu=index,name --format=csv,noheader
+```
+
+Output example:
+
+```
+0, NVIDIA GeForce RTX 5070 Ti Laptop GPU
+1, NVIDIA GeForce RTX 3090
+```
+
+The configuration defaults to GPU ID `-1` (CPU mode):
+
+```yaml
+# src/main/resources/configurations/ai-configuration.yml
+spring:
+  ai:
+    embedding:
+      transformer:
+        onnx:
+          model-uri: ${AI_TRANSFORMER_ONNX:./onnx/model_qint8_avx512_vnni.onnx}
+          gpu-device-id: ${AI_TRANSFORMER_ONNX_GPU_ID:-1}
+        tokenizer:
+          uri: ${AI_TRANSFORMER_TOKENIZER:./onnx/tokenizer.json}
+```
+
+To use GPU 0:
+
+```bash
+# Windows (PowerShell)
+$env:AI_TRANSFORMER_ONNX_GPU_ID = "0"
+
+# Bash (Linux/macOS)
+export AI_TRANSFORMER_ONNX_GPU_ID=0
+```
+
+To force CPU mode:
+
+```bash
+$env:AI_TRANSFORMER_ONNX_GPU_ID = "-1"
+# or omit the variable entirely — CPU is the default
+```
+
+### Performance
+
+When using CUDA provider ONNX models, expect:
+
+- **CPU (baseline)**: ~100-200ms per embedding (384-dim passage)
+- **GPU (estimated)**: ~10-50ms per embedding (384-dim passage) — 4x-20x faster depending on GPU and model size
+
+The actual performance gain depends on the GPU model, batch size, and whether the model is quantized.
