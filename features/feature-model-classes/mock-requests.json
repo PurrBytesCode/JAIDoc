@@ -1,0 +1,26 @@
+{
+  "model_classes": {
+    "description": "Example states for the model classes feature",
+    "enums": {
+      "ElementKind": ["MODULE", "PACKAGE", "TYPE"],
+      "IngestStatus": {
+        "values": ["INGESTING", "READY", "FAILED"],
+        "default": "INGESTING"
+      }
+    },
+    "Progress": {
+      "percentage": 75.5,
+      "module": "javadoc"
+    },
+    "JdkSearchResult": {
+      "chunkId": "java.io.BufferedInputStream#read(byte[],int,int)",
+      "kind": "METHOD",
+      "qualifiedType": "java.io.BufferedInputStream",
+      "member": "read",
+      "signature": "read(byte[],int,int)",
+      "text": "Reads up to len bytes of data from this input stream...",
+      "score": 0.847,
+      "rawJson": "{\"type\": \"class\", ...}"
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "json_doclet": {
+    "description": "Example of the JSON Doclet's CLI options and output structure",
+    "cli_options": {
+      "-d": "Output directory (default: json-doclet-out)",
+      "--doc-version": "Version recorded in index.json",
+      "--pretty": "Format JSON with indentation",
+      "--no-chunks": "Do not generate chunks.jsonl",
+      "--chunks-file": "Path of the JSONL chunks file",
+      "--max-chunk-chars": "Maximum chunk size (default: 4000)",
+      "--chunk-overlap": "Overlap between fragments (default: 200)",
+      "--only-documented": "Emit chunks only for documented elements"
+    },
+    "output_structure": {
+      "json-doclet-out/": {
+        "index.json": "Manifest with modules, packages, types, counts",
+        "module-java.base.json": "Module documentation",
+        "api/java/io/": {
+          "package-info.json": "Package documentation",
+          "BufferedInputStream.json": "Type documentation",
+          "FileInputStream.json": "Type documentation"
+        },
+        "chunks.jsonl": "Line-delimited JSON for semantic search"
+      }
+    },
+    "chunk_example": {
+      "id": "java.io.BufferedInputStream#read(byte[],int,int)",
+      "text": "Reads up to len bytes of data from this input stream. An attempt to read after EOF will return -1.",
+      "metadata": {
+        "kind": "METHOD",
+        "documented": true,
+        "type": "java.io.BufferedInputStream",
+        "package": "java.io",
+        "module": "java.base",
+        "member": "read",
+        "signature": "read(byte[],int,int)",
+        "since": "1.1"
+      }
+    }
+  }
+}

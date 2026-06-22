@@ -1,0 +1,13 @@
+{
+  "mcp_configuration": {
+    "description": "Example of the MCP Configuration's bean creation",
+    "javadocToolCallbacks": {
+      "type": "ToolCallbackProvider",
+      "tools": ["listVersions()", "searchJavadoc(version, query, topK)"]
+    },
+    "springBootToolCallbacks": {
+      "type": "ToolCallbackProvider",
+      "tools": ["searchSpringBootDocs(query)"]
+    }
+  }
+}

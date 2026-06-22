@@ -1,0 +1,22 @@
+{
+  "semantic_search": {
+    "description": "Example of the Semantic Search's input/output",
+    "input": {
+      "version": "25.0.3",
+      "query": "read bytes from a stream",
+      "topK": 10
+    },
+    "output": [
+      {
+        "chunkId": "java.io.BufferedInputStream#read(byte[],int,int)",
+        "kind": "METHOD",
+        "qualifiedType": "java.io.BufferedInputStream",
+        "member": "read",
+        "signature": "read(byte[],int,int)",
+        "text": "Reads up to len bytes of data from this input stream. An attempt to read after EOF will return -1.",
+        "score": 0.847,
+        "rawJson": "{\"type\": \"class\", ...}"
+      }
+    ]
+  }
+}

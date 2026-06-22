@@ -1,0 +1,31 @@
+{
+  "database_ingestion": {
+    "description": "Example of the Database Ingestion's input/output",
+    "input": {
+      "version": "25.0.3"
+    },
+    "output": {
+      "type": "JdkVersion entity",
+      "example": {
+        "version": "25.0.3",
+        "major": 25,
+        "minor": 0,
+        "security": 3,
+        "javaRuntime": "hotspot",
+        "generator": "json-doclet 1.0.0",
+        "generatedAt": "2026-01-15T10:30:00Z",
+        "typeCount": 12345,
+        "packageCount": 234,
+        "moduleCount": 12,
+        "chunkCount": 50000,
+        "ingestedAt": "2026-06-21T14:00:00Z",
+        "status": "READY"
+      }
+    },
+    "phases": {
+      "phase1_manifest": "Parse index.json → JdkVersion entity",
+      "phase2_elements": "Parse all .json files → JdkDocElement entities (batch flush every 200)",
+      "phase3_chunks": "Parse chunks.jsonl → JdkDocChunk entities with embeddings (batch flush every 200)"
+    }
+  }
+}
