@@ -31,4 +31,10 @@ public class JavaDocMCP {
             @ToolParam(description = "Maximum number of results") int topK) {
         return jdkSearchService.search(version, query, topK <= 0 ? 10 : topK);
     }
+
+    @Tool(description = "Generate JDK documentation and ingest it into the database. Downloads the JDK source, runs the JsonDoclet to produce JSON Javadoc, then ingests the data with vector embeddings.")
+    public String ingestJdk(@ToolParam(description = "JDK version to ingest, e.g. 25.0.3") String version) {
+        // TODO: Implement actual search logic
+        return "Not Implemented";
+    }
 }
