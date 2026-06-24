@@ -32,7 +32,8 @@ It does this by:
 3. **Exposing** it through the MCP protocol so AI models can query it directly
 
 - **Doclet pipeline**: JDK source → `JsonDoclet` → JSON Javadoc (fully implemented)
-- **MCP tools**: `listVersions()`, `searchJavadoc()` — fully wired to the semantic search service
+- **MCP tools**: `listVersions()`, `searchJavadoc()`, `startDocGeneration()`, `getDocGenerationProgress()`,
+  `startIngest()`, `getIngestProgress()` — fully wired to the semantic search service
 
 This project demonstrates the full stack: doclet → JSON → SQLite + Hibernate Search/Lucene → MCP tools. It's meant to
 be studied, adapted, and used as a reference for building your own documentation MCP servers — starting with the JDK SDK
@@ -67,6 +68,10 @@ The MCP server exposes the following query capabilities through its tools:
 - **`searchJavadoc(version, query, topK)`** — Semantic search of JDK API documentation using vector kNN embeddings.
   Returns chunks ranked by relevance, including kind (class/method/field), signature, and description.
 - **`listVersions()`** — Lists available JDK versions whose documentation has been ingested.
+- **`startDocGeneration(jdkVersion, jdkDistribution)`** — Start an async JDK documentation generation pipeline.
+- **`getDocGenerationProgress(taskId)`** — Poll the status of a doc generation task.
+- **`startIngest(jdkVersion, jdkDistribution)`** — Start an async JDK documentation ingestion pipeline.
+- **`getIngestProgress(taskId)`** — Poll the status of an ingest task.
 
 ### Example: Semantic search for JDK API
 
@@ -86,8 +91,8 @@ Before searching, documentation must be ingested into the database:
 
 The ingest is idempotent — re-ingesting a version replaces any prior ingestion.
 
-A future MCP tool (`ingestJdk(version)`) will allow triggering this entire pipeline directly from the AI model, without
-needing to run the server CLI. This is planned but not yet implemented.
+MCP tools `startIngest()` and `getIngestProgress()` allow triggering and polling the ingestion pipeline directly from
+the AI model, without needing to run the server CLI.
 
 ## How It Works
 
@@ -100,8 +105,9 @@ The JDK doesn't ship its Javadoc as JSON, so we need to generate it from the sou
    extracting class signatures, method descriptions, parameters, return types, and annotations in a format optimized for
    LLM comprehension.
 3. **Vector Indexing** — Embed and index the JSON data into SQLite + Hibernate Search/Lucene for semantic search.
-4. **MCP Tools Exposure** — Register MCP tools (`searchJavadoc`, `listVersions`) that allow AI models to query by
-   semantic similarity or list versions.
+4. **MCP Tools Exposure** — Register MCP tools (`searchJavadoc`, `listVersions`, `startIngest`, `getIngestProgress`,
+   `startDocGeneration`, `getDocGenerationProgress`) that allow AI models to query by semantic similarity, list
+   versions, or trigger ingestion pipelines.
 
 This pipeline is modular and version-aware: each JDK version gets its own ingestion run, and the database stores them
 separately so users can query documentation for any supported version.
@@ -109,9 +115,8 @@ separately so users can query documentation for any supported version.
 ## Roadmap
 
 - **Phase 1** ✅ JDK documentation ingestion and database layer; semantic search; MCP tools (`searchJavadoc`,
-  `listVersions`)
+  `listVersions`, `startIngest`, `getIngestProgress`, `startDocGeneration`, `getDocGenerationProgress`)
 - **Phase 2** Spring Boot ingestion: adoc parsing, migration guides, how-to guides, and structured MCP tools
-- **Phase 3** MCP tool `ingestJdk(version)` — trigger ingestion directly from the MCP server (planned)
 - **Phase 3** Spring Framework API docs: annotations, generics, cross-references
 
 ### Phase 2: Spring Boot Integration
@@ -159,7 +164,7 @@ graph LR
     jdkdocs["📄 JDK Docs<br/>Javadoc JSON"]
     sbdocs["📄 Spring Boot Docs<br/>adoc · Migration · How-To"]
     ai <-->|" MCP (streamable) "| server
-    server -->|" Search "| jdkdocs
+    server -->|" Search / Ingest "| jdkdocs
     server -->|" Ingest (adoc, planned) "| sbdocs
     server -->|" Search "| db
 ```
