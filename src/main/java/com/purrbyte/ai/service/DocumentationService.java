@@ -101,17 +101,17 @@ public class DocumentationService {
                             }
                         };
                         Path extractDir = workDirectory.resolve("jdk-sources").resolve(version);
+                        boolean sourceWasExtracted;
                         if (Files.exists(extractDir)) {
                             log.info("Source already extracted at {}", extractDir);
-                        } else if (requestedMajor == Runtime.version().feature()) {
-                            extractSourceZip(localSrcZip(), version, extractCallback);
+                            sourceWasExtracted = false;
                         } else {
                             Path archive = downloadDistribution(version, progressCallback);
-                            extractSourceZip(extractSrcZipFromArchive(archive, version), version, extractCallback);
+                            sourceWasExtracted = extractSourceZip(extractSrcZipFromArchive(archive, version), version, extractCallback);
                         }
                         List<String> modules = resolveModules(extractDir);
                         log.info("Documenting JDK {} ({} modules)", version, modules.size());
-                        return runJavadocDoclet(extractDir, version, modules, progressCallback);
+                        return runJavadocDoclet(extractDir, version, modules, progressCallback, sourceWasExtracted);
                     } catch (IOException e) {
                         throw new CompletionException(e);
                     }
@@ -263,12 +263,14 @@ public class DocumentationService {
     /**
      * Extracts a source zip into {@code <work>/jdk-sources/<version>} with zip-slip protection.
      * The extraction is idempotent: if the directory already exists, it is reused.
+     *
+     * @return true if the source was newly extracted, false if the directory already existed
      */
-    private void extractSourceZip(Path zipFile, String version, Consumer<Double> progressCallback) throws IOException {
+    private boolean extractSourceZip(Path zipFile, String version, Consumer<Double> progressCallback) throws IOException {
         Path extractDir = workDirectory.resolve("jdk-sources").resolve(version);
         if (Files.exists(extractDir)) {
             log.info("The source has already been obtained at {}.", extractDir);
-            return;
+            return false;
         }
         Files.createDirectories(extractDir);
         int totalEntries;
@@ -299,17 +301,18 @@ public class DocumentationService {
             }
         }
         log.info("JDK source extracted to: {}", extractDir);
+        return true;
     }
 
     /**
-     * Compresses the version directory into a ZIP file at {@code data/<version>.zip}
+     * Compresses the version directory into a ZIP file at {@code data/jdk/<version>.zip}
      * and deletes the original extracted directory. Idempotent: skips if ZIP already exists.
      *
-     * @param versionDir the extracted version directory to compress
+     * @param versionDir the extracted version directory to compress (e.g. {@code data/jdk/25.0.3/})
      * @param version    the version string (used for ZIP filename)
      */
     void zipVersion(Path versionDir, String version) throws IOException {
-        Path zipPath = versionDir.resolveSibling(version + ".zip");
+        Path zipPath = versionDir.getParent().resolve(version + ".zip");
         if (Files.exists(zipPath)) {
             log.info("ZIP already exists at {}, skipping compression", zipPath);
             return;
@@ -317,14 +320,15 @@ public class DocumentationService {
         log.info("Compressing {} into {}", versionDir, zipPath);
         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipPath))) {
             try (var walk = Files.walk(versionDir)) {
+                String versionPrefix = version + "/";
                 walk.forEach(source -> {
                     try {
                         String entryName = versionDir.relativize(source).toString();
                         if (Files.isDirectory(source)) {
-                            zos.putNextEntry(new ZipEntry(entryName + "/"));
+                            zos.putNextEntry(new ZipEntry(versionPrefix + entryName + "/"));
                             zos.closeEntry();
                         } else {
-                            zos.putNextEntry(new ZipEntry(entryName));
+                            zos.putNextEntry(new ZipEntry(versionPrefix + entryName));
                             Files.copy(source, zos);
                             zos.closeEntry();
                         }
@@ -368,7 +372,18 @@ public class DocumentationService {
         return modules;
     }
 
-    private Path runJavadocDoclet(Path moduleRoot, String version, List<String> modules, Consumer<Progress> progressCallback) throws IOException {
+    /**
+     * Runs javadoc with the JsonDoclet and copies the output to the data directory.
+     * Preserves the javadoc-out temp directory for debugging purposes.
+     *
+     * @param moduleRoot         the extracted source directory
+     * @param version            JDK version
+     * @param modules            modules to document
+     * @param progressCallback   callback for progress updates
+     * @param sourceWasExtracted true if the source was newly extracted (allows cleanup)
+     * @return path to the generated documentation directory in the output directory
+     */
+    private Path runJavadocDoclet(Path moduleRoot, String version, List<String> modules, Consumer<Progress> progressCallback, boolean sourceWasExtracted) throws IOException {
         if (modules.isEmpty()) {
             throw new IOException("No modules found to document under " + moduleRoot);
         }
@@ -408,13 +423,10 @@ public class DocumentationService {
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.redirectErrorStream(true);
         Process process = pb.start();
-        CompletableFuture<Void> progressTicker = startProgressTicker(p -> {
-            if (progressCallback != null) {
-                progressCallback.accept(Progress.of(p, Progress.MODULE_JAVADOC));
-            }
-        });
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+        if (progressCallback != null) {
+            progressCallback.accept(Progress.of(0, Progress.MODULE_JAVADOC));
+        }
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 log.info("[javadoc] {}", line);
@@ -425,13 +437,17 @@ public class DocumentationService {
         boolean exited;
         try {
             exited = process.waitFor(JAVADOC_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            if (progressCallback != null) {
+                progressCallback.accept(Progress.of(100, Progress.MODULE_JAVADOC));
+            }
         } catch (InterruptedException e) {
-            progressTicker.cancel(true);
+            if (progressCallback != null) {
+                progressCallback.accept(Progress.of(-1, Progress.MODULE_JAVADOC));
+            }
             Thread.currentThread().interrupt();
             deleteDirectory(tempOutputDir);
             throw new IOException("javadoc process interrupted", e);
         }
-        progressTicker.cancel(true);
         if (!exited) {
             process.destroyForcibly();
             deleteDirectory(tempOutputDir);
@@ -445,22 +461,23 @@ public class DocumentationService {
             throw new IOException("javadoc did not produce index.json (exit code " + exitCode + ")");
         }
         if (exitCode != 0) {
-            log.warn("javadoc exited with code {} but index.json was produced; continuing with partial documentation",
-                    exitCode);
+            log.warn("javadoc exited with code {} but index.json was produced; continuing with partial documentation", exitCode);
         }
-        Path versionDir = outputDirectory.resolve(version);
+        Path versionDir = outputDirectory.resolve("jdk").resolve(version);
         Files.createDirectories(versionDir);
         try {
             copyDirectory(tempOutputDir, versionDir);
         } catch (IOException e) {
             throw new IOException("Failed to copy javadoc output to output directory: " + e.getMessage(), e);
         }
-        try {
-            deleteDirectory(tempOutputDir);
-        } catch (IOException e) {
-            log.warn("Failed to clean up temp dir {}: {}", tempOutputDir, e.getMessage());
+        // Delete the extracted source directory if it was newly created
+        if (sourceWasExtracted && Files.exists(moduleRoot)) {
+            try {
+                deleteDirectory(moduleRoot);
+            } catch (IOException e) {
+                log.warn("Failed to clean up source dir {}: {}", moduleRoot, e.getMessage());
+            }
         }
-        // Compress the version directory into a ZIP and remove the extracted directory
         zipVersion(versionDir, version);
         log.info("JDK documentation generated at {}", versionDir);
         return versionDir;
@@ -485,30 +502,6 @@ public class DocumentationService {
             log.debug("Failed to list doclet directory: {}", e.getMessage());
             return null;
         }
-    }
-
-    /**
-     * Creates an async progress ticker that increments progress during the javadoc phase.
-     *
-     * @param progressCallback callback for raw progress percentage (0.0 to 100.0)
-     */
-    private CompletableFuture<Void> startProgressTicker(Consumer<Double> progressCallback) {
-        if (progressCallback == null) {
-            return CompletableFuture.completedFuture(null);
-        }
-        return CompletableFuture.runAsync(() -> {
-            int i = 0;
-            while (!Thread.currentThread().isInterrupted()) {
-                double progress = 5.0 + (95.0 * Math.min(i / 100.0, 1.0));
-                progressCallback.accept(progress);
-                i++;
-                try {
-                    TimeUnit.MILLISECONDS.sleep(500);
-                } catch (InterruptedException e) {
-                    break;
-                }
-            }
-        });
     }
 
     /**

@@ -5,6 +5,7 @@ import com.purrbyte.ai.domain.JdkDocElement;
 import com.purrbyte.ai.domain.JdkVersion;
 import com.purrbyte.ai.model.ElementKind;
 import com.purrbyte.ai.model.IngestStatus;
+import com.purrbyte.ai.model.dto.IngestProgress;
 import com.purrbyte.ai.repository.JdkDocChunkRepository;
 import com.purrbyte.ai.repository.JdkDocElementRepository;
 import com.purrbyte.ai.repository.JdkVersionRepository;
@@ -27,6 +28,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Enumeration;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -37,6 +43,8 @@ public class IngestionService {
 
     private static final int BATCH_SIZE = 200;
 
+    private final Executor ingestExecutor = Executors.newVirtualThreadPerTaskExecutor();
+
     private final DocumentationService documentationService;
     private final EmbeddingService embeddingService;
     private final JdkVersionRepository jdkVersionRepository;
@@ -46,6 +54,10 @@ public class IngestionService {
 
     @Transactional
     public JdkVersion ingest(String version) throws IOException {
+        return ingest(version, null);
+    }
+
+    private JdkVersion ingest(String version, Consumer<IngestProgress> progressCallback) throws IOException {
         long totalStart = System.currentTimeMillis();
         log.info("Starting ingest for JDK {} (ZIP: {})", version, documentationService.getVersionZip(version));
         Path zipPath = documentationService.getVersionZip(version);
@@ -68,14 +80,17 @@ public class IngestionService {
             log.info("[{}/manifest] Manifest loaded — {} modules, {} packages, {} types, {} chunks ({}ms)",
                     version, jdkVersion.getModuleCount(), jdkVersion.getPackageCount(),
                     jdkVersion.getTypeCount(), jdkVersion.getChunkCount(), elapsedMs(t0));
+            if (progressCallback != null) {
+                progressCallback.accept(IngestProgress.of(10.0, IngestProgress.MODULE_MANIFEST));
+            }
             try {
                 log.info("[{}/elements] Ingesting structural elements from ZIP", version);
                 long startTime = System.currentTimeMillis();
-                ingestElementsFromZip(jdkVersion, zipFile, jdkVersion.getTypeCount() + jdkVersion.getPackageCount() + jdkVersion.getModuleCount(), t0);
+                ingestElementsFromZip(jdkVersion, zipFile, jdkVersion.getTypeCount() + jdkVersion.getPackageCount() + jdkVersion.getModuleCount(), t0, progressCallback);
                 log.info("[{}/elements] Structural elements ingested ({}ms)", version, elapsedMs(startTime));
                 log.info("[{}/chunks] Ingesting {} chunks and generating embeddings (ZIP: {})", version, jdkVersion.getChunkCount(), documentationService.getVersionZip(version));
                 long endTime = System.currentTimeMillis();
-                ingestChunksFromZip(jdkVersion, zipFile, jdkVersion.getChunkCount(), startTime);
+                ingestChunksFromZip(jdkVersion, zipFile, jdkVersion.getChunkCount(), startTime, progressCallback);
                 log.info("Ingested JDK {}: {} chunks ({}ms)", version, jdkVersion.getChunkCount(), elapsedMs(endTime));
             } catch (RuntimeException | IOException e) {
                 jdkVersion.setStatus(IngestStatus.FAILED);
@@ -87,6 +102,31 @@ public class IngestionService {
         return jdkVersion;
     }
 
+    /**
+     * Asynchronously ingests the JDK documentation for the specified version.
+     *
+     * @param version          JDK version (e.g. "25.0.3")
+     * @param progressCallback callback for progress updates (reports MANIFEST, ELEMENTS, CHUNKS phases)
+     * @return future with the ingested {@link JdkVersion} entity
+     */
+    public CompletableFuture<JdkVersion> ingestAsync(String version, Consumer<IngestProgress> progressCallback) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                Path zipPath = documentationService.getVersionZip(version);
+                if (zipPath == null) {
+                    throw new IOException("No generated documentation found for version " + version);
+                }
+                // Report manifest phase
+                progressCallback.accept(IngestProgress.of(0.0, IngestProgress.MODULE_MANIFEST));
+                JdkVersion result = ingest(version, progressCallback);
+                // Report final phase as complete
+                progressCallback.accept(IngestProgress.of(100.0, IngestProgress.MODULE_CHUNKS));
+                return result;
+            } catch (IOException e) {
+                throw new CompletionException(new RuntimeException("Ingestion failed: " + e.getMessage(), e));
+            }
+        }, ingestExecutor);
+    }
 
     private JdkVersion readManifestFromZip(String version, ZipFile zipFile) throws IOException {
         ZipEntry indexEntry = ZIPHelper.findZipEntry(zipFile, "index.json");
@@ -113,7 +153,7 @@ public class IngestionService {
                 .build();
     }
 
-    private void ingestElementsFromZip(JdkVersion jdkVersion, ZipFile zipFile, int totalExpected, long startMillis) throws IOException {
+    private void ingestElementsFromZip(JdkVersion jdkVersion, ZipFile zipFile, int totalExpected, long startMillis, Consumer<IngestProgress> progressCallback) throws IOException {
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
         int total = 0;
         int persisted = 0;
@@ -129,11 +169,19 @@ public class IngestionService {
                 }
                 if (total % BATCH_SIZE == 0) {
                     log.info("[{}/elements] Processed {} / {} entries, persisted {} elements ({}ms elapsed)", jdkVersion.getVersion(), total, totalExpected, persisted, elapsedMs(startMillis));
+                    if (totalExpected > 0 && progressCallback != null) {
+                        double progress = Math.min(total / (double) totalExpected * 100.0, 100.0);
+                        progressCallback.accept(IngestProgress.of(progress, IngestProgress.MODULE_ELEMENTS));
+                    }
                 }
             }
         }
-        if (total > BATCH_SIZE && total % (BATCH_SIZE * 10) == 0) {
+        if (total > BATCH_SIZE && total % BATCH_SIZE == 0) {
             log.info("[{}/elements] Processed {} / {} entries, persisted {} elements ({}ms elapsed)", jdkVersion.getVersion(), total, totalExpected, persisted, elapsedMs(startMillis));
+            if (totalExpected > 0 && progressCallback != null) {
+                double progress = Math.min(total / (double) totalExpected * 100.0, 100.0);
+                progressCallback.accept(IngestProgress.of(progress, IngestProgress.MODULE_ELEMENTS));
+            }
         }
     }
 
@@ -166,7 +214,7 @@ public class IngestionService {
         return true;
     }
 
-    private void ingestChunksFromZip(JdkVersion jdkVersion, ZipFile zipFile, int totalChunks, long startMillis) throws IOException {
+    private void ingestChunksFromZip(JdkVersion jdkVersion, ZipFile zipFile, int totalChunks, long startMillis, Consumer<IngestProgress> progressCallback) throws IOException {
         ZipEntry chunksEntry = ZIPHelper.findZipEntry(zipFile, "chunks.jsonl");
         if (chunksEntry == null) {
             log.info("[{}/chunks] No chunks.jsonl found in ZIP", jdkVersion.getVersion());
@@ -210,15 +258,22 @@ public class IngestionService {
                         .build();
                 jdkDocElementRepository.findByJdkVersionAndQualifiedId(jdkVersion, ownerId).ifPresent(jdkDocChunk::setJDKDocElement);
                 jdkDocChunkRepository.save(jdkDocChunk);
-                if (++count % BATCH_SIZE == 0) {
+                if (count % BATCH_SIZE == 0) {
                     jdkDocChunkRepository.flush();
-                }
-                if (count > BATCH_SIZE && count % (BATCH_SIZE * 10) == 0) {
                     log.info("[{}/chunks] Processed {} / {} chunks ({} skipped, {}ms elapsed)", jdkVersion.getVersion(), count, totalChunks, skipped, elapsedMs(startMillis));
+                    if (totalChunks > 0 && progressCallback != null) {
+                        double progress = Math.min(count / (double) totalChunks * 100.0, 100.0);
+                        progressCallback.accept(IngestProgress.of(progress, IngestProgress.MODULE_CHUNKS));
+                    }
                 }
+                count++;
             }
         }
         log.info("[{}/chunks] Chunk ingestion complete: {} / {} processed, {} skipped ({}ms elapsed)", jdkVersion.getVersion(), count, totalChunks, skipped, elapsedMs(startMillis));
+        if (totalChunks > 0 && progressCallback != null) {
+            double progress = Math.min(count / (double) totalChunks * 100.0, 100.0);
+            progressCallback.accept(IngestProgress.of(progress, IngestProgress.MODULE_CHUNKS));
+        }
     }
 
     /**
