@@ -11,6 +11,19 @@ Actuator values are restricted by convention — do not expose sensitive data:
 | Loggers      | `READ_ONLY` | Allow inspection without modification |
 | Health       | Always show | Diagnostic only, no sensitive data    |
 
+### Actuator Environment Variables
+
+| Variable                        | Default     | Purpose                            |
+|---------------------------------|-------------|------------------------------------|
+| `ACTUATOR_HEALTH_SHOW_DETAILS`  | `ALWAYS`    | Show health details by default     |
+| `ACTUATOR_LOGGERS_ACCESS`       | `READ_ONLY` | Allow reading loggers, not writing |
+| `ACTUATOR_ENDPOINTS_WEB_EXPOSE` | *none*      | Control web-exposed endpoints      |
+| `ACTUATOR_ENDPOINTS_EXPOSE`     | *none*      | Control JMX-exposed endpoints      |
+| `ACTUATOR_INFO_BUILD_ENABLED`   | `true`      | Expose build info endpoint         |
+| `ACTUATOR_INFO_JAVA_ENABLED`    | `true`      | Expose Java info endpoint          |
+
+Observations annotations are enabled by default.
+
 Metrics export is disabled by default.
 
 ## Logging Paths

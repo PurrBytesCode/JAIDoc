@@ -42,19 +42,26 @@ JAIDoc/
     │   │   ├── mcp/                 # MCP tool objects (JavaDocMCP, SpringBootMCP)
     │   │   ├── model/               # Domain models and DTOs
     │   │   │   ├── ElementKind.java          # Element categorization (MODULE, PACKAGE, TYPE)
-    │   │   │   ├── IngestStatus.java         # Ingestion lifecycle state
+    │   │   │   ├── IngestStatus.java         # Ingestion lifecycle state (INGESTING, READY, FAILED)
+    │   │   │   ├── TaskStatus.java           # Async task status (PENDING, RUNNING, COMPLETED, FAILED)
     │   │   │   ├── converter/                # JPA attribute converters
     │   │   │   │   └── FloatArrayConverter.java   # float[] ↔ SQLite BLOB mapping
     │   │   │   └── dto/                      # Data transfer objects
+    │   │   │       ├── IngestProgress.java   # Progress update for JDK ingestion pipeline
     │   │   │       ├── JdkSearchResult.java  # kNN search result DTO
-    │   │   │       └── Progress.java         # Pipeline progress update DTO
+    │   │   │       ├── Progress.java         # Pipeline progress update DTO
+    │   │   │       └── TaskInfo.java         # Information about an async task
     │   │   ├── repository/          # Spring Data JPA repositories
     │   │   ├── service/             # Application services
     │   │   │   ├── DocumentationService.java  # JDK source → JSON pipeline (download, extract, javadoc, versioned output)
     │   │   │   ├── EmbeddingService.java      # Transformer embedding wrapper (e5 prefixes)
     │   │   │   ├── IngestDiscoveryService.java # Auto-discovers and ingests JDK versions from the data directory on startup
+    │   │   │   ├── IngestionService.java      # Async ingestion of JSON Javadoc into the database via virtual threads
     │   │   │   └── JdkSearchService.java      # Vector kNN search filtered by version
     │   │   └── util/                # Shared utilities
+    │   │       ├── JdkDistributionDownloader.java  # Downloads JDK distributions from Adoptium
+    │   │       ├── TaskStore.java                    # In-memory task store for async task tracking
+    │   │       └── ZIPHelper.java                    # ZIP entry lookup utility
     │   └── resources/
     │       ├── application.yaml     # Main config
     │       └── configurations/      # Profile YAMLs
@@ -71,11 +78,13 @@ JAIDoc/
         │   │   └── DocTreeJsonTest.java
         │   ├── model/converter/               # JPA converter tests (FloatArrayConverter)
         │   │   └── FloatArrayConverterTest.java
-        │   ├── service/                       # Service layer tests (JavaDoc generation, search)
+        │   ├── service/                       # Service layer tests (JavaDoc generation, ingest + search)
         │   │   ├── DocumentationServiceTest.java
-        │   │   └── DocumentationServiceIntegrationTest.java  # E2E JavaDoc generation (local JDK + downloaded JDK)
-        │   ├── util/                          # Utility class tests (version parsing, download)
-        │   │   └── JdkDistributionDownloaderTest.java
+        │   │   ├── DocumentationServiceIntegrationTest.java  # E2E JavaDoc generation (local JDK + downloaded JDK)
+        │   │   └── IngestionSearchIntegrationTest.java       # Ingest + search pipeline integration test
+        │   ├── util/                          # Utility class tests (version parsing, download, ZIP helpers)
+        │   │   ├── JdkDistributionDownloaderTest.java
+        │   │   └── ZIPHelperTest.java
         │   └── JAIDocTest.java                # Integration test for main class
         └── resources/
             └── application-test.yaml   # Test profile configuration

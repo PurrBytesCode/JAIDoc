@@ -6,17 +6,17 @@ The JDK documentation data pipeline has two stages: the raw JDK source (used as 
 output (used by the MCP server as a queryable database). The JSON output is then ingested into a SQLite database with
 Hibernate Search kNN indexing for semantic search.
 
-**Note**: The MCP server tools for querying are planned but not yet implemented. The database layer is ready; the
-MCP tools (`JavaDocMCP`) are currently a placeholder.
+**Note**: The MCP server tools for querying (`JavaDocMCP`) are fully implemented with 6 tools: `listVersions`,
+`searchJavadoc`, `startDocGeneration`, `getDocGenerationProgress`, `startIngest`, and `getIngestProgress`.
 
 ## Input: JDK Source
 
 A copy of the JDK source distribution is kept in `data/jdk/` for local testing:
 
-| File                  | Description                                                         |
-|-----------------------|---------------------------------------------------------------------|
-| `data/jdk/25.0.3.zip` | JDK 25.0.3 source distribution (ZIP) — input to the doclet pipeline |
-| `data/jdk/21.0.11.zip`| JDK 21.0.11 source distribution (ZIP) — input to the doclet pipeline |
+| File                   | Description                                                          |
+|------------------------|----------------------------------------------------------------------|
+| `data/jdk/25.0.3.zip`  | JDK 25.0.3 source distribution (ZIP) — input to the doclet pipeline  |
+| `data/jdk/21.0.11.zip` | JDK 21.0.11 source distribution (ZIP) — input to the doclet pipeline |
 
 This ZIP is the raw material. The `DocumentationService` downloads it automatically via the JDK distribution
 downloader (see [JDK-DISTRIBUTION.md](JDK-DISTRIBUTION.md)), but keeping a local copy avoids repeated downloads during
@@ -50,7 +50,7 @@ queryable database. The ZIP file is created under `data/jdk/` with a version-pre
 ## Pipeline Flow
 
 ```
-JDK source ZIP → JsonDoclet → JSON Javadoc → DB ingestion → Hibernate Search kNN index → MCP tools (queryable)
+JDK source ZIP → JsonDoclet → JSON Javadoc → Compress ZIP → DB ingestion → Hibernate Search kNN index → MCP tools (queryable)
 ```
 
 1. **Ingest** — Extract the JDK source from the ZIP (or download it automatically).
@@ -64,8 +64,8 @@ JDK source ZIP → JsonDoclet → JSON Javadoc → DB ingestion → Hibernate Se
 6. **Persist** — Store chunks and elements in SQLite via JPA entities (`JdkDocChunk`, `JdkDocElement`), with vector
    embeddings indexed by Hibernate Search kNN.
 
-**Note**: Steps 5–6 require the service layer to be wired up. Currently the doclet pipeline (steps 1–4) is the only
-fully implemented part. The MCP tools and REST endpoints for querying are planned but not yet implemented.
+Steps 5–6 are fully implemented. `IngestionService.ingestAsync()` uses virtual threads to process each chunk (embedding
+generation + JPA persistence), tracking progress via `IngestProgress` DTOs and reporting status via `TaskInfo`.
 
 ## Versioned Data
 

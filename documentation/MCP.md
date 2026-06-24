@@ -24,7 +24,7 @@ The typical workflow is:
 
 1. **Initialize** — send an `initialize` JSON-RPC request to establish a session. The server responds with an
    `Mcp-Session-Id` header.
-2. **Use tools** — include the `Mcp-Session-Id` header in all subsequent requests (`tools/list`, `tools/call`, etc.).
+2. **Use tools** — include the `Mcp-Session-Id` header in all following requests (`tools/list`, `tools/call`, etc.).
 3. **Session lifetime** — the server may close idle sessions automatically. Re-initialize if the session expires.
 
 When testing with IntelliJ's HTTP client, capture the `Mcp-Session-Id` from the `initialize` response and reuse it via
@@ -64,10 +64,17 @@ public class SpringBootMCP {
 
 #### JDK Javadoc Tools
 
-| Tool            | Description                                                | Parameters                                                                                                 |
-|-----------------|------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
-| `listVersions`  | List JDK versions whose documentation has been generated   | *none*                                                                                                     |
-| `searchJavadoc` | Semantic search of the JDK Javadoc within a single version | `version` (string) — JDK version, `query` (string) — natural language query, `topK` (number) — max results |
+| Tool                       | Description                                                | Parameters                                                                                                 |
+|----------------------------|------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| `listVersions`             | List JDK versions whose documentation has been generated   | *none*                                                                                                     |
+| `searchJavadoc`            | Semantic search of the JDK Javadoc within a single version | `version` (string) — JDK version, `query` (string) — natural language query, `topK` (number) — max results |
+| `startDocGeneration`       | Start an async JDK documentation generation pipeline       | `jdkVersion` (string) — target JDK version, `jdkDistribution` (string) — Adoptium distribution name        |
+| `getDocGenerationProgress` | Poll the status of a doc generation task                   | `taskId` (string) — async task ID from `startDocGeneration`                                                |
+| `startIngest`              | Start an async JDK documentation ingestion pipeline        | `jdkVersion` (string) — target JDK version, `jdkDistribution` (string) — Adoptium distribution name        |
+| `getIngestProgress`        | Poll the status of an ingest task                          | `taskId` (string) — async task ID from `startIngest`                                                       |
+
+**Note**: `startDocGeneration`, `getDocGenerationProgress`, `startIngest`, and `getIngestProgress` return `TaskInfo`
+objects containing `taskId`, `status` (`PENDING` / `RUNNING` / `COMPLETED` / `FAILED`), `progress`, and `message`.
 
 ## JetBrains MCP Server
 

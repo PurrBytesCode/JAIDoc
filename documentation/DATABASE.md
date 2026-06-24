@@ -27,6 +27,7 @@ JdkVersion (jdk_version)            1 ──< JdkDocElement (jdk_doc_element)   
 
 | Column          | Type    | Description                                       |
 |-----------------|---------|---------------------------------------------------|
+| `id`            | TEXT    | UUID primary key                                  |
 | `version`       | TEXT    | JDK version (denormalized, mandatory kNN filter)  |
 | `chunk_id`      | TEXT    | Unique chunk identifier                           |
 | `text`          | TEXT    | Chunk text                                        |
@@ -38,6 +39,48 @@ JdkVersion (jdk_version)            1 ──< JdkDocElement (jdk_doc_element)   
 | `member`        | TEXT    | Member name (if it's a type member)               |
 | `signature`     | TEXT    | Member signature                                  |
 | `deprecated`    | BOOLEAN | Whether deprecated                                |
+| `since`         | TEXT    | Since annotation                                  |
+| `sourceFile`    | TEXT    | Source file name                                  |
+| `sourceLine`    | INTEGER | Source line number                                |
+| `part`          | INTEGER | Chunk part index within parent element            |
+| `parts`         | INTEGER | Total parts for parent element                    |
+| `parentChunkId` | TEXT    | Parent chunk ID (if this is a sub-chunk)          |
+
+### Main columns of `jdk_doc_element`
+
+| Column          | Type    | Description                                      |
+|-----------------|---------|--------------------------------------------------|
+| `id`            | TEXT    | UUID primary key                                 |
+| `version`       | TEXT    | JDK version (denormalized, mandatory kNN filter) |
+| `kind`          | TEXT    | Element type (MODULE, PACKAGE, TYPE, etc.)       |
+| `qualifiedType` | TEXT    | Full type name                                   |
+| `packageName`   | TEXT    | Package it belongs to                            |
+| `moduleName`    | TEXT    | Module it belongs to                             |
+| `member`        | TEXT    | Member name (if it's a type member)              |
+| `signature`     | TEXT    | Member signature                                 |
+| `deprecated`    | BOOLEAN | Whether deprecated                               |
+| `since`         | TEXT    | Since annotation                                 |
+| `rawJson`       | TEXT    | Raw structural JSON of the element               |
+
+### Main columns of `jdk_version`
+
+| Column         | Type    | Description                                       |
+|----------------|---------|---------------------------------------------------|
+| `id`           | TEXT    | UUID primary key                                  |
+| `version`      | TEXT    | JDK version (e.g. "25.0.3")                       |
+| `major`        | INTEGER | Major version number                              |
+| `minor`        | INTEGER | Minor version number                              |
+| `security`     | INTEGER | Security build number                             |
+| `tag`          | TEXT    | Adoptium tag (e.g. "25.0.3+7")                    |
+| `distribution` | TEXT    | Distribution (e.g. "temurin")                     |
+| `status`       | TEXT    | Ingestion status (`INGESTING`, `READY`, `FAILED`) |
+
+### Relationships
+
+- `JdkDocElement` has a `@ManyToOne` relationship to `JdkVersion` (parent element belongs to a JDK version)
+- `JdkDocChunk` has a `@ManyToOne` relationship to `JdkDocElement` (chunk belongs to its parent element), and optionally
+  to `JdkVersion`
+- All entities use `@GeneratedValue(strategy = GenerationType.UUID)` for UUID primary keys
 
 ## Hibernate Search Mapping
 
@@ -79,9 +122,15 @@ Without these prefixes, ranking degrades silently.
 
 ## Ingestion
 
-Ingestion is an explicit step (partially implemented):
+Ingestion is an explicit step (fully implemented):
 
-1. **Doclet pipeline** (current): JDK source → `JsonDoclet` → JSON Javadoc
+1. **Doclet pipeline**: JDK source → `JsonDoclet` → JSON Javadoc
+2. **Auto-ingestion** (on startup): `IngestDiscoveryService` auto-discovers and ingests JDK versions from the
+   `data/` directory when `ingest.enabled=true`.
+3. **Async ingestion** (on demand): `IngestionService.ingestAsync(jdkVersion, jdkDistribution)` processes each chunk
+   (embedding generation + JPA persistence) using virtual threads. Progress is tracked via `IngestProgress` DTOs (with
+   phases `INGESTING`, `READY`, `FAILED`) and reported through `TaskInfo`.
+4. **MCP tools**: `startIngest` and `getIngestProgress` allow triggering and polling ingestion from the MCP server.
 
 The process:
 
@@ -90,16 +139,14 @@ The process:
 - Loads structural JSON → `JdkDocElement`
 - Reads `chunks.jsonl`, embeds and persists → `JdkDocChunk`
 
-The `IngestDiscoveryService` auto-discovers and ingests JDK versions on startup. The `IngestStatus` enum tracks the
-lifecycle state (`INGESTING`, `READY`, `FAILED`).
+The `IngestStatus` enum tracks the lifecycle state (`INGESTING`, `READY`, `FAILED`).
 
 ## Search
 
 Search is restricted to one version at a time:
 
-- **Service layer** (current): `JdkSearchService` with Hibernate Search kNN filtered by `version`
-- **MCP tool** (planned): `searchJavadoc("25.0.3", "query", 10)`
-- **REST endpoint** (planned): `GET /api/search?version=25.0.3&q=query&topK=10`
+- **Service layer**: `JdkSearchService` with Hibernate Search kNN filtered by `version`
+- **MCP tool**: `searchJavadoc("25.0.3", "query", 10)` — fully implemented in `JavaDocMCP`
 
 The kNN is filtered by `version` to guarantee isolation between versions.
 
