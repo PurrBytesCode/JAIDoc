@@ -284,7 +284,8 @@ used throughout the project.
 Test classes must compile **clean** — no compiler warnings. If a warning appears, fix it rather than ignoring it. Common
 test-specific warnings to watch for:
 
-- **Dead parameters**: Factory methods or constructors with parameters that are never used by any test (e.g., a hardcoded
+- **Dead parameters**: Factory methods or constructors with parameters that are never used by any test (e.g., a
+  hardcoded
   `false` always passed). If a parameter is always the same value, either remove it or create separate factory methods
   for each path (e.g. `createChunkWriter(...)` vs `createDocumentedOnlyChunkWriter(...)`).
 - **Unused fields**: Instance fields that are only used by a few tests when most tests call static methods. Prefer local

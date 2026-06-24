@@ -1,7 +1,7 @@
 package com.purrbyte.ai.util;
 
-import com.purrbyte.ai.model.dto.TaskInfo;
 import com.purrbyte.ai.model.TaskStatus;
+import com.purrbyte.ai.model.dto.TaskInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

@@ -33,7 +33,8 @@
             <li class="cat-idea"><a href="#plan-rules-removed">Plan Rules Removed — Incremental Workover</a></li>
             <li class="cat-idea"><a href="#task-progress-log">Task Progress Log</a></li>
             <li class="cat-idea"><a href="#task-decomposition-flow">Task Decomposition Flow</a></li>
-            <li class="cat-docs"><a href="#ai-tool-observations">AI Tool Observations — Consistency, Prompting, and MCP Usage</a></li>
+            <li class="cat-docs"><a href="#ai-tool-observations">AI Tool Observations — Consistency, Prompting, and MCP
+                Usage</a></li>
         </ul>
     </nav>
 
@@ -46,7 +47,8 @@
             gradual problem-solving — working on one piece at a time.</p>
         <p><strong>Open question:</strong> Can the local model divide and separate tasks into manageable sub-tasks?
             When creating full plans, local models lack the power — they end up in loops, ignore many things, or take
-            too long to respond. Instead of full plans, the approach should be to design a flow with local AI that breaks
+            too long to respond. Instead of full plans, the approach should be to design a flow with local AI that
+            breaks
             features or tasks into minimal manageable processes that can be worked on without much effort.</p>
     </section>
 
@@ -116,19 +118,24 @@
         <p><strong>Observations on model consistency:</strong></p>
         <ul>
             <li>Cloud and local models alike sometimes need a reset — the same model that has worked well for hours
-                simply breaks, and even simple commands stop working</li>
+                simply breaks, and even simple commands stop working
+            </li>
             <li>Guessing it's by design, but it's uncomfortable not having at least a minimally consistent level of
-                performance</li>
+                performance
+            </li>
             <li>Will try other MCP models from the same qwen family for faster results, so failures are less tedious and
-                annoying</li>
+                annoying
+            </li>
         </ul>
         <p><strong>Observations on tool behavior:</strong></p>
         <ul>
             <li>Claude Code doesn't follow the elements in its own CLAUDE.md very well, especially when it comes to file
-                reading via MCP — it seems to disregard them</li>
+                reading via MCP — it seems to disregard them
+            </li>
             <li>Junie CLI is much more correct with MCP usage and prioritizes it heavily</li>
             <li>The advantages of Claude Code are sequential criteria and certain practical commands, but Junie is more
-                practical and agile</li>
+                practical and agile
+            </li>
             <li>Need to examine how the qwopus models work in Junie with more detail and update my information</li>
         </ul>
     </section>

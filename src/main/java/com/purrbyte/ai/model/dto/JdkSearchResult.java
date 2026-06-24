@@ -2,14 +2,14 @@ package com.purrbyte.ai.model.dto;
 
 import lombok.*;
 
+/**
+ * Search result from a vector kNN query on {@code JdkDocChunk}.
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Getter
 @Setter
-/**
- * Search result from a vector kNN query on {@code JdkDocChunk}.
- */
 public final class JdkSearchResult {
 
     /**
