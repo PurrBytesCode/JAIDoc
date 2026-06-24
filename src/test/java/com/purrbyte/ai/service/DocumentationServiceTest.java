@@ -2,6 +2,7 @@ package com.purrbyte.ai.service;
 
 import com.purrbyte.ai.repository.JdkVersionRepository;
 import com.purrbyte.ai.test.UnitTest;
+import com.purrbyte.ai.util.ZIPHelper;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -15,6 +16,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,6 +63,19 @@ class DocumentationServiceTest extends UnitTest {
     }
 
     @Nested
+    class GetVersionZipNoSubdir_returnsNull {
+
+        @Test
+        void versionAtRootNotInJdkDir_returnsNull() throws IOException {
+            setupDirectories();
+            // ZIP at data/25.0.3.zip (old location) should not be found
+            createTestZipWithVersionDir(outputDirectory, "25.0.3", "index.json", "{}");
+            DocumentationService service = createService();
+            assertThat(service.getVersionZip("25.0.3")).isNull();
+        }
+    }
+
+    @Nested
     class ListAvailableVersionsTest {
 
         private DocumentationService createServiceWithRepo(JdkVersionRepository repo) {
@@ -101,63 +116,16 @@ class DocumentationServiceTest extends UnitTest {
     }
 
     @Nested
-    class IsVersionGeneratedTest {
-
-        @Test
-        void versionWithIndexInZip_returnsTrue() throws IOException {
-            setupDirectories();
-            createTestZipWithVersionDir(outputDirectory, "25.0.3", "index.json", "{}", "elements.json", "[]");
-            DocumentationService service = createService();
-            assertThat(service.isVersionGenerated("25.0.3")).isTrue();
-        }
-
-        @Test
-        void versionWithIndexInZipInSubdir_returnsTrue() throws IOException {
-            setupDirectories();
-            Path subDir = outputDirectory.resolve("jdk");
-            Files.createDirectories(subDir);
-            createTestZipWithVersionDir(subDir, "25.0.3", "index.json", "{}", "elements.json", "[]");
-            DocumentationService service = createService();
-            assertThat(service.isVersionGenerated("25.0.3")).isTrue();
-        }
-
-        @Test
-        void versionWithoutIndexInZip_returnsFalse() throws IOException {
-            setupDirectories();
-            // ZIP exists but no index.json inside
-            createTestZipWithVersionDir(outputDirectory, "25.0.3", "elements.json", "[]");
-            DocumentationService service = createService();
-            assertThat(service.isVersionGenerated("25.0.3")).isFalse();
-        }
-
-        @Test
-        void versionWithoutIndexInZipInSubdir_returnsFalse() throws IOException {
-            setupDirectories();
-            Path subDir = outputDirectory.resolve("jdk");
-            Files.createDirectories(subDir);
-            // ZIP exists but no index.json inside
-            createTestZipWithVersionDir(subDir, "25.0.3", "elements.json", "[]");
-            DocumentationService service = createService();
-            assertThat(service.isVersionGenerated("25.0.3")).isFalse();
-        }
-
-        @Test
-        void nonExistentVersion_returnsFalse() throws IOException {
-            setupDirectories();
-            DocumentationService service = createService();
-            assertThat(service.isVersionGenerated("99.0.0")).isFalse();
-        }
-    }
-
-    @Nested
     class GetVersionZipTest {
 
         @Test
-        void existingVersionAtRoot_returnsZipPath() throws IOException {
+        void existingVersionInJdkDir_returnsZipPath() throws IOException {
             setupDirectories();
-            createTestZipWithVersionDir(outputDirectory, "25.0.3", "index.json", "{}", "elements.json", "[]");
+            Path jdkDir = outputDirectory.resolve("jdk");
+            Files.createDirectories(jdkDir);
+            createTestZipWithVersionDir(jdkDir, "25.0.3", "index.json", "{}", "elements.json", "[]");
             DocumentationService service = createService();
-            Path zipPath = outputDirectory.resolve("25.0.3.zip");
+            Path zipPath = jdkDir.resolve("25.0.3.zip");
             assertThat(service.getVersionZip("25.0.3")).isEqualTo(zipPath);
         }
 
@@ -176,7 +144,112 @@ class DocumentationServiceTest extends UnitTest {
         void nonExistentVersion_returnsNull() throws IOException {
             setupDirectories();
             DocumentationService service = createService();
-            assertThat(service.getVersionZip("25.0.3")).isNull();
+            assertThat(service.getVersionZip("99.0.0")).isNull();
+        }
+    }
+
+    @Nested
+    class IsVersionGeneratedTest {
+
+        @Test
+        void versionWithIndexInZip_returnsTrue() throws IOException {
+            setupDirectories();
+            Path jdkDir = outputDirectory.resolve("jdk");
+            Files.createDirectories(jdkDir);
+            createTestZipWithVersionDir(jdkDir, "25.0.3", "index.json", "{}", "elements.json", "[]");
+            DocumentationService service = createService();
+            assertThat(service.isVersionGenerated("25.0.3")).isTrue();
+        }
+
+        @Test
+        void versionWithIndexInZipInSubdir_returnsTrue() throws IOException {
+            setupDirectories();
+            Path jdkDir = outputDirectory.resolve("jdk");
+            Files.createDirectories(jdkDir);
+            createTestZipWithVersionDir(jdkDir, "25.0.3", "index.json", "{}", "elements.json", "[]");
+            DocumentationService service = createService();
+            assertThat(service.isVersionGenerated("25.0.3")).isTrue();
+        }
+
+        @Test
+        void versionWithoutIndexInZip_returnsFalse() throws IOException {
+            setupDirectories();
+            // ZIP exists but no index.json inside
+            Path jdkDir = outputDirectory.resolve("jdk");
+            Files.createDirectories(jdkDir);
+            createTestZipWithVersionDir(jdkDir, "25.0.3", "elements.json", "[]");
+            DocumentationService service = createService();
+            assertThat(service.isVersionGenerated("25.0.3")).isFalse();
+        }
+
+        @Test
+        void versionWithoutIndexInZipInSubdir_returnsFalse() throws IOException {
+            setupDirectories();
+            Path jdkDir = outputDirectory.resolve("jdk");
+            Files.createDirectories(jdkDir);
+            // ZIP exists but no index.json inside
+            createTestZipWithVersionDir(jdkDir, "25.0.3", "elements.json", "[]");
+            DocumentationService service = createService();
+            assertThat(service.isVersionGenerated("25.0.3")).isFalse();
+        }
+
+        @Test
+        void nonExistentVersion_returnsFalse() throws IOException {
+            setupDirectories();
+            DocumentationService service = createService();
+            assertThat(service.isVersionGenerated("99.0.0")).isFalse();
+        }
+    }
+
+    @Nested
+    class ZipVersionTest {
+
+        @Test
+        void zip_createsVersionPrefixedEntries() throws Exception {
+            setupDirectories();
+            Path jdkDir = outputDirectory.resolve("jdk").resolve("25.0.3");
+            Files.createDirectories(jdkDir);
+            Files.writeString(jdkDir.resolve("index.json"), "{}");
+            Files.writeString(jdkDir.resolve("chunks.jsonl"), "line1");
+            DocumentationService service = createService();
+            invokeZipVersion(service, jdkDir, "25.0.3");
+            // ZIP should be at data/jdk/25.0.3.zip
+            Path zipPath = outputDirectory.resolve("jdk").resolve("25.0.3.zip");
+            assertThat(zipPath).exists();
+            try (ZipFile zf = new ZipFile(zipPath.toFile())) {
+                ZipEntry index = ZIPHelper.findZipEntry(zf, "25.0.3/index.json");
+                assertThat(index).isNotNull();
+                ZipEntry chunks = ZIPHelper.findZipEntry(zf, "25.0.3/chunks.jsonl");
+                assertThat(chunks).isNotNull();
+            }
+            // Original directory should be deleted
+            assertThat(Files.exists(jdkDir)).isFalse();
+        }
+
+        @Test
+        void idempotent_skipsIfExists() throws Exception {
+            setupDirectories();
+            Path jdkDir = outputDirectory.resolve("jdk").resolve("25.0.3");
+            Files.createDirectories(jdkDir);
+            Files.writeString(jdkDir.resolve("index.json"), "{}");
+            Path zipPath = outputDirectory.resolve("jdk").resolve("25.0.3.zip");
+            // Pre-create the ZIP
+            try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipPath))) {
+                zos.putNextEntry(new ZipEntry("25.0.3/index.json"));
+                zos.write("{}".getBytes(StandardCharsets.UTF_8));
+                zos.closeEntry();
+            }
+            DocumentationService service = createService();
+            invokeZipVersion(service, jdkDir, "25.0.3");
+            // ZIP should still exist and original directory should still exist
+            assertThat(zipPath).exists();
+            assertThat(Files.exists(jdkDir)).isTrue();
+        }
+
+        private void invokeZipVersion(DocumentationService service, Path versionDir, String version) throws Exception {
+            Method method = DocumentationService.class.getDeclaredMethod("zipVersion", Path.class, String.class);
+            method.setAccessible(true);
+            method.invoke(service, versionDir, version);
         }
     }
 

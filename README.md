@@ -147,7 +147,7 @@ The repository is organized into distinct workspaces, each with a specific purpo
 | `onnx/`          | Local AI models — ONNX embedding model and tokenizer used for semantic search                                            |
 | `doclet/`        | Build output — the doclet JAR produced by Maven                                                                          |
 | `assembly/`      | Maven assembly descriptor — packaging configuration for the doclet JAR                                                   |
-| `test/`          | IntelliJ HTTP client — `mcp-tools.http` and environment config for manual MCP tool testing                               |
+| `request/`       | IntelliJ HTTP client — `mcp-tools.http` and environment config for manual MCP tool testing                               |
 
 ## Architecture
 

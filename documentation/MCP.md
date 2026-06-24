@@ -29,7 +29,7 @@ The typical workflow is:
 
 When testing with IntelliJ's HTTP client, capture the `Mcp-Session-Id` from the `initialize` response and reuse it via
 environment variables.
-See `test/mcp-tools.http` for a complete working example.
+See `request/mcp-tools.http` for a complete working example.
 
 ### MCP Domains
 

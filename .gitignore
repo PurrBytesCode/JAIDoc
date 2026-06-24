@@ -13,8 +13,12 @@ logs/
 ### RUNTIME ###
 JdkDocChunk/
 backup.zip
+jdk-distributions/
+jdk-doc-workspace/
 
 ### AI ###
+.claude/multi-gpu-settings.local.json
+.claude/settings.local.json
 .agents/
 .cline/
 .junie/plans

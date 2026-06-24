@@ -109,7 +109,30 @@ Mcp-Session-Id: {{mcpSessionId}}
   }
 }
 
-### Start Doc Generation — async task
+### Start Doc Generation — async task - 25.0.3
+POST {{serverMCPUrl}}
+Accept: {{accept}}
+Content-Type: {{contentType}}
+Mcp-Session-Id: {{mcpSessionId}}
+
+{
+  "jsonrpc": "{{jsonRpcVersion}}",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "startDocGeneration",
+    "arguments": {
+      "version": "25.0.3"
+    }
+  }
+}
+
+> {%
+    client.global.set("docGenerationTaskId", response.body.result);
+    client.log("Doc Generation Task ID: " + client.global.get("docGenerationTaskId"));
+%}
+
+### Start Doc Generation — async task - 17.0.19
 POST {{serverMCPUrl}}
 Accept: {{accept}}
 Content-Type: {{contentType}}
