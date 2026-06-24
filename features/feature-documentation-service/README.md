@@ -79,7 +79,7 @@ DocumentationService.generateJdkDocumentation(version, progress)
     │     ├──→ Execute: javadoc -docletpath <jar> -doclet JsonDoclet
     │     │          --module-source-path <root> --module <modules> -d <out> --pretty --doc-version <ver>
     │     │          -Xmaxerrs 100000 -Xmaxwarns 100000
-    │     ├──→ Wait up to 600 seconds
+    │     ├──→ Wait up to configured timeout (default 600s)
     │     ├──→ Success: presence of index.json (not exit code)
     │     └──→ Copy output to data directory, compress, cleanup
     │
@@ -88,8 +88,8 @@ DocumentationService.generateJdkDocumentation(version, progress)
 
 ### Configuration
 
-- `src/main/resources/configurations/db-configuration.yml` — `doclet.work.directory`, `doclet.jar.directory`,
-  `doclet.javadoc.home`, `doclet.modules`, `data.directory`
+- `src/main/resources/configurations/documentation-configuration.yml` — `doclet.work.directory`, `doclet.jar.directory`,
+  `doclet.javadoc.home`, `doclet.javadoc.timeout`, `doclet.modules`, `data.directory`
 
 ## Tests
 

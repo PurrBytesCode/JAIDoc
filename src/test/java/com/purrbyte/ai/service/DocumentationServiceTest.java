@@ -79,7 +79,7 @@ class DocumentationServiceTest extends UnitTest {
     class ListAvailableVersionsTest {
 
         private DocumentationService createServiceWithRepo(JdkVersionRepository repo) {
-            return new DocumentationService(null, repo, workDirectory, outputDirectory, "", docletDirectory, "");
+            return new DocumentationService(null, repo, workDirectory, outputDirectory, "", docletDirectory, "", 600);
         }
 
         @Test
@@ -246,6 +246,7 @@ class DocumentationServiceTest extends UnitTest {
             assertThat(Files.exists(jdkDir)).isTrue();
         }
 
+        @SuppressWarnings("SameParameterValue")
         private void invokeZipVersion(DocumentationService service, Path versionDir, String version) throws Exception {
             Method method = DocumentationService.class.getDeclaredMethod("zipVersion", Path.class, String.class);
             method.setAccessible(true);
@@ -300,7 +301,7 @@ class DocumentationServiceTest extends UnitTest {
      * Creates a test ZIP with a version-prefixed directory structure, matching what
      * {@link DocumentationService#zipVersion} produces.
      */
-    @SuppressWarnings("SameParameterValue")
+    @SuppressWarnings({"SameParameterValue", "UnusedReturnValue"})
     private Path createTestZipWithVersionDir(Path dir, String version, String... entries) throws IOException {
         Path zipFile = dir.resolve(version + ".zip");
         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipFile))) {
@@ -321,7 +322,7 @@ class DocumentationServiceTest extends UnitTest {
     }
 
     private DocumentationService createService() {
-        return new DocumentationService(null, null, workDirectory, outputDirectory, "", docletDirectory, "");
+        return new DocumentationService(null, null, workDirectory, outputDirectory, "", docletDirectory, "", 600);
     }
 
     @SuppressWarnings("SameParameterValue")

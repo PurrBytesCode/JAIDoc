@@ -51,6 +51,7 @@ jdk:
 doclet:
   javadoc:
     home: ${DOCLET_JAVADOC_HOME:}                               # JDK home for the javadoc tool (empty = running JDK)
+    timeout: ${DOCLET_JAVADOC_TIMEOUT:600}                     # Timeout in seconds for the javadoc process
 ```
 
 ## Key behaviors

@@ -26,7 +26,7 @@ DocumentationService.generateJdkDocumentation(version, progress)
     ├──→ runJavadocDoclet(moduleRoot, version, modules, javadocProgress) — MODULE_JAVADOC
     │     ├──→ Start progress ticker: 5% → 100% over 100 ticks (500ms each)
     │     ├──→ Execute javadoc command with JsonDoclet
-    │     ├──→ Wait up to 600 seconds
+    │     ├──→ Wait up to configured timeout (default 600s)
     │     ├──→ Success: index.json exists (not exit code)
     │     └──→ Copy output → compress → cleanup
     │
@@ -65,5 +65,6 @@ MODULE_JAVADOC:   5% → 100% — running javadoc with JsonDoclet (rough estimat
 - `IOException("The javadoc JDK (major M) cannot document newer JDK {version} source")` — Javadoc JDK older than target
 - `IOException("JDK source archive not found at {srcZip}")` — Running JDK doesn't ship lib/src.zip
 - `IOException("No Adoptium JDK binary found for version {version} ({os}/{arch})")` — No matching binary
-- `IOException("javadoc process timed out after 600 seconds")` — Javadoc timeout
+- `IOException("javadoc process timed out after {timeout} seconds")` — Javadoc timed out (configured via
+  `doclet.javadoc.timeout`)
 - `IOException("javadoc did not produce index.json (exit code E)")` — Javadoc failure

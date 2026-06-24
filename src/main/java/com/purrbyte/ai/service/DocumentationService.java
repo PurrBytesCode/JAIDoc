@@ -41,7 +41,6 @@ import java.util.zip.ZipOutputStream;
 @Service
 public class DocumentationService {
 
-    private static final long JAVADOC_TIMEOUT_SECONDS = 600;
     private static final int JAVADOC_MAX_DIAGNOSTICS = 100_000;
     private static final int MIN_MODULAR_MAJOR = 11;
     private static final int MIN_JAVADOC_MAJOR = 17;
@@ -53,6 +52,7 @@ public class DocumentationService {
     private final Path outputDirectory;
     private final Path docletDirectory;
     private final Path javadocHome;
+    private final long javadocTimeoutSeconds;
     private final List<String> configuredModules;
 
     public DocumentationService(
@@ -62,7 +62,8 @@ public class DocumentationService {
             @Value("${data.directory}") Path outputDirectory,
             @Value("${doclet.modules:}") String modulesCsv,
             @Value("${doclet.jar.directory:doclet}") Path docletDirectory,
-            @Value("${doclet.javadoc.home:}") String javadocHome) {
+            @Value("${doclet.javadoc.home:}") String javadocHome,
+            @Value("${doclet.javadoc.timeout:600}") long javadocTimeoutSeconds) {
         this.jdkDistributionDownloader = jdkDistributionDownloader;
         this.jdkVersionRepository = jdkVersionRepository;
         this.workDirectory = workDirectory;
@@ -71,6 +72,7 @@ public class DocumentationService {
         this.javadocHome = (javadocHome == null || javadocHome.isBlank())
                 ? Path.of(System.getProperty("java.home"))
                 : Path.of(javadocHome);
+        this.javadocTimeoutSeconds = javadocTimeoutSeconds;
         this.configuredModules = parseModules(modulesCsv);
     }
 
@@ -436,7 +438,7 @@ public class DocumentationService {
         }
         boolean exited;
         try {
-            exited = process.waitFor(JAVADOC_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            exited = process.waitFor(javadocTimeoutSeconds, TimeUnit.SECONDS);
             if (progressCallback != null) {
                 progressCallback.accept(Progress.of(100, Progress.MODULE_JAVADOC));
             }
@@ -451,7 +453,7 @@ public class DocumentationService {
         if (!exited) {
             process.destroyForcibly();
             deleteDirectory(tempOutputDir);
-            throw new IOException("javadoc process timed out after " + JAVADOC_TIMEOUT_SECONDS + " seconds");
+            throw new IOException("javadoc process timed out after " + javadocTimeoutSeconds + " seconds");
         }
         int exitCode = process.exitValue();
         // The doclet runs only after type attribution; missing generated symbols can leave a non-zero

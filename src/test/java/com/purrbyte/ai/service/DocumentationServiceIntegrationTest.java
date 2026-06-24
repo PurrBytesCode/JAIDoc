@@ -50,7 +50,8 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
                 Path.of("target/data"),
                 "java.base",
                 Path.of(System.getProperty("user.dir"), "doclet"),
-                ""
+                "",
+                600
         );
         var future = service.generateJdkDocumentation("25.0.3", progressCallback);
         Path result = future.get();
@@ -81,7 +82,8 @@ class DocumentationServiceIntegrationTest extends IntegrationTest {
                 Path.of("target/data"),
                 "java.base",
                 Path.of(System.getProperty("user.dir"), "doclet"),
-                ""
+                "",
+                600
         );
         var future = service.generateJdkDocumentation(version, progressCallback);
         Path result = future.get();

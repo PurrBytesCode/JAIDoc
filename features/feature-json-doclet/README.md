@@ -90,8 +90,8 @@ JsonDoclet.run()
 
 ### Configuration
 
-- `src/main/resources/configurations/db-configuration.yml` — `doclet.work.directory`, `doclet.jar.directory`,
-  `doclet.javadoc.home`, `doclet.modules`
+- `src/main/resources/configurations/documentation-configuration.yml` — `doclet.work.directory`, `doclet.jar.directory`,
+  `doclet.javadoc.home`, `doclet.javadoc.timeout`, `doclet.modules`
 
 ## Tests
 
