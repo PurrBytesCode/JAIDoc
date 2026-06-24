@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026-06-24 — Black Book</title>
+    <link rel="stylesheet" href="blackbook.css">
+</head>
+<body>
+<article class="bb-page">
+    <header class="bb-head">
+        <p class="bb-eyebrow">Black Book · Dev Log</p>
+        <h1 class="bb-date">2026-06-24</h1>
+        <p class="bb-meta">JAIDoc — AI-assisted development</p>
+    </header>
+
+    <nav class="bb-contents" aria-label="In this entry">
+        <p class="toc-title">In this entry</p>
+        <ul class="bb-toc">
+            <li class="cat-idea"><a href="#cpu-for-search-gpu-for-vector-creation">CPU for Search, GPU for Vector
+                Creation</a></li>
+            <li class="cat-docs"><a href="#ingestion-performance-167-minutes-on-cpu">Ingestion Performance — 167 Minutes
+                on CPU</a></li>
+        </ul>
+    </nav>
+
+    <section class="entry cat-idea" id="cpu-for-search-gpu-for-vector-creation">
+        <p class="tab">💡 Idea</p>
+        <h2>CPU for Search, GPU for Vector Creation</h2>
+        <ul>
+            <li>Realized CPU inference is suitable for the retrieval/search phase but a bottleneck during chunk vector
+                creation
+            </li>
+            <li>Need to download the same transformer model in two variants:
+                <ul>
+                    <li>CPU-optimized (smaller, sufficient for search)</li>
+                    <li>GPU-optimized with Nvidia (larger model, better throughput for batch vectorization)</li>
+                </ul>
+            </li>
+            <li>Dependencies are already in place; next step is to wire up the dual-model path and document the
+                process
+            </li>
+            <li>This will help anyone setting up the project — the GPU path dramatically reduces ingestion time</li>
+        </ul>
+    </section>
+
+    <section class="entry cat-docs" id="ingestion-performance-167-minutes-on-cpu">
+        <p class="tab">📝 Documentation</p>
+        <h2>Ingestion Performance — 167 Minutes on CPU</h2>
+        <ul>
+            <li>Ingesting JDK 25.0.3 with the CPU-only model took <strong>167 minutes 34 seconds</strong> for 93,196
+                chunks
+            </li>
+            <li>This is too slow to be practical and confirms the need for GPU acceleration on vector creation</li>
+        </ul>
+        <pre><code>INFO 25412 --- [JAIDoc] [           main] c.purrbyte.ai.service.IngestionService   : [25.0.3/chunks] Chunk ingestion complete: 93196 / 93196 processed, 0 skipped (10054445ms elapsed)
+INFO 25412 --- [JAIDoc] [           main] c.purrbyte.ai.service.IngestionService   : Ingested JDK 25.0.3: 93196 chunks (10053235ms)
+INFO 25412 --- [JAIDoc] [           main] c.purrbyte.ai.service.IngestionService   : Total ingest for JDK 25.0.3: 167m34s (10054485ms)
+INFO 25412 --- [JAIDoc] [           main] c.p.ai.service.IngestDiscoveryService    : Successfully ingested version 25.0.3 (status=READY, chunks=93196)
+INFO 25412 --- [JAIDoc] [           main] c.p.ai.service.IngestDiscoveryService    : Ingest auto-discovery complete. Discovered 1 version(s) with generated docs.</code></pre>
+    </section>
+
+    <footer class="bb-foot">
+        <span>Black Book · JAIDoc</span>
+        <nav>
+            <a href="2026-06-21.html">← prev</a>
+            ·
+            <a href="BLACKBOOK.md">Index</a>
+        </nav>
+    </footer>
+</article>
+</body>
+</html>
