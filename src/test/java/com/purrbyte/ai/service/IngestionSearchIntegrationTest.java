@@ -33,12 +33,12 @@ public class IngestionSearchIntegrationTest extends IntegrationTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        // Create a test ZIP fixture at the configured output directory.
+        // Create a test ZIP fixture at the configured output directory under jdk/.
         // The ZIP structure must match what DocumentationService.zipVersion produces:
         // a version-prefixed directory containing the JSON files.
-        Path outputDir = dataDirectory;
-        Files.createDirectories(outputDir);
-        Path zipFile = outputDir.resolve("25.0.3.zip");
+        Path jdkDir = dataDirectory.resolve("jdk");
+        Files.createDirectories(jdkDir);
+        Path zipFile = jdkDir.resolve("25.0.3.zip");
         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipFile))) {
             // Directory entry for the version folder
             zos.putNextEntry(new ZipEntry("25.0.3/"));

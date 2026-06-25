@@ -12,36 +12,40 @@ BaseTest (abstract)
 └── @Tag(BaseTest.TAG_INTEGRATION)
 
 UnitTest extends BaseTest (abstract)
-├── Constructor: builds JsonMapper manually using ObjectMapperConfiguration.customizer
-├── protected final JsonMapper jsonMapper
-└── Purpose: fast, isolated unit tests — NO Spring context
+├── static final JsonMapper jsonMapper — built via static factory method `createJsonMapper()` using ObjectMapperConfiguration.customizer
+├── Purpose: fast, isolated unit tests — NO Spring context
 
 IntegrationTest extends BaseTest (abstract)
 ├── @SpringBootTest
-├── @Disabled("${test.integration.enabled:false}")
+├── @EnabledIf("${test.integration.enabled:false}")
+├── @Tag(BaseTest.TAG_INTEGRATION)
 ├── @Autowired protected JsonMapper jsonMapper
 └── Purpose: integration tests — need Spring context and bean wiring
 ```
 
 ## Test base class annotations
 
-| Annotation                                              | Purpose                                                        |
-|---------------------------------------------------------|----------------------------------------------------------------|
-| `@Slf4j`                                                | Lombok logger in all test classes                              |
-| `@TestMethodOrder(MethodOrderer.OrderAnnotation.class)` | Respect `@Order` on test methods                               |
-| `@ExtendWith(TimeExtension.class)`                      | Measure test execution time — logs after each test method      |
-| `@ActiveProfiles({"test"})`                             | Use the `test` Spring profile                                  |
-| `@Tag(BaseTest.TAG_UNIT)`                               | **Only on `BaseTest`** — applies to unit test hierarchy        |
-| `@Tag(BaseTest.TAG_INTEGRATION)`                        | **Only on `BaseTest`** — applies to integration test hierarchy |
-| `@SpringBootTest`                                       | **Only on `IntegrationTest`** — starts full context            |
-| `@Disabled("${test.integration.enabled:false}")`        | **Only on `IntegrationTest`** — skips unless enabled           |
+| Annotation                                              | Purpose                                                                         |
+|---------------------------------------------------------|---------------------------------------------------------------------------------|
+| `@Slf4j`                                                | Lombok logger in all test classes                                               |
+| `@TestMethodOrder(MethodOrderer.OrderAnnotation.class)` | Respect `@Order` on test methods                                                |
+| `@ExtendWith(TimeExtension.class)`                      | Measure test execution time — logs after each test method                       |
+| `@ActiveProfiles({"test"})`                             | Use the `test` Spring profile                                                   |
+| `@Tag(BaseTest.TAG_UNIT)`                               | **On `BaseTest`** — applies to unit test hierarchy                              |
+| `@Tag(BaseTest.TAG_INTEGRATION)`                        | **On `BaseTest` and `IntegrationTest`** — applies to integration test hierarchy |
+| `@SpringBootTest`                                       | **Only on `IntegrationTest`** — starts full context                             |
+| `@EnabledIf("${test.integration.enabled:false}")`       | **Only on `IntegrationTest`** — runs only when enabled                          |
 
 ## Test class annotation rules
 
 - **`BaseTest`** carries both `@Tag` annotations (UNIT and INTEGRATION). This means `UnitTest` inherits UNIT and
   `IntegrationTest` inherits INTEGRATION automatically.
-- **`IntegrationTest`** adds `@SpringBootTest` and `@Disabled` — it never runs unless `test.integration.enabled=true`.
-- **`UnitTest`** does NOT have `@SpringBootTest` — it builds `JsonMapper` manually. No Spring context.
+- **`IntegrationTest`** adds `@SpringBootTest`, `@EnabledIf("${test.integration.enabled:false}")`, and
+  `@Tag(BaseTest.TAG_INTEGRATION)` — it runs only when `test.integration.enabled=true`.
+- **`UnitTest`** does NOT have `@SpringBootTest` — it builds `JsonMapper` via a static factory method. No Spring
+  context.
+- **`BaseTest`** also has `@Tag(BaseTest.TAG_INTEGRATION)` (not just on `IntegrationTest`) — this means
+  `IntegrationTest` inherits both its own tag and the one from `BaseTest`.
 - **`@Order`** on test methods respects the `@TestMethodOrder` set on `BaseTest`. Test methods can be ordered with
   `@Order(1)`, `@Order(2)`, etc.
 - **`@TestInstance(PER_CLASS)`** is NOT used — all tests use the default `PER_METHOD` test instance strategy.
@@ -54,14 +58,18 @@ IntegrationTest extends BaseTest (abstract)
 
 ### No Spring in unit tests
 
-`UnitTest` does **not** have `@SpringBootTest`. It builds `JsonMapper` manually in the constructor, applying the same
-`JsonMapperBuilderCustomizer` that `ObjectMapperConfiguration` provides:
+`UnitTest` does **not** have `@SpringBootTest`. It builds `JsonMapper` via a static factory method `createJsonMapper()`,
+applying the same `JsonMapperBuilderCustomizer` that `ObjectMapperConfiguration` provides. The customizer applies the
+same two features to `JsonMapper`, `YAMLMapper`, and `XmlMapper` (via `XmlMapperBuilderCustomizer`) — ensuring
+consistent behavior across all serialization formats.
 
 ```java
-public UnitTest() {
+static final JsonMapper jsonMapper = createJsonMapper();
+
+static JsonMapper createJsonMapper() {
     JsonMapper.Builder builder = new JsonMapper.Builder(new JsonFactoryBuilder().build());
     new ObjectMapperConfiguration().jsonMapperBuilderCustomizer().customize(builder);
-    this.jsonMapper = builder.build();
+    return builder.build();
 }
 ```
 
@@ -125,15 +133,17 @@ src/test/java/com/purrbyte/ai/
 │       └── TimeExtension.java
 ├── service/
 │   ├── DocumentationServiceTest.java                     # Unit tests for DocumentationService
-│   └── DocumentationServiceIntegrationTest.java          # E2E JavaDoc generation (local JDK + downloaded JDK)
+│   ├── DocumentationServiceIntegrationTest.java          # E2E JavaDoc generation (local JDK + downloaded JDK)
+│   └── IngestionSearchIntegrationTest.java               # Ingest + search pipeline integration test
 ├── model/converter/
 │   └── FloatArrayConverterTest.java                      # JPA converter tests (float[] ↔ BLOB)
 ├── util/
-│   └── JdkDistributionDownloaderTest.java                # Adoptium OS/arch/version mapping (no network)
+│   ├── JdkDistributionDownloaderTest.java                # Adoptium OS/arch/version mapping (no network)
+│   └── ZIPHelperTest.java                                # ZIP entry lookup utility tests
 ├── doclet/
 │   ├── ChunkWriterTest.java
 │   └── DocTreeJsonTest.java
-└── JAIDocTest.java                # Integration test for main class
+└── JAIDocTest.java                # Integration test for main class (startup, BufferingApplicationStartup)
 ```
 
 Test classes use the same package structure as their production counterparts. Test-specific classes (base classes,
@@ -222,15 +232,21 @@ sequence. The `@Order` values are typically sequential integers (1, 2, 3...).
 ### Actual network calls
 
 Some integration tests make real network calls (e.g., `DocumentationServiceIntegrationTest` downloads external
-resources). These tests require network access and may be slow. They are disabled by default via `@Disabled`.
+resources). These tests require network access and may be slow. They are disabled by default via the `INTEGRATION` tag
+and `-Dtest.integration.enabled=true`.
 
-### E2E JavaDoc generation pipeline
+### E2E Javadoc generation pipeline
 
-`DocumentationServiceIntegrationTest` runs the full JavaDoc generation pipeline — obtain a complete `lib/src.zip`, run
-javadoc with the JsonDoclet in module mode, and verify the JSON output (`index.json` plus the `api/` directory), scoped
+`DocumentationServiceIntegrationTest` runs the full Javadoc generation pipeline — obtain a complete `lib/src.zip`, run
+Javadoc with the JsonDoclet in module mode, and verify the JSON output (`index.json` plus the `api/` directory), scoped
 to `java.base`. The first test documents the running JDK from its local `lib/src.zip` (no network). The second
 downloads a non-running version's distribution from Adoptium and documents it (needs network and downloads a full JDK).
 Both are disabled by default via the `INTEGRATION` tag and `-Dtest.integration.enabled=true`.
+
+### Ingest + search pipeline integration
+
+`IngestionSearchIntegrationTest` verifies the complete ingestion + search flow: JSON Javadoc → ingest into SQLite via
+`IngestionService` → Hibernate Search kNN index → search via `JdkSearchService`.
 
 ### File system operations
 
@@ -242,6 +258,12 @@ cleaned up automatically.
 `ChunkWriterTest` writes actual JSONL files to a `@TempDir` directory and verifies the output content. It uses the
 `jsonMapper` injected from the Spring context to serialize objects.
 
+### DocTreeJsonTest — normalization and entity decoding
+
+`DocTreeJsonTest` verifies the `DocTreeJson.normalize()` and `decodeEntity()` utility methods. It tests string
+normalization (whitespace collapsing, line trimming) and HTML entity decoding (`&amp;`, `&lt;`, `&gt;`, `&quot;`, etc.).
+No file I/O — purely functional unit tests.
+
 ## JsonMapper configuration
 
 Both `UnitTest` and `IntegrationTest` use the same two customizations:
@@ -252,12 +274,18 @@ Both `UnitTest` and `IntegrationTest` use the same two customizations:
 The `DateTimeFeature` and `DeserializationFeature` are imported from `tools.jackson.*`, the same Jackson implementation
 used throughout the project.
 
+## ObjectMapperConfiguration
+
+`ObjectMapperConfiguration` provides a `JsonMapperBuilderCustomizer` bean (for unit tests) and configures both
+`YAMLMapper` and `XmlMapperBuilderCustomizer` for serialization consistency across JSON, YAML, and XML formats.
+
 ## No warnings in test code
 
 Test classes must compile **clean** — no compiler warnings. If a warning appears, fix it rather than ignoring it. Common
 test-specific warnings to watch for:
 
-- **Dead parameters**: Factory methods or constructors with parameters that are never used by any test (e.g. a hardcoded
+- **Dead parameters**: Factory methods or constructors with parameters that are never used by any test (e.g., a
+  hardcoded
   `false` always passed). If a parameter is always the same value, either remove it or create separate factory methods
   for each path (e.g. `createChunkWriter(...)` vs `createDocumentedOnlyChunkWriter(...)`).
 - **Unused fields**: Instance fields that are only used by a few tests when most tests call static methods. Prefer local

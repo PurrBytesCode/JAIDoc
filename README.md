@@ -32,7 +32,8 @@ It does this by:
 3. **Exposing** it through the MCP protocol so AI models can query it directly
 
 - **Doclet pipeline**: JDK source → `JsonDoclet` → JSON Javadoc (fully implemented)
-- **MCP tools**: `listVersions()`, `searchJavadoc()` — fully wired to the semantic search service
+- **MCP tools**: `listVersions()`, `searchJavadoc()`, `startDocGeneration()`, `getDocGenerationProgress()`,
+  `startIngest()`, `getIngestProgress()` — fully wired to the semantic search service
 
 This project demonstrates the full stack: doclet → JSON → SQLite + Hibernate Search/Lucene → MCP tools. It's meant to
 be studied, adapted, and used as a reference for building your own documentation MCP servers — starting with the JDK SDK
@@ -57,8 +58,51 @@ java -jar target/jaidoc-1.0.0.jar
 The app uses a local ONNX transformer model for semantic search (vector embeddings). The model is not tracked in Git —
 download it first:
 
-The script will ask which model and variant to download. See [onnx/TRANSFORMER.md](onnx/TRANSFORMER.md) for available
-models, variants, and configuration options.
+```bash
+# Download with defaults (project onnx/ directory)
+.\scripts\download-onnx-transformer-model.ps1  # Windows
+# or
+./scripts/download-onnx-transformer-model.sh   # Linux/macOS
+```
+
+The script will ask which model and variant to download. To download a specific variant, pass the arguments directly:
+
+```bash
+.\scripts\download-onnx-transformer-model.ps1 multilingual-e5-small model
+```
+
+See [onnx/TRANSFORMER.md](onnx/TRANSFORMER.md) for available models, variants, and configuration options.
+
+### Embedding Model — Test Which Variant Fits Your Hardware
+
+> **⚠️ Important: Ingestion can take a long time on CPU.**
+>
+> The ingestion pipeline generates vector embeddings for every documentation chunk. With the **CPU-only model**, this
+> process can take **more than 160 minutes** on the first run. A single JDK version generates at least **500 MB** of
+> data in the database during ingestion.
+
+The FP16 base model (`model.onnx`) runs significantly faster on CPU than the quantized INT8 variant
+(`model_qint8_avx512_vnni.onnx`), despite being larger. On Intel Core Ultra 9 275HX hardware, the FP16 model
+delivers noticeably better throughput. However, performance varies by CPU — **test both variants on your machine** to
+see which gives you the best results:
+
+```powershell
+# Use the FP16 base model (larger file, faster on many CPUs)
+$env:AI_TRANSFORMER_ONNX = "./onnx/model.onnx"
+
+# Use the quantized INT8 model (smaller file, may be faster on some CPUs)
+$env:AI_TRANSFORMER_ONNX = "./onnx/model_qint8_avx512_vnni.onnx"
+```
+
+The default is `model.onnx` (FP16), but override it with the `AI_TRANSFORMER_ONNX` environment variable to try the
+other variant.
+
+> **Crucial: the same model must be used for both ingestion and search.** Ingesting with one variant and searching with
+> another produces incompatible embeddings — the embeddings are tied to the specific model, not the model family.
+> However, **different model families** (e.g., `multilingual-e5-small` vs. `multilingual-e5-base`) also produce
+> incompatible embeddings and cannot be mixed.
+
+For full details, see [onnx/TRANSFORMER.md — CPU Inference](onnx/TRANSFORMER.md#cpu-inference).
 
 ## Example Queries
 
@@ -67,6 +111,10 @@ The MCP server exposes the following query capabilities through its tools:
 - **`searchJavadoc(version, query, topK)`** — Semantic search of JDK API documentation using vector kNN embeddings.
   Returns chunks ranked by relevance, including kind (class/method/field), signature, and description.
 - **`listVersions()`** — Lists available JDK versions whose documentation has been ingested.
+- **`startDocGeneration(jdkVersion, jdkDistribution)`** — Start an async JDK documentation generation pipeline.
+- **`getDocGenerationProgress(taskId)`** — Poll the status of a doc generation task.
+- **`startIngest(jdkVersion, jdkDistribution)`** — Start an async JDK documentation ingestion pipeline.
+- **`getIngestProgress(taskId)`** — Poll the status of an ingest task.
 
 ### Example: Semantic search for JDK API
 
@@ -86,8 +134,8 @@ Before searching, documentation must be ingested into the database:
 
 The ingest is idempotent — re-ingesting a version replaces any prior ingestion.
 
-A future MCP tool (`ingestJdk(version)`) will allow triggering this entire pipeline directly from the AI model, without
-needing to run the server CLI. This is planned but not yet implemented.
+MCP tools `startIngest()` and `getIngestProgress()` allow triggering and polling the ingestion pipeline directly from
+the AI model, without needing to run the server CLI.
 
 ## How It Works
 
@@ -99,9 +147,12 @@ The JDK doesn't ship its Javadoc as JSON, so we need to generate it from the sou
 2. **Javadoc Serialization** — Run a custom doclet (`JsonDoclet`) on the JDK source to produce structured JSON directly,
    extracting class signatures, method descriptions, parameters, return types, and annotations in a format optimized for
    LLM comprehension.
-3. **Vector Indexing** — Embed and index the JSON data into SQLite + Hibernate Search/Lucene for semantic search.
-4. **MCP Tools Exposure** — Register MCP tools (`searchJavadoc`, `listVersions`) that allow AI models to query by
-   semantic similarity or list versions.
+3. **Vector Indexing** — Embed the JSON data with a local ONNX transformer model (FP16 base model,
+   multilingual-e5-small)
+   and index it into SQLite + Hibernate Search/Lucene for semantic search.
+4. **MCP Tools Exposure** — Register MCP tools (`searchJavadoc`, `listVersions`, `startIngest`, `getIngestProgress`,
+   `startDocGeneration`, `getDocGenerationProgress`) that allow AI models to query by semantic similarity, list
+   versions, or trigger ingestion pipelines.
 
 This pipeline is modular and version-aware: each JDK version gets its own ingestion run, and the database stores them
 separately so users can query documentation for any supported version.
@@ -109,9 +160,8 @@ separately so users can query documentation for any supported version.
 ## Roadmap
 
 - **Phase 1** ✅ JDK documentation ingestion and database layer; semantic search; MCP tools (`searchJavadoc`,
-  `listVersions`)
+  `listVersions`, `startIngest`, `getIngestProgress`, `startDocGeneration`, `getDocGenerationProgress`)
 - **Phase 2** Spring Boot ingestion: adoc parsing, migration guides, how-to guides, and structured MCP tools
-- **Phase 3** MCP tool `ingestJdk(version)` — trigger ingestion directly from the MCP server (planned)
 - **Phase 3** Spring Framework API docs: annotations, generics, cross-references
 
 ### Phase 2: Spring Boot Integration
@@ -147,7 +197,7 @@ The repository is organized into distinct workspaces, each with a specific purpo
 | `onnx/`          | Local AI models — ONNX embedding model and tokenizer used for semantic search                                            |
 | `doclet/`        | Build output — the doclet JAR produced by Maven                                                                          |
 | `assembly/`      | Maven assembly descriptor — packaging configuration for the doclet JAR                                                   |
-| `test/`          | IntelliJ HTTP client — `mcp-tools.http` and environment config for manual MCP tool testing                               |
+| `request/`       | IntelliJ HTTP client — `mcp-tools.http` and environment config for manual MCP tool testing                               |
 
 ## Architecture
 
@@ -159,7 +209,7 @@ graph LR
     jdkdocs["📄 JDK Docs<br/>Javadoc JSON"]
     sbdocs["📄 Spring Boot Docs<br/>adoc · Migration · How-To"]
     ai <-->|" MCP (streamable) "| server
-    server -->|" Search "| jdkdocs
+    server -->|" Search / Ingest "| jdkdocs
     server -->|" Ingest (adoc, planned) "| sbdocs
     server -->|" Search "| db
 ```
