@@ -5,6 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
+        <!-- https://central.sonatype.com/artifact/org.springframework.boot/spring-boot/overview-->
         <version>4.1.0</version>
         <relativePath/>
     </parent>
@@ -23,7 +24,9 @@
         <commons-compress.version>1.28.0</commons-compress.version>
         <!-- https://central.sonatype.com/artifact/org.hibernate.search/hibernate-search-bom/versions-->
         <hibernate-search.version>8.4.0.Final</hibernate-search.version>
+        <!-- https://central.sonatype.com/artifact/org.springframework.ai/spring-ai-bom-->
         <spring-ai.version>2.0.0</spring-ai.version>
+        <!-- https://central.sonatype.com/artifact/org.springframework.cloud/spring-cloud-dependencies-->
         <spring-cloud.version>2025.1.2</spring-cloud.version>
         <java.version>25</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
