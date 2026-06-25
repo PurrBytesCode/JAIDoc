@@ -7,11 +7,11 @@ The model is **not** tracked in Git (see `.gitignore`), so you must download it 
 
 | Variant                        | Size    | Status   | Description                                                                        |
 |--------------------------------|---------|----------|------------------------------------------------------------------------------------|
-| `model_qint8_avx512_vnni.onnx` | ~113 MB | **used** | Quantized INT8, AVX-512 + VNNI — fastest on modern Intel (Ice Lake+) or AMD Zen 3+ |
+| `model_qint8_avx512_vnni.onnx` | ~113 MB | unused   | Quantized INT8, AVX-512 + VNNI — fastest on modern Intel (Ice Lake+) or AMD Zen 3+ |
 | `model_O4.onnx`                | ~224 MB | unused   | OpenVINO optimized variant                                                         |
-| `model.onnx`                   | ~449 MB | unused   | FP16 base model — largest file, slowest inference                                  |
+| `model.onnx`                   | ~449 MB | **used** | FP16 base model — larger file, much faster inference on CPU                        |
 
-The application defaults to `model_qint8_avx512_vnni.onnx` (the fastest). Override the model with the
+The application defaults to `model.onnx` (FP16 base model). Override the model with the
 `AI_TRANSFORMER_ONNX` environment variable.
 
 ## Configuration
@@ -24,8 +24,7 @@ spring:
     embedding:
       transformer:
         onnx:
-          model-uri: ${AI_TRANSFORMER_ONNX:./onnx/model_qint8_avx512_vnni.onnx}
-          gpu-device-id: ${AI_TRANSFORMER_ONNX_GPU_ID:-1}
+          model-uri: ${AI_TRANSFORMER_ONNX:./onnx/model.onnx}
         tokenizer:
           uri: ${AI_TRANSFORMER_TOKENIZER:./onnx/tokenizer.json}
 ```
@@ -33,8 +32,8 @@ spring:
 Override the model path by setting the `AI_TRANSFORMER_ONNX` environment variable:
 
 ```bash
-# Use the FP16 base model (largest, slowest)
-export AI_TRANSFORMER_ONNX=./onnx/model.onnx
+# Use the quantized INT8 model (smallest, requires AVX-512)
+export AI_TRANSFORMER_ONNX=./onnx/model_qint8_avx512_vnni.onnx
 ```
 
 > **Note:** Spring AI's `ModelUri` requires a `file:` URI scheme for absolute paths. Bare Windows paths like
@@ -44,7 +43,7 @@ export AI_TRANSFORMER_ONNX=./onnx/model.onnx
 
 You can swap the model for a different one — just download the files and set both `AI_TRANSFORMER_ONNX` and
 `AI_TRANSFORMER_TOKENIZER` to point to the correct paths. Different models have different tokenizers, so you must
-update both. The default model is **multilingual-e5-small** with the **model_qint8_avx512_vnni.onnx** variant — this is
+update both. The default model is **multilingual-e5-small** with the **model.onnx** (FP16) variant — this is
 the one currently used and tested.
 
 ## URI Scheme Requirement
@@ -61,7 +60,7 @@ You must use a `file:` URI scheme:
       embedding:
         transformer:
           onnx:
-            model-uri: ./onnx/model_qint8_avx512_vnni.onnx
+            model-uri: ./onnx/model.onnx
           tokenizer:
             uri: ./onnx/tokenizer.json
   ```
@@ -69,7 +68,7 @@ You must use a `file:` URI scheme:
 - **Absolute paths via environment variables** — use `file:///` with forward slashes:
   ```bash
   # Windows (PowerShell)
-  $env:AI_TRANSFORMER_ONNX = "file:///C:/Users/aluis/IdeaProjects/JAIDoc/onnx/model_qint8_avx512_vnni.onnx"
+  $env:AI_TRANSFORMER_ONNX = "file:///C:/Users/aluis/IdeaProjects/JAIDoc/onnx/model.onnx"
   $env:AI_TRANSFORMER_TOKENIZER = "file:///C:/Users/aluis/IdeaProjects/JAIDoc/onnx/tokenizer.json"
   ```
 
@@ -80,7 +79,7 @@ You must use a `file:` URI scheme:
       embedding:
         transformer:
           onnx:
-            model-uri: file:///C:/Users/aluis/IdeaProjects/JAIDoc/onnx/model_qint8_avx512_vnni.onnx
+            model-uri: file:///C:/Users/aluis/IdeaProjects/JAIDoc/onnx/model.onnx
           tokenizer:
             uri: file:///C:/Users/aluis/IdeaProjects/JAIDoc/onnx/tokenizer.json
   ```
@@ -135,10 +134,10 @@ Run the appropriate script for your platform — it will ask which variant you w
 .\scripts\download-onnx-transformer-model.ps1
 
 # Download to a custom directory
-.\scripts\download-onnx-transformer-model.ps1 -Model multilingual-e5-small -Variant model_qint8_avx512_vnni -OutputDir .\data\models\onnx
+.\scripts\download-onnx-transformer-model.ps1 -Model multilingual-e5-small -Variant model -OutputDir .\data\models\onnx
 
 # Override the output path for the current run (e.g., when the working dir is target/)
-.\scripts\download-onnx-transformer-model.ps1 -Model multilingual-e5-small -Variant model_qint8_avx512_vnni -OutputDir ..\onnx
+.\scripts\download-onnx-transformer-model.ps1 -Model multilingual-e5-small -Variant model -OutputDir ..\onnx
 ```
 
 ### Bash (Linux / macOS)
@@ -148,48 +147,24 @@ Run the appropriate script for your platform — it will ask which variant you w
 ./scripts/download-onnx-transformer-model.sh
 
 # Download to a custom directory
-./scripts/download-onnx-transformer-model.sh multilingual-e5-small model_qint8_avx512_vnni ./data/models/onnx
+./scripts/download-onnx-transformer-model.sh multilingual-e5-small model ./data/models/onnx
 
 # Override the output path for the current run (e.g., when the working dir is target/)
-./scripts/download-onnx-transformer-model.sh multilingual-e5-small model_qint8_avx512_vnni ../onnx
+./scripts/download-onnx-transformer-model.sh multilingual-e5-small model ../onnx
 ```
 
 ## Model Source
 
 - **Model**: [intfloat/multilingual-e5-small](https://huggingface.co/intfloat/multilingual-e5-small)
 - **Task**: Text embeddings, multilingual (50+ languages)
-- **Quantization**: INT8 for the `model_qint8_*` variants, FP16 for `model.onnx`
+- **Quantization**: INT8 for the `model_qint8_*` variants (unused), FP16 for `model.onnx` (used)
 
-## CUDA/GPU Models
+## CPU Inference
 
-> **Note:** No CUDA provider ONNX models are currently available for the models listed above. The following sections
-> describe the planned support for GPU acceleration once suitable models are found.
+The FP16 base model (`model.onnx`) runs much better on CPU than the quantized variant, with significantly faster
+inference times.
 
-### Prerequisites
-
-- NVIDIA GPU with compute capability 6.0+ (Pascal or newer)
-- NVIDIA driver version 450.80.02 or later
-- CUDA Toolkit 11.8 or later (for Java CUDA runtime compatibility)
-- Install CUDA from [https://developer.nvidia.com/cuda-downloads](https://developer.nvidia.com/cuda-downloads)
-- Verify CUDA availability: `nvidia-smi` — should show your GPU and CUDA version
-
-### GPU Device ID
-
-To use GPU acceleration, set the `AI_TRANSFORMER_ONNX_GPU_ID` environment variable to the index of the GPU you want
-to use. You can find available GPU IDs with:
-
-```bash
-nvidia-smi --query-gpu=index,name --format=csv,noheader
-```
-
-Output example:
-
-```
-0, NVIDIA GeForce RTX 5070 Ti Laptop GPU
-1, NVIDIA GeForce RTX 3090
-```
-
-The configuration defaults to GPU ID `-1` (CPU mode):
+The configuration defaults to CPU mode:
 
 ```yaml
 # src/main/resources/configurations/ai-configuration.yml
@@ -198,34 +173,22 @@ spring:
     embedding:
       transformer:
         onnx:
-          model-uri: ${AI_TRANSFORMER_ONNX:./onnx/model_qint8_avx512_vnni.onnx}
-          gpu-device-id: ${AI_TRANSFORMER_ONNX_GPU_ID:-1}
+          model-uri: ${AI_TRANSFORMER_ONNX:./onnx/model.onnx}
         tokenizer:
           uri: ${AI_TRANSFORMER_TOKENIZER:./onnx/tokenizer.json}
 ```
 
-To use GPU 0:
-
-```bash
-# Windows (PowerShell)
-$env:AI_TRANSFORMER_ONNX_GPU_ID = "0"
-
-# Bash (Linux/macOS)
-export AI_TRANSFORMER_ONNX_GPU_ID=0
-```
-
-To force CPU mode:
-
-```bash
-$env:AI_TRANSFORMER_ONNX_GPU_ID = "-1"
-# or omit the variable entirely — CPU is the default
-```
-
 ### Performance
 
-When using CUDA provider ONNX models, expect:
+- **CPU (FP16, current)**: ~50-100ms per embedding (384-dim passage)
+- **CPU (INT8, historical)**: ~108ms per embedding — the FP16 model on CPU is noticeably faster than the quantized
+  INT8 model
 
-- **CPU (baseline)**: ~100-200ms per embedding (384-dim passage)
-- **GPU (estimated)**: ~10-50ms per embedding (384-dim passage) — 4x-20x faster depending on GPU and model size
+The FP16 model (`model.onnx`) runs significantly faster on CPU than the quantized INT8 variant (
+`model_qint8_avx512_vnni.onnx`),
+despite being larger. The FP16 model's advantage on the CPU is especially important for ingestion workloads, where the
+INT8 model took **167 minutes 34 seconds** to ingest 93,196 chunks (JDK 25.0.3). The FP16 model completes this in
+considerably less time.
 
-The actual performance gain depends on the GPU model, batch size, and whether the model is quantized.
+> **Historical note:** Ingestion of JDK 25.0.3 with the INT8 model took 167m34s (10,054,485ms) for 93,196 chunks — too
+> slow to be practical. The FP16 model on CPU provides a meaningful speedup over that baseline.

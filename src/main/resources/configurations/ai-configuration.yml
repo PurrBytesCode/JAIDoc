@@ -3,8 +3,6 @@ spring:
     embedding:
       transformer:
         onnx:
-          model-uri: ${AI_TRANSFORMER_ONNX:file:./onnx/model_qint8_avx512_vnni.onnx}
-          # Need to install https://developer.nvidia.com/cuda-downloads
-          gpu-device-id: ${AI_TRANSFORMER_ONNX_GPU_ID:-1}
+          model-uri: ${AI_TRANSFORMER_ONNX:file:./onnx/model.onnx}
         tokenizer:
           uri: ${AI_TRANSFORMER_TOKENIZER:file:./onnx/tokenizer.json}

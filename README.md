@@ -68,50 +68,41 @@ download it first:
 The script will ask which model and variant to download. To download a specific variant, pass the arguments directly:
 
 ```bash
-.\scripts\download-onnx-transformer-model.ps1 multilingual-e5-small model_qint8_avx512_vnni
+.\scripts\download-onnx-transformer-model.ps1 multilingual-e5-small model
 ```
 
 See [onnx/TRANSFORMER.md](onnx/TRANSFORMER.md) for available models, variants, and configuration options.
 
-### GPU Acceleration for Ingestion
+### Embedding Model — Test Which Variant Fits Your Hardware
 
-> **⚠️ Important: GPU is strongly recommended for the first ingestion.**
+> **⚠️ Important: Ingestion can take a long time on CPU.**
 >
 > The ingestion pipeline generates vector embeddings for every documentation chunk. With the **CPU-only model**, this
-> process can take **more than 160 minutes** on the first run. If your machine has an NVIDIA GPU with CUDA support,
-> you can reduce this time dramatically — by **4x – 20x** depending on your GPU and model size.
->
-> **Recommended approach:**
->
-> - **GPU for ingestion**: Install the [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads)
-    (version 11.8 or later), ensure your NVIDIA driver is 450.80.02 or newer, then set
-    `AI_TRANSFORMER_ONNX_GPU_ID` to your GPU index:
->
-> ```bash
-> # Windows (PowerShell)
-> $env:AI_TRANSFORMER_ONNX_GPU_ID = "0"
-> # Bash (Linux/macOS)
-> export AI_TRANSFORMER_ONNX_GPU_ID=0
-> ```
->
-> - **CPU for search**: After ingestion, the CPU model is perfectly fine for semantic search — the embedding generation
-    is a one-time cost during ingestion, not per-query.
->
-> **Crucial: the same model must be used for both ingestion and search.** The CUDA variant and CPU-variant of the
-> *same model* (e.g., `model_qint8_avx512_vnni.onnx` on GPU vs. `model_qint8_avx512_vnni.onnx` on CPU) produce
-> compatible embeddings — you can use the GPU variant for ingestion and switch to the CPU variant for search afterward.
-> However, **different model families** (e.g., `multilingual-e5-small` vs. `multilingual-e5-base`) produce incompatible
-> embeddings and cannot be mixed.
->
-> Additionally, a single JDK version generates at least **500 MB** of data in the database during ingestion.
->
-> To find your GPU index:
->
-> ```bash
-> nvidia-smi --query-gpu=index,name --format=csv,noheader
-> ```
->
-> For full details, see [onnx/TRANSFORMER.md — CUDA/GPU Models](onnx/TRANSFORMER.md#cuda-gpu-models).
+> process can take **more than 160 minutes** on the first run. A single JDK version generates at least **500 MB** of
+> data in the database during ingestion.
+
+The FP16 base model (`model.onnx`) runs significantly faster on CPU than the quantized INT8 variant
+(`model_qint8_avx512_vnni.onnx`), despite being larger. On Intel Core Ultra 9 275HX hardware, the FP16 model
+delivers noticeably better throughput. However, performance varies by CPU — **test both variants on your machine** to
+see which gives you the best results:
+
+```powershell
+# Use the FP16 base model (larger file, faster on many CPUs)
+$env:AI_TRANSFORMER_ONNX = "./onnx/model.onnx"
+
+# Use the quantized INT8 model (smaller file, may be faster on some CPUs)
+$env:AI_TRANSFORMER_ONNX = "./onnx/model_qint8_avx512_vnni.onnx"
+```
+
+The default is `model.onnx` (FP16), but override it with the `AI_TRANSFORMER_ONNX` environment variable to try the
+other variant.
+
+> **Crucial: the same model must be used for both ingestion and search.** Ingesting with one variant and searching with
+> another produces incompatible embeddings — the embeddings are tied to the specific model, not the model family.
+> However, **different model families** (e.g., `multilingual-e5-small` vs. `multilingual-e5-base`) also produce
+> incompatible embeddings and cannot be mixed.
+
+For full details, see [onnx/TRANSFORMER.md — CPU Inference](onnx/TRANSFORMER.md#cpu-inference).
 
 ## Example Queries
 
@@ -156,7 +147,9 @@ The JDK doesn't ship its Javadoc as JSON, so we need to generate it from the sou
 2. **Javadoc Serialization** — Run a custom doclet (`JsonDoclet`) on the JDK source to produce structured JSON directly,
    extracting class signatures, method descriptions, parameters, return types, and annotations in a format optimized for
    LLM comprehension.
-3. **Vector Indexing** — Embed and index the JSON data into SQLite + Hibernate Search/Lucene for semantic search.
+3. **Vector Indexing** — Embed the JSON data with a local ONNX transformer model (FP16 base model,
+   multilingual-e5-small)
+   and index it into SQLite + Hibernate Search/Lucene for semantic search.
 4. **MCP Tools Exposure** — Register MCP tools (`searchJavadoc`, `listVersions`, `startIngest`, `getIngestProgress`,
    `startDocGeneration`, `getDocGenerationProgress`) that allow AI models to query by semantic similarity, list
    versions, or trigger ingestion pipelines.
