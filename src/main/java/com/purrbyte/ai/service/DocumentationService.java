@@ -576,14 +576,18 @@ public class DocumentationService {
      * @return path to the ZIP file, or null if not found
      */
     private Path findVersionZip(String version) {
-        try (var stream = Files.walk(outputDirectory)) {
+        Path jdkDir = outputDirectory.resolve("jdk");
+        if (!Files.isDirectory(jdkDir)) {
+            return null;
+        }
+        try (var stream = Files.walk(jdkDir)) {
             return stream
                     .filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().equals(version + ".zip"))
                     .findFirst()
                     .orElse(null);
         } catch (IOException e) {
-            log.warn("Failed to list data directory {}: {}", outputDirectory, e.getMessage());
+            log.warn("Failed to list JDK directory {}: {}", jdkDir, e.getMessage());
             return null;
         }
     }
