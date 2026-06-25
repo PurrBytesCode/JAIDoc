@@ -81,10 +81,7 @@ public class JavaDocMCP {
         }
         TaskInfo taskInfo = taskStore.createTask(version);
         UUID taskId = taskInfo.getTaskId();
-        Consumer<IngestProgress> progressCallback = p -> {
-            taskStore.updateProgress(taskId, p.getPercentage(), p.getModule());
-            log.info("[{}] {} → {}%", taskId, p.getModule(), p.getPercentage());
-        };
+        Consumer<IngestProgress> progressCallback = p -> taskStore.updateProgress(taskId, p.getPercentage(), p.getModule());
         ingestionService.ingestAsync(version, progressCallback)
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
