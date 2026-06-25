@@ -3,5 +3,8 @@ spring:
     mcp:
       server:
         enabled: true
-        name: JaiDoc
+        name: ${spring.application.name}
+        version: @project.version@
         protocol: streamable
+        stdio: ${MCP_SERVER_STDIO:false}
+        request-timeout: ${MCP_SERVER_TIMEOUT:20S}

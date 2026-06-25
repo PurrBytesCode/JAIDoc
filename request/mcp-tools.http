@@ -128,8 +128,19 @@ Mcp-Session-Id: {{mcpSessionId}}
 }
 
 > {%
-    client.global.set("docGenerationTaskId", response.body.result);
-    client.log("Doc Generation Task ID: " + client.global.get("docGenerationTaskId"));
+    response.body.onEachLine((line, unsubscribe) => {
+        let cleanLine = String(line).trim();
+        if (cleanLine.startsWith("data:")) {
+            let jsonText = cleanLine.replace(/^data:\s*/, "").trim();
+            client.log("jsonText: " + jsonText);
+            let mainJson = JSON.parse(jsonText);
+            client.log("mainJson.result.content[0].text: " + mainJson.result.content[0].text);
+            let taskId = JSON.parse(mainJson.result.content[0].text);
+            client.global.set("docGenerationTaskId", taskId);
+            client.log("Doc Generation Task ID: " + client.global.get("docGenerationTaskId"));
+            unsubscribe();
+        }
+    });
 %}
 
 ### Start Doc Generation — async task - 17.0.19
@@ -151,8 +162,19 @@ Mcp-Session-Id: {{mcpSessionId}}
 }
 
 > {%
-    client.global.set("docGenerationTaskId", response.body.result);
-    client.log("Doc Generation Task ID: " + client.global.get("docGenerationTaskId"));
+    response.body.onEachLine((line, unsubscribe) => {
+        let cleanLine = String(line).trim();
+        if (cleanLine.startsWith("data:")) {
+            let jsonText = cleanLine.replace(/^data:\s*/, "").trim();
+            client.log("jsonText: " + jsonText);
+            let mainJson = JSON.parse(jsonText);
+            client.log("mainJson.result.content[0].text: " + mainJson.result.content[0].text);
+            let taskId = mainJson.result.content[0].text.replaceAll('"', '');
+            client.global.set("docGenerationTaskId", taskId);
+            client.log("Doc Generation Task ID: " + client.global.get("docGenerationTaskId"));
+            unsubscribe();
+        }
+    });
 %}
 
 ### Get Doc Generation Progress
@@ -192,8 +214,19 @@ Mcp-Session-Id: {{mcpSessionId}}
 }
 
 > {%
-    client.global.set("ingestTaskId", response.body.result);
-    client.log("Ingest Task ID: " + client.global.get("ingestTaskId"));
+    response.body.onEachLine((line, unsubscribe) => {
+        let cleanLine = String(line).trim();
+        if (cleanLine.startsWith("data:")) {
+            let jsonText = cleanLine.replace(/^data:\s*/, "").trim();
+            client.log("jsonText: " + jsonText);
+            let mainJson = JSON.parse(jsonText);
+            client.log("mainJson.result.content[0].text: " + mainJson.result.content[0].text);
+            let taskId = mainJson.result.content[0].text.replaceAll('"', '');
+            client.global.set("ingestTaskId", taskId);
+            client.log("Ingest Task ID: " + client.global.get("ingestTaskId"));
+            unsubscribe();
+        }
+    });
 %}
 
 ### Get Ingest Progress

@@ -1,6 +1,6 @@
 spring:
   application:
-    name: JAIDoc
+    name: @project.artifactId@
   config:
     import:
       - configurations/actuator-configuration.yml
