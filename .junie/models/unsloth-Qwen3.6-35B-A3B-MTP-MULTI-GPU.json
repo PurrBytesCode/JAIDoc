@@ -1,9 +1,9 @@
 {
   "baseUrl": "http://localhost:11434/v1/chat/completions",
-  "id": "unsloth-Qwen3.6-35B-A3B-MULTI-GPU",
+  "id": "unsloth-Qwen3.6-35B-A3B-MTP-MULTI-GPU",
   "apiType": "OpenAICompletion",
   "primaryModel": {
-    "id": "unsloth-Qwen3.6-35B-A3B"
+    "id": "unsloth-Qwen3.6-35B-A3B-MTP"
   },
   "fasterModel": {
     "id": "JetBrains-Mellum2-12B-A2.5B"
