@@ -2,7 +2,6 @@
     "github-JetBrains-junie-extensions": {
         "url": "https://github.com/JetBrains/junie-extensions",
         "extensions": [
-            "context7",
             "java-engineer",
             "spring-boot-engineer"
         ],
@@ -14,7 +13,9 @@
     "github-anthropics-claude-plugins-official": {
         "url": "https://github.com/anthropics/claude-plugins-official",
         "extensions": [
-            "frontend-design"
+            "frontend-design",
+            "mcp-server-dev",
+            "skill-creator"
         ],
         "source": {
             "type": "git",
