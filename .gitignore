@@ -15,6 +15,7 @@ JdkDocChunk/
 backup.zip
 jdk-distributions/
 jdk-doc-workspace/
+spring-boot-artifacts/
 
 ### AI ###
 .claude/multi-gpu-settings.local.json

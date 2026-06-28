@@ -9,19 +9,20 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Downloads Spring Boot artifacts from Maven Central so that arbitrary versions can be ingested.
@@ -43,11 +44,9 @@ import java.util.function.Consumer;
 @Component
 public class SpringBootArtifactDownloader {
 
-    private static final String MAVEN_METADATA_URL =
-            "https://repo1.maven.org/maven2/org/springframework/boot/spring-boot/maven-metadata.xml";
-    private static final String MAVEN_REPO_BASE =
-            "https://repo1.maven.org/maven2/org/springframework/boot/spring-boot";
-    private static final int DOWNLOAD_BUFFER = 1 << 16;
+    private static final String MAVEN_METADATA_URL = "https://repo1.maven.org/maven2/org/springframework/boot/spring-boot/maven-metadata.xml";
+    private static final String MAVEN_REPO_BASE = "https://repo1.maven.org/maven2/org/springframework/boot/spring-boot";
+    private static final int DOWNLOAD_BUFFER = 65536;
     private static final Pattern LATEST_TAG = Pattern.compile("<latest>([^<]+)</latest>");
 
     private final Executor downloadExecutor = Executors.newVirtualThreadPerTaskExecutor();
@@ -66,64 +65,63 @@ public class SpringBootArtifactDownloader {
 
     /**
      * Resolves the latest stable Spring Boot version by querying Maven Central's metadata XML.
+     * Falls back to the Solr search API if the metadata is blank or does not contain a {@code <latest>} tag.
      *
-     * @return the latest release version string (e.g. {@code "3.4.2"})
-     * @throws IOException if the metadata cannot be fetched or parsed
+     * @return the latest release version string, or empty if the version cannot be resolved
      */
-    public String resolveLatestVersion() throws IOException {
-        log.info("Resolving latest Spring Boot version from Maven Central");
+    public Optional<String> resolveLatestVersion() {
         String xml = restClient.get().uri(URI.create(MAVEN_METADATA_URL)).retrieve().body(String.class);
-        if (xml == null || xml.isBlank()) {
-            throw new IOException("Empty response from Maven Central metadata API");
+        if (xml != null && !xml.isBlank()) {
+            Matcher matcher = LATEST_TAG.matcher(xml);
+            if (matcher.find()) {
+                return Optional.of(matcher.group(1));
+            }
         }
-        Matcher matcher = LATEST_TAG.matcher(xml);
-        if (matcher.find()) {
-            String latest = matcher.group(1);
-            log.info("Latest Spring Boot version: {}", latest);
-            return latest;
-        }
-        // Fallback: try the JSON search API
         return resolveLatestFromSearchApi();
     }
 
     /**
      * Resolves the latest version using Maven Central's Solr search API as a fallback.
+     *
+     * @return the latest version string, or empty if the search fails or returns no results
      */
-    private String resolveLatestFromSearchApi() throws IOException {
-        String url = "https://search.maven.org/solrsearch/select?q=g:org.springframework.boot+AND+a:spring-boot"
-                + "&rows=1&wt=json&core=gav";
+    private Optional<String> resolveLatestFromSearchApi() {
+        String url = "https://search.maven.org/solrsearch/select?q=g:org.springframework.boot+AND+a:spring-boot&rows=1&wt=json&core=gav";
         String body = restClient.get().uri(URI.create(url)).retrieve().body(String.class);
         if (body == null) {
-            throw new IOException("Empty response from Maven search API");
+            return Optional.empty();
         }
         JsonNode root = jsonMapper.readTree(body);
         JsonNode response = root.path("response");
         JsonNode docs = response.path("docs");
-        if (docs.isArray() && docs.size() > 0) {
+        if (docs.isArray() && !docs.isEmpty()) {
             String version = docs.get(0).path("v").asString(null);
-            log.info("Latest Spring Boot version from search API: {}", version);
-            return version;
+            return Optional.ofNullable(version);
         }
-        throw new IOException("No Spring Boot artifact found in Maven Central search results");
+        return Optional.empty();
     }
 
     /**
      * Downloads a Spring Boot artifact for the specified version.
      *
-     * @param version        Spring Boot version (e.g. {@code "3.4.2"})
-     * @param artifactType   type of artifact: {@code "jar"} or {@code "sources"}
+     * @param version          Spring Boot version (e.g. {@code "3.4.2"})
+     * @param artifactType     type of artifact: {@code "jar"} or {@code "sources"}
      * @param progressCallback callback reporting download progress (may be null)
      * @return future with the path to the downloaded file (cached on later calls)
      */
-    public CompletableFuture<Path> downloadArtifact(String version, String artifactType,
-                                                     Consumer<Progress> progressCallback) {
-        validateVersion(version);
-        String suffix = switch (artifactType) {
-            case "jar" -> "";
-            case "sources" -> "-sources";
-            default -> throw new IllegalArgumentException("Unknown artifact type: " + artifactType
-                    + ". Supported: jar, sources");
-        };
+    public CompletableFuture<Path> downloadArtifact(String version, String artifactType, Consumer<Progress> progressCallback) {
+        if (version == null || version.isBlank()) {
+            return CompletableFuture.failedFuture(new IllegalArgumentException("Spring Boot version cannot be null or blank"));
+        }
+        String suffix;
+        switch (artifactType) {
+            case "jar" -> suffix = "";
+            case "sources" -> suffix = "-sources";
+            default -> {
+                return CompletableFuture.failedFuture(new IllegalArgumentException(
+                        "Unknown artifact type: " + artifactType + ". Supported: jar, sources"));
+            }
+        }
         String fileName = "spring-boot-" + version + suffix + ".jar";
         Path targetFile = Path.of(downloadDirectory).resolve(fileName);
         if (Files.exists(targetFile)) {
@@ -131,41 +129,54 @@ public class SpringBootArtifactDownloader {
             return CompletableFuture.completedFuture(targetFile);
         }
         String downloadUrl = MAVEN_REPO_BASE + "/" + version + "/spring-boot-" + version + suffix + ".jar";
+        Path partFile = Path.of(downloadDirectory).resolve(fileName + ".part");
         return CompletableFuture.supplyAsync(() -> {
             try {
-                Path targetDir = Path.of(downloadDirectory);
-                Files.createDirectories(targetDir);
-                Path partFile = targetDir.resolve(fileName + ".part");
-                try (InputStream input = restClient.get().uri(URI.create(downloadUrl))
-                        .retrieve().body(InputStream.class);
-                     OutputStream output = Files.newOutputStream(partFile)) {
-                    if (input == null) {
-                        throw new IOException("Empty response downloading Spring Boot " + version + " " + artifactType);
-                    }
-                    byte[] buffer = new byte[DOWNLOAD_BUFFER];
-                    int read;
-                    while ((read = input.read(buffer)) != -1) {
-                        output.write(buffer, 0, read);
-                        if (progressCallback != null) {
-                            progressCallback.accept(Progress.of(100.0, "spring-boot-" + artifactType + "-download"));
-                        }
-                    }
-                }
+                Files.createDirectories(Path.of(downloadDirectory));
+                AtomicLong contentLength = new AtomicLong();
+                restClient.get().uri(URI.create(downloadUrl))
+                        .exchange((request, response) -> {
+                            long cl = response.getHeaders().getContentLength();
+                            contentLength.set(cl);
+                            InputStream input = response.getBody();
+                            byte[] buffer = new byte[DOWNLOAD_BUFFER];
+                            int read;
+                            long downloaded = 0;
+                            try (OutputStream output = Files.newOutputStream(partFile)) {
+                                while ((read = input.read(buffer)) != -1) {
+                                    output.write(buffer, 0, read);
+                                    downloaded += read;
+                                    if (progressCallback != null && cl > 0) {
+                                        progressCallback.accept(Progress.of(
+                                                Math.min(100.0, (downloaded * 100.0) / cl),
+                                                Progress.MODULE_DOWNLOAD));
+                                    }
+                                }
+                            }
+                            if (progressCallback != null && cl <= 0) {
+                                progressCallback.accept(Progress.of(100.0, Progress.MODULE_DOWNLOAD));
+                            }
+                            return cl;
+                        });
+
                 Files.move(partFile, targetFile, StandardCopyOption.REPLACE_EXISTING);
                 log.info("Spring Boot {} {} downloaded to {}", version, artifactType, targetFile);
                 return targetFile;
-            } catch (Exception e) {
-                // Clean up partial file on failure
-                try {
-                    Files.deleteIfExists(targetFile);
-                    Files.deleteIfExists(targetFile.getParent().resolve(targetFile.getFileName() + ".part"));
-                } catch (IOException cleanupEx) {
-                    log.warn("Failed to clean up partial download: {}", cleanupEx.getMessage());
-                }
-                throw new CompletionException(new IOException(
-                        "Failed to download Spring Boot " + version + " " + artifactType + ": " + e.getMessage(), e));
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to download Spring Boot " + version
+                        + " " + artifactType + ": " + e.getMessage(), e);
             }
-        }, downloadExecutor);
+        }, downloadExecutor).exceptionally(ex -> {
+            try {
+                Files.deleteIfExists(partFile);
+            } catch (IOException cleanupEx) {
+                // Cleanup failure is not exceptional — swallow silently
+            }
+            throw new RuntimeException(
+                    "Failed to download Spring Boot " + version + " " + artifactType
+                            + ": " + (ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage()),
+                    ex);
+        });
     }
 
     /**
@@ -184,14 +195,4 @@ public class SpringBootArtifactDownloader {
         return downloadArtifact(version, "sources", progressCallback);
     }
 
-    /**
-     * Validates that the version string is non-blank.
-     *
-     * @throws IllegalArgumentException if version is null or blank
-     */
-    private static void validateVersion(String version) {
-        if (version == null || version.isBlank()) {
-            throw new IllegalArgumentException("Spring Boot version cannot be null or blank");
-        }
-    }
 }

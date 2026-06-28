@@ -22,3 +22,10 @@ doclet:
     timeout: ${DOCLET_JAVADOC_TIMEOUT:600}
   # Comma-separated JDK modules to document. Empty = all modules found in the JDK's lib/src.zip.
   modules: ${DOCLET_MODULES:}
+
+spring:
+  boot:
+    artifacts:
+      download:
+        # Directory where downloaded Spring Boot artifacts (jar, sources) are cached.
+        directory: ${SPRING_BOOT_ARTIFACTS_DIR:./spring-boot-artifacts}
