@@ -104,9 +104,17 @@ public class SpringBootArtifactDownloader {
     /**
      * Downloads a Spring Boot artifact for the specified version.
      *
+     * <p>If the target file already exists in the download directory, it is returned immediately
+     * without re-downloading. Progress is reported via the {@link Consumer} of {@link Progress}
+     * (may be {@code null} to suppress progress events).
+     *
+     * <p>On failure, the incomplete {@code .part} file is deleted and the original
+     * {@link RuntimeException} is re-thrown wrapped in a descriptive message. The returned
+     * {@link CompletableFuture} will complete exceptionally in this case.
+     *
      * @param version          Spring Boot version (e.g. {@code "3.4.2"})
      * @param artifactType     type of artifact: {@code "jar"} or {@code "sources"}
-     * @param progressCallback callback reporting download progress (maybe null)
+     * @param progressCallback callback reporting download progress (may be {@code null})
      * @return future with the path to the downloaded file (cached on later calls)
      */
     public CompletableFuture<Path> downloadArtifact(String version, String artifactType, Consumer<Progress> progressCallback) {

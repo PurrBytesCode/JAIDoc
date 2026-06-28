@@ -7,24 +7,28 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 /**
- * Progress update for the JDK documentation generation pipeline.
+ * Progress update emitted during artifact download, extraction, or documentation generation.
+ *
+ * <p>Each {@code Progress} carries a percentage (0.0–100.0) and a {@link #module} identifier
+ * that classifies which pipeline phase the progress belongs to. Consumers render the
+ * percentage against the module label to display stage-specific progress (e.g. "download: 45%").
  */
 @Getter
 @Setter
 public class Progress {
 
     /**
-     * Phase: downloading JDK source
+     * Module identifier for the download phase (artifact fetch from remote repository).
      */
     public static final String MODULE_DOWNLOAD = "download";
 
     /**
-     * Phase: extracting JDK source zip
+     * Module identifier for the extraction phase (unpacking downloaded archive).
      */
     public static final String MODULE_EXTRACT = "extract";
 
     /**
-     * Phase: running Javadoc with JsonDoclet
+     * Module identifier for the Javadoc generation phase (running JsonDoclet).
      */
     public static final String MODULE_JAVADOC = "javadoc";
 
