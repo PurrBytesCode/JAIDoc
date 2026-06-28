@@ -137,6 +137,10 @@ public class SpringBootArtifactDownloader {
                 AtomicLong contentLength = new AtomicLong();
                 restClient.get().uri(URI.create(downloadUrl))
                         .exchange((_, response) -> {
+                            if (!response.getStatusCode().is2xxSuccessful()) {
+                                throw new RuntimeException(
+                                        "HTTP " + response.getStatusCode() + " downloading " + downloadUrl);
+                            }
                             long cl = response.getHeaders().getContentLength();
                             contentLength.set(cl);
                             InputStream input = response.getBody();
