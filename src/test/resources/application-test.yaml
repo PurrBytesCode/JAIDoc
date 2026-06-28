@@ -2,6 +2,11 @@ jdk:
   distribution:
     download:
       directory: target/test-jdk-distributions
+spring:
+  boot:
+    artifacts:
+      download:
+        directory: target/test-spring-boot-artifacts
 data:
   directory: target/data
 doclet:

@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
  * <p>Three artifact types are supported:
  * <ul>
  *   <li>{@code jar} — the main Spring Boot jar (contains {@code META-INF/spring-configuration-metadata.json})</li>
- *   <li>{@code sources} — the sources jar used by the JsonDoclet to generate API documentation</li>
+ *   <li>{@code sources} — the source jar used by the JsonDoclet to generate API documentation</li>
  * </ul>
  *
  * <p>Downloads are cached: an already-present file is reused. Progress is reported via a
@@ -106,7 +106,7 @@ public class SpringBootArtifactDownloader {
      *
      * @param version          Spring Boot version (e.g. {@code "3.4.2"})
      * @param artifactType     type of artifact: {@code "jar"} or {@code "sources"}
-     * @param progressCallback callback reporting download progress (may be null)
+     * @param progressCallback callback reporting download progress (maybe null)
      * @return future with the path to the downloaded file (cached on later calls)
      */
     public CompletableFuture<Path> downloadArtifact(String version, String artifactType, Consumer<Progress> progressCallback) {
@@ -123,19 +123,20 @@ public class SpringBootArtifactDownloader {
             }
         }
         String fileName = "spring-boot-" + version + suffix + ".jar";
-        Path targetFile = Path.of(downloadDirectory).resolve(fileName);
+        Path path = Path.of(downloadDirectory);
+        Path targetFile = path.resolve(fileName);
         if (Files.exists(targetFile)) {
             log.info("Spring Boot artifact already downloaded at {} (type={})", targetFile, artifactType);
             return CompletableFuture.completedFuture(targetFile);
         }
         String downloadUrl = MAVEN_REPO_BASE + "/" + version + "/spring-boot-" + version + suffix + ".jar";
-        Path partFile = Path.of(downloadDirectory).resolve(fileName + ".part");
+        Path partFile = path.resolve(fileName + ".part");
         return CompletableFuture.supplyAsync(() -> {
             try {
-                Files.createDirectories(Path.of(downloadDirectory));
+                Files.createDirectories(path);
                 AtomicLong contentLength = new AtomicLong();
                 restClient.get().uri(URI.create(downloadUrl))
-                        .exchange((request, response) -> {
+                        .exchange((_, response) -> {
                             long cl = response.getHeaders().getContentLength();
                             contentLength.set(cl);
                             InputStream input = response.getBody();
