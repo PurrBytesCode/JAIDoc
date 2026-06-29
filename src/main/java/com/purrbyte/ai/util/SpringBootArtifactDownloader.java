@@ -86,7 +86,7 @@ public class SpringBootArtifactDownloader {
      * @return the latest version string, or empty if the search fails or returns no results
      */
     private Optional<String> resolveLatestFromSearchApi() {
-        String url = "https://search.maven.org/solrsearch/select?q=g:org.springframework.boot+AND+a:spring-boot&rows=1&wt=json&core=gav";
+        String url = "https://central.sonatype.com/solrsearch/select?wt=json&q=g:org.springframework.boot+AND+a:spring-boot-starter&sort=v+desc&rows=1";
         String body = restClient.get().uri(URI.create(url)).retrieve().body(String.class);
         if (body == null) {
             return Optional.empty();
