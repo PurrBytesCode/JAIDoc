@@ -138,6 +138,8 @@ src/test/java/com/purrbyte/ai/
 ├── model/converter/
 │   └── FloatArrayConverterTest.java                      # JPA converter tests (float[] ↔ BLOB)
 ├── util/
+│   ├── SpringBootArtifactDownloaderTest.java             # Maven artifact resolution (no network)
+│   ├── SpringBootArtifactDownloaderIntegrationTest.java  # Spring Boot artifact download integration
 │   ├── JdkDistributionDownloaderTest.java                # Adoptium OS/arch/version mapping (no network)
 │   └── ZIPHelperTest.java                                # ZIP entry lookup utility tests
 ├── doclet/

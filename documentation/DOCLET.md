@@ -9,8 +9,9 @@ The project has two main components:
 
 - **JsonDoclet** — A JDK doclet that reads Java source code via the `jdk.javadoc.doclet` API and produces structured
   JSON output with every Javadoc element (types, fields, methods, constructors, annotations, block tags, etc.).
-- **MCP Server** — A Spring AI MCP server that exposes the documentation to AI models (currently a stub; tools are not
-  yet implemented).
+- **MCP Server** — A Spring AI MCP server that exposes the documentation to AI models. `JavaDocMCP` provides 6 fully
+  implemented tools for JDK documentation (list, search, generate, ingest). `SpringBootMCP` is a stub with a placeholder
+  search tool. Tools are auto-discovered via `@Tool` annotations.
 
 ## Architecture
 

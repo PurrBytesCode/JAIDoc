@@ -43,6 +43,13 @@ JAIDoc/
 ├── blackbook/                       # Black Book — dev log (rules + dated notes)
 │   ├── BLACKBOOK.md                 # Rules for creating entries
 │   └── YYYY-MM-DD.html / .md       # Dated note entries
+├── request/                         # HTTP client request files
+│   ├── mcp-tools.http               # MCP tools API requests
+│   └── http-client.env.json         # HTTP client environment variables
+├── logs/                            # Application log files (Logback rolling)
+├── JdkDocChunk/                     # Hibernate Search Lucene index data
+├── jaidoc.sqlite                    # SQLite database file
+├── LICENSE                          # Project license
 ├── pom.xml                          # Maven build (Spring Boot 4.1.0, Java 25)
 ├── README.md                        # Project overview
 └── src/
@@ -147,7 +154,7 @@ JDK version gets its own subdirectory with one `index.json`, `chunks.jsonl`, and
 
 The `domain/` package defines JPA entities persisted in SQLite via Hibernate:
 
-- **`JdkVersion`** — JDK version metadata (version string, Adoptium tag, distribution)
+- **`JdkVersion`** — JDK version metadata (version, counts, ingestion status)
 - **`JdkDocChunk`** — Chunked Javadoc content with a vector embedding (`float[]`) for semantic search
 - **`JdkDocElement`** — Structured Javadoc element (class, method, field) with metadata
 
